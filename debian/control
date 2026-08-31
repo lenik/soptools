@@ -1,0 +1,18 @@
+Source: soptools
+Section: utils
+Priority: optional
+Maintainer: Lenik <soptools@bodz.net>
+Build-Depends: debhelper-compat (= 13), meson, ninja-build, pkgconf, asciidoctor
+Standards-Version: 4.6.0
+Homepage: https://github.com/lenik/soptools
+Rules-Requires-Root: no
+
+Package: soptools
+Architecture: any
+Depends:
+    ${shlibs:Depends},
+    ${misc:Depends}
+Description: SOP workflow assistant for project construction
+ soptools guides project construction through Standard Operating Procedure
+ workflows. It provides a wxWidgets GUI and console mode, builtin SOP
+ definitions, translations, and man pages.

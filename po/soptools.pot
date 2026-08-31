@@ -1,0 +1,50 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: soptools\n"
+"Report-Msgid-Bugs-To: soptools@bodz.net\n"
+"POT-Creation-Date: 2026-08-31 18:00+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/soptools.cpp:32
+msgid ""
+"Usage: soptools [OPTIONS] [PROJECTDIR]\n"
+"Guide project construction through SOP workflow steps.\n"
+msgstr ""
+
+#: src/soptools.cpp:34
+msgid "  -s, --sop SOPDIR     SOP directory (default: builtin figma.sop)\n"
+msgstr ""
+
+#: src/soptools.cpp:35
+msgid "  -c, --console        console-only mode (no GUI)\n"
+msgstr ""
+
+#: src/soptools.cpp:36
+msgid "  -g, --gui            force GUI mode\n"
+msgstr ""
+
+#: src/soptools.cpp:37
+msgid "  -C, --chdir DIR      project directory (default: cwd or nearest .git)\n"
+msgstr ""
+
+#: src/soptools.cpp:38
+msgid "  -v, --verbose        repeat for more verbose loggings\n"
+msgstr ""
+
+#: src/soptools.cpp:39
+msgid "  -q, --quiet          show less logging messages\n"
+msgstr ""
+
+#: src/soptools.cpp:40
+msgid "  -h, --help           display this help and exit\n"
+msgstr ""
+
+#: src/soptools.cpp:41
+msgid "      --version        output version information and exit\n"
+msgstr ""

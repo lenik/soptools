@@ -1,0 +1,21 @@
+soptools (0.0.2) unstable; urgency=medium
+
+  * sopwin GUI: reorganize menus into File, Procedure, View, and Help.
+  * sopwin GUI: add project Open/Save/Revert and SOP Load with keyboard shortcuts.
+  * sopwin GUI: persist workflow position and step state under
+    .config/sopwin/<sopname>.conf; write shell logs to
+    .config/sopwin/<sopname>/<id>.log.
+  * sopwin GUI: improve workflow graph layout, edge routing, arrows, and
+    auto-scroll to the current step.
+  * sopwin GUI: View menu adds Toggle Graph (F2) and Toggle Loggings (Ctrl+L).
+  * sopwin GUI: replace Detach menu items with pane-header detach icons for
+    Graph and Loggings; closing a detached window re-attaches the pane.
+  * sop_model: use zero-padded unique step ids (for example 000sh, 020gpt).
+
+ -- Lenik <pub.lenik@bodz.net>  Mon, 31 Aug 2026 21:30:00 +0800
+
+soptools (0.0.1) unstable; urgency=medium
+
+  * Initial release
+
+ -- Lenik <pub.lenik@bodz.net>  Mon, 31 Aug 2026 16:15:19 +0800

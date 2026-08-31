@@ -1,0 +1,106 @@
+= de-soptools(1)
+{project-author} <{project-email}>
+v{project-version}, {project-year}
+:doctype: manpage
+:manmanual: User Commands
+:mansource: de-soptools
+:man-linkstyle: blue R <>
+:nofooter:
+
+== NAME
+
+soptools - gefuehrter SOP-Workflow-Assistent fuer Projektaufbau
+
+== SYNOPSIS
+
+*soptools* [_OPTION_]... [_PROJECTDIR_]
+
+== DESCRIPTION
+
+*soptools* loads a Standard Operating Procedure (SOP) directory and guides the user step-by-step through project construction tasks. Each step may be a shell script, an AI output capture, or a manual checkpoint.
+
+SOP files use the naming convention:
+
+____
+....
+<seq><role>.<name>.md
+....
+____
+
+The GUI shows a workflow graph, branch selection, forward/back navigation, automated run controls, and optional logging. Console mode provides a text interface with the same workflow engine.
+
+== OPTIONS
+
+*-s, --sop* _SOPDIR_
+
+____
+SOP directory to load. Defaults to the builtin *figma.sop* shipped with *soptools*.
+____
+
+*-c, --console*
+
+____
+Use console-only mode without a GUI.
+____
+
+*-g, --gui*
+
+____
+Force GUI mode even when no display is detected.
+____
+
+*-C, --chdir* _DIR_
+
+____
+Project directory. By default *soptools* walks upward from the current working directory looking for *.git*; if none is found, the current directory is used.
+____
+
+*-v, --verbose*
+
+____
+Increase logging verbosity. Repeat for more detail.
+____
+
+*-q, --quiet*
+
+____
+Reduce logging output.
+____
+
+*-h, --help*
+
+____
+Print a usage summary and exit successfully.
+____
+
+*--version*
+
+____
+Print version and license information and exit successfully.
+____
+
+== EXIT STATUS
+
+*0*
+
+____
+Success.
+____
+
+*1*
+
+____
+An error occurred.
+____
+
+== AUTHOR
+
+Written by Lenik
+
+== COPYRIGHT
+
+Copyright © 2026. License AGPL-3.0-or-later. This is free software: you are free to change and redistribute it under the terms of the GNU Affero General Public License. There is NO WARRANTY, to the extent permitted by law.
+
+== AUTHOR
+
+Lenik

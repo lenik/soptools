@@ -1,0 +1,40 @@
+# Audit interactive-control coverage
+
+After workflow tests are implemented, audit all interactive GUI controls.
+
+Ensure every meaningful interactive control is exercised by at least one E2E test.
+
+Include, where applicable:
+
+```text
+buttons
+links
+tabs
+menus
+context menus
+dropdowns
+selects
+search inputs
+filters
+sorting controls
+pagination
+checkboxes
+radio buttons
+switches
+forms
+dialogs
+sheets
+drawers
+date/time controls
+file uploads
+downloads
+media controls
+drag/drop
+expand/collapse controls
+bulk-selection controls
+destructive confirmations
+```
+
+Do not create redundant tests when an existing workflow already covers the control.
+
+The goal is interaction coverage, not test-count inflation.
