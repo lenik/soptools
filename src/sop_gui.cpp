@@ -24,6 +24,8 @@
 #include <wx/filedlg.h>
 #include <wx/textdlg.h>
 #include <wx/bmpbuttn.h>
+#include <wx/scrolwin.h>
+#include <wx/statline.h>
 
 #include "config.h"
 
@@ -231,10 +233,45 @@ wxPanel *MakePaneHeader(wxWindow *parent, wxBitmapButton **button_out,
     btn->Bind(wxEVT_BUTTON, [on_click](wxCommandEvent &) { on_click(); });
     row->Add(btn, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxRIGHT, 4);
     header->SetSizer(row);
+    header->SetMinSize(wxSize(-1, 28));
     if (button_out) {
         *button_out = btn;
     }
     return header;
+}
+
+wxStaticText *MakeSectionTitle(wxWindow *parent, const wxString &title) {
+    auto *label = new wxStaticText(parent, wxID_ANY, title);
+    wxFont font = label->GetFont();
+    font.MakeBold();
+    label->SetFont(font);
+    return label;
+}
+
+void AddShortcutRows(wxFlexGridSizer *grid, std::initializer_list<std::pair<const char *, const char *>> rows) {
+    for (const auto &row : rows) {
+        auto *key = new wxStaticText(grid->GetContainingWindow(), wxID_ANY, wxString::FromUTF8(row.first));
+        wxFont key_font = key->GetFont();
+        key_font.MakeBold();
+        key->SetFont(key_font);
+        grid->Add(key, 0, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL);
+        grid->Add(new wxStaticText(grid->GetContainingWindow(), wxID_ANY, wxString::FromUTF8(row.second)), 0,
+                wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
+    }
+}
+
+wxPanel *MakeShortcutSection(wxWindow *parent, const wxString &title,
+                             std::initializer_list<std::pair<const char *, const char *>> rows) {
+    auto *panel = new wxPanel(parent);
+    panel->SetBackgroundColour(parent->GetBackgroundColour());
+    auto *section = new wxBoxSizer(wxVERTICAL);
+    section->Add(MakeSectionTitle(panel, title), 0, wxBOTTOM, 6);
+    auto *grid = new wxFlexGridSizer(2, 12, 4);
+    grid->AddGrowableCol(1);
+    AddShortcutRows(grid, rows);
+    section->Add(grid, 0, wxEXPAND);
+    panel->SetSizer(section);
+    return panel;
 }
 
 class MainFrame : public wxFrame {
@@ -261,7 +298,10 @@ public:
                          wxString::FromUTF8("sopwin"), wxOK | wxICON_ERROR);
         }
         graph_layout_dirty_ = true;
-        graph_->SetStepSelectHandler([this](const std::string &step_id) { graph_->SetSelectedStep(step_id); });
+        graph_->SetStepSelectHandler([this](const std::string &step_id) {
+            graph_->SetSelectedStep(step_id);
+            PreviewStep(step_id);
+        });
         graph_->SetMoveToHandler([this](const std::string &, size_t path_index) {
             engine_->set_current_index(path_index);
             RefreshAll();
@@ -282,6 +322,7 @@ public:
         });
         RefreshAll();
         UpdateWindowTitle();
+        Bind(wxEVT_SIZE, &MainFrame::OnFrameSize, this);
     }
 
     void UpdateWindowTitle() {
@@ -312,11 +353,14 @@ private:
     wxPanel *log_host_ = nullptr;
     wxBoxSizer *log_host_sizer_ = nullptr;
     wxSplitterWindow *splitter_ = nullptr;
+    wxPanel *content_panel_ = nullptr;
     wxToolBar *toolbar_ = nullptr;
     wxMenu *view_menu_ = nullptr;
     bool show_log_ = false;
     bool show_graph_ = true;
     bool graph_layout_dirty_ = true;
+    bool preview_mode_ = false;
+    std::string preview_step_id_;
     wxString sticky_status_;
     size_t sticky_status_index_ = static_cast<size_t>(-1);
 
@@ -420,14 +464,18 @@ private:
     }
 
     void CreateUi() {
+        // wxGTK: frame sizer must not host content directly alongside native toolbar.
+        content_panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
+        content_panel_->SetBackgroundColour(ios_bg());
+
         auto *root = new wxBoxSizer(wxVERTICAL);
 
-        splitter_ = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+        splitter_ = new wxSplitterWindow(content_panel_, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                          wxSP_LIVE_UPDATE | wxSP_3D);
         splitter_->SetMinimumPaneSize(120);
         splitter_->SetSashGravity(0.0);
 
-        graph_pane_ = new wxPanel(splitter_);
+        graph_pane_ = new wxPanel(splitter_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
         graph_pane_->SetBackgroundColour(ios_bg());
         auto *graph_sizer = new wxBoxSizer(wxVERTICAL);
         graph_sizer->Add(MakePaneHeader(graph_pane_, &graph_detach_btn_,
@@ -516,9 +564,49 @@ private:
 
         main_pane_->SetSizer(main_sizer);
         splitter_->SplitHorizontally(graph_pane_, main_pane_, graph_split_sash_);
-        root->Add(splitter_, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 12);
+        root->Add(splitter_, 1, wxEXPAND | wxALL, 12);
+        content_panel_->SetSizer(root);
 
-        SetSizer(root);
+        auto *frame_root = new wxBoxSizer(wxVERTICAL);
+        frame_root->Add(content_panel_, 1, wxEXPAND);
+        SetSizer(frame_root);
+    }
+
+    void RelayoutMainPanes() {
+        if (content_panel_) {
+            content_panel_->Layout();
+        }
+        if (graph_pane_) {
+            graph_pane_->Layout();
+        }
+        if (main_pane_) {
+            main_pane_->Layout();
+        }
+        if (splitter_) {
+            splitter_->Layout();
+            splitter_->UpdateSize();
+            if (splitter_->IsSplit()) {
+                const int client_h = splitter_->GetClientSize().y;
+                const int min_pane = splitter_->GetMinimumPaneSize();
+                const int max_sash = std::max(min_pane, client_h - min_pane - 4);
+                if (splitter_->GetSashPosition() > max_sash) {
+                    graph_split_sash_ = max_sash;
+                    splitter_->SetSashPosition(max_sash);
+                }
+            }
+        }
+        if (GetSizer()) {
+            GetSizer()->Layout();
+        }
+        Layout();
+        if (graph_) {
+            graph_->SendSizeEvent();
+        }
+    }
+
+    void OnFrameSize(wxSizeEvent &evt) {
+        evt.Skip();
+        RelayoutMainPanes();
     }
 
     void append_log(int level, const std::string &msg) {
@@ -631,14 +719,42 @@ private:
             graph_->SyncNodeStates();
         }
         graph_->SetCurrentIndex(current);
-        CallAfter([this]() {
-            if (graph_) {
-                graph_->ScrollToCurrentNode(true);
-            }
-        });
+        if (current < engine_->active_steps().size()) {
+            const std::string step_id = engine_->active_steps()[current];
+            CallAfter([this, step_id]() {
+                if (!graph_) {
+                    return;
+                }
+                RelayoutMainPanes();
+                graph_->ScrollToStepId(step_id, false);
+            });
+        }
+    }
+
+    void PreviewStep(const std::string &step_id) {
+        const auto &def = engine_->definition();
+        const auto it = def.steps.find(step_id);
+        if (it == def.steps.end()) {
+            return;
+        }
+        const SopStep &step = it->second;
+        preview_mode_ = true;
+        preview_step_id_ = step_id;
+
+        role_icon_->SetBitmap(role_icon(step, wxSize(28, 28)));
+        role_label_->SetLabel(wxString::FromUTF8(step.role_label()));
+        title_label_->SetLabel(wxString::FromUTF8(step.display_title()));
+        desc_label_->SetLabel(wxString::FromUTF8(step.description));
+        status_label_->SetLabel(status_text(step));
+        status_label_->SetForegroundColour(status_colour(step));
+        body_view_->SetValue(wxString::FromUTF8(step.body));
+        ai_panel_->Show(step.is_user());
+        Layout();
     }
 
     void RefreshStepView() {
+        preview_mode_ = false;
+        preview_step_id_.clear();
         const SopStep *step = engine_->step_at(engine_->current_index());
         if (!step) {
             return;
@@ -763,7 +879,10 @@ private:
             }
             graph_pane_->Hide();
         }
-        Layout();
+        RelayoutMainPanes();
+        if (graph_ && engine_->current_index() < engine_->active_steps().size()) {
+            graph_->ScrollToStepId(engine_->active_steps()[engine_->current_index()], false);
+        }
     }
 
     void SetLoggingVisible(bool visible) {
@@ -777,7 +896,7 @@ private:
             log_host_->Show(visible);
             log_view_->SetLoggingVisible(visible);
         }
-        Layout();
+        RelayoutMainPanes();
     }
 
     void ToggleGraphDetach() {
@@ -805,7 +924,7 @@ private:
         graph_detached_frame_->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnGraphDetachedClose, this);
         graph_detached_frame_->Show(true);
         UpdateDetachButton(graph_detach_btn_, graph_pane_, true);
-        Layout();
+        RelayoutMainPanes();
     }
 
     void AttachGraphPane() {
@@ -824,9 +943,9 @@ private:
         } else {
             graph_pane_->Hide();
         }
-        Layout();
-        if (graph_) {
-            graph_->ScrollToCurrentNode(false);
+        RelayoutMainPanes();
+        if (graph_ && engine_->current_index() < engine_->active_steps().size()) {
+            graph_->ScrollToStepId(engine_->active_steps()[engine_->current_index()], false);
         }
     }
 
@@ -838,7 +957,7 @@ private:
         log_view_->Detach();
         log_host_->Hide();
         UpdateDetachButton(log_detach_btn_, log_host_, true);
-        Layout();
+        RelayoutMainPanes();
     }
 
     void ReattachLogPane() {
@@ -848,7 +967,7 @@ private:
         log_view_->AttachTo(log_host_, log_host_sizer_);
         log_host_->Show(show_log_);
         UpdateDetachButton(log_detach_btn_, log_host_, false);
-        Layout();
+        RelayoutMainPanes();
     }
 
     void ToggleLogDetach() {
@@ -1010,37 +1129,35 @@ private:
     }
 
     void OnHelpShortcuts(wxCommandEvent &) {
-        wxDialog dlg(this, wxID_ANY, wxString::FromUTF8("Keyboard Shortcuts"), wxDefaultPosition, wxSize(460, 360));
-        auto *txt = new wxTextCtrl(&dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
-                                   wxTE_MULTILINE | wxTE_READONLY | wxBORDER_NONE);
-        wxFont mono = txt->GetFont();
-        mono.SetFamily(wxFONTFAMILY_TELETYPE);
-        txt->SetFont(mono);
-        txt->SetValue(wxString::FromUTF8(
-            "File\n"
-            "  Ctrl+O         Open Project\n"
-            "  Ctrl+S         Save project configuration\n"
-            "  Ctrl+Q         Quit\n"
-            "\n"
-            "Procedure\n"
-            "  Ctrl+U         Load SOP\n"
-            "  PgUp           Back\n"
-            "  PgDn           Next\n"
-            "  F5             Start / Resume auto-run\n"
-            "  F8             Pause auto-run\n"
-            "  Ctrl+Enter     Execute / Copy current step\n"
-            "\n"
-            "View\n"
-            "  F2             Toggle Graph\n"
-            "  Ctrl+L         Toggle Loggings\n"
-            "\n"
-            "Help\n"
-            "  F1             Keyboard Shortcuts\n"));
-        auto *sizer = new wxBoxSizer(wxVERTICAL);
-        sizer->Add(txt, 1, wxEXPAND | wxALL, 12);
+        wxDialog dlg(this, wxID_ANY, wxString::FromUTF8("Keyboard Shortcuts"), wxDefaultPosition, wxSize(520, 420));
+        auto *root = new wxBoxSizer(wxVERTICAL);
+        root->Add(MakeShortcutSection(
+                      &dlg, wxString::FromUTF8("File"),
+                      {{"Ctrl+O", "Open Project"},
+                       {"Ctrl+S", "Save project configuration"},
+                       {"Ctrl+Q", "Quit"}}),
+                  0, wxEXPAND | wxALL, 12);
+        root->Add(new wxStaticLine(&dlg), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
+        root->Add(MakeShortcutSection(
+                      &dlg, wxString::FromUTF8("Procedure"),
+                      {{"Ctrl+U", "Load SOP"},
+                       {"PgUp", "Back"},
+                       {"PgDn", "Next"},
+                       {"F5", "Start / Resume auto-run"},
+                       {"F8", "Pause auto-run"},
+                       {"Ctrl+Enter", "Execute / Copy current step"}}),
+                  0, wxEXPAND | wxALL, 12);
+        root->Add(new wxStaticLine(&dlg), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
+        root->Add(MakeShortcutSection(
+                      &dlg, wxString::FromUTF8("View"),
+                      {{"F2", "Toggle Graph"}, {"Ctrl+L", "Toggle Loggings"}}),
+                  0, wxEXPAND | wxALL, 12);
+        root->Add(new wxStaticLine(&dlg), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
+        root->Add(MakeShortcutSection(&dlg, wxString::FromUTF8("Help"), {{"F1", "Keyboard Shortcuts"}}), 0,
+                  wxEXPAND | wxALL, 12);
         auto *close_btn = new wxButton(&dlg, wxID_OK, wxString::FromUTF8("Close"));
-        sizer->Add(close_btn, 0, wxALIGN_CENTER | wxBOTTOM, 12);
-        dlg.SetSizer(sizer);
+        root->Add(close_btn, 0, wxALIGN_CENTER | wxBOTTOM, 12);
+        dlg.SetSizer(root);
         dlg.ShowModal();
     }
 
@@ -1053,14 +1170,51 @@ private:
         }
         std::ostringstream body;
         body << in.rdbuf();
-        wxMessageBox(wxString::FromUTF8(body.str()), wxString::FromUTF8("License"), wxOK | wxICON_INFORMATION);
+
+        wxDialog dlg(this, wxID_ANY, wxString::FromUTF8("License"), wxDefaultPosition, wxSize(680, 460));
+        auto *root = new wxBoxSizer(wxVERTICAL);
+        auto *txt = new wxTextCtrl(&dlg, wxID_ANY, wxString::FromUTF8(body.str()), wxDefaultPosition, wxSize(-1, 360),
+                                    wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP | wxBORDER_SUNKEN);
+        wxFont mono = txt->GetFont();
+        mono.SetFamily(wxFONTFAMILY_TELETYPE);
+        txt->SetFont(mono);
+        root->Add(txt, 1, wxEXPAND | wxALL, 12);
+        root->Add(new wxButton(&dlg, wxID_OK, wxString::FromUTF8("Close")), 0, wxALIGN_CENTER | wxBOTTOM, 12);
+        dlg.SetSizer(root);
+        dlg.ShowModal();
     }
 
     void OnHelpAbout(wxCommandEvent &) {
-        const wxString text = wxString::Format(
-            wxString::FromUTF8("sopwin %s\nCopyright (C) %d %s\n\nGuide project construction through SOP workflow steps."),
-            wxString::FromUTF8(PROJECT_VERSION), PROJECT_YEAR, wxString::FromUTF8(PROJECT_AUTHOR));
-        wxMessageBox(text, wxString::FromUTF8("About sopwin"), wxOK | wxICON_INFORMATION);
+        wxDialog dlg(this, wxID_ANY, wxString::FromUTF8("About sopwin"), wxDefaultPosition, wxSize(460, 220));
+        auto *root = new wxBoxSizer(wxVERTICAL);
+        auto *header = new wxBoxSizer(wxHORIZONTAL);
+        header->Add(new wxStaticBitmap(&dlg, wxID_ANY,
+                                       wxArtProvider::GetBitmap(wxART_EXECUTABLE_FILE, wxART_OTHER, wxSize(64, 64))),
+                    0, wxALL, 12);
+        auto *text_col = new wxBoxSizer(wxVERTICAL);
+        auto *app_name = new wxStaticText(&dlg, wxID_ANY, wxString::FromUTF8("sopwin"));
+        wxFont title_font = app_name->GetFont();
+        title_font.SetPointSize(title_font.GetPointSize() + 6);
+        title_font.MakeBold();
+        app_name->SetFont(title_font);
+        text_col->Add(app_name, 0, wxBOTTOM, 4);
+        text_col->Add(new wxStaticText(&dlg, wxID_ANY,
+                                       wxString::Format(wxString::FromUTF8("Version %s"),
+                                                        wxString::FromUTF8(PROJECT_VERSION))),
+                    0, wxBOTTOM, 4);
+        text_col->Add(new wxStaticText(&dlg, wxID_ANY,
+                                       wxString::Format(wxString::FromUTF8("Copyright (C) %d %s"), PROJECT_YEAR,
+                                                        wxString::FromUTF8(PROJECT_AUTHOR))),
+                      0, wxBOTTOM, 8);
+        text_col->Add(new wxStaticText(
+                          &dlg, wxID_ANY,
+                          wxString::FromUTF8("Guide project construction through SOP workflow steps.")),
+                      0);
+        header->Add(text_col, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxRIGHT, 12);
+        root->Add(header, 1, wxEXPAND);
+        root->Add(new wxButton(&dlg, wxID_OK, wxString::FromUTF8("Close")), 0, wxALIGN_CENTER | wxBOTTOM, 12);
+        dlg.SetSizer(root);
+        dlg.ShowModal();
     }
 };
 
