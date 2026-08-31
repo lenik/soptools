@@ -11,11 +11,22 @@ soptools (0.0.2) unstable; urgency=medium
   * sopwin GUI: fix Toggle Graph (F2) and Toggle Loggings (Ctrl+L) accelerator handling.
   * sopwin GUI: pane detach icons toggle attach/detach state; detached log window
     includes attach control.
-  * sopwin GUI: align keyboard shortcuts dialog with monospace layout.
-  * sopwin GUI: improve graph edge routing, auto-scroll, and zoom-safe node text.
+  * sopwin GUI: Help shortcuts use a structured key/description layout; About shows
+    an application icon; License uses a read-only scrollable text box.
+  * sopwin GUI: treat each branch column as one object (bbox ports); column-to-column
+    uses a single edge; nodes fan in/out inside the column.
+  * sopwin GUI: wrap edges go right-down-left-past-row-start-down-right into the next
+    row; keep left-edge pan stable on resize (wrapping only).
+  * sopwin GUI: widen horizontal gaps around branch columns for bend/arrow clearance.
+  * sopwin GUI: auto-scroll only when the running step changes and leaves the viewport;
+    node click previews content without scrolling.
+  * sopwin GUI: show step id in the info header on preview and current step view.
+  * sopwin GUI: place content between toolbar and status bar; add canvas border and
+    viewport clip so graph paint cannot escape the canvas (fix ResetClip clearing
+    the outer clip).
   * sop_model: use zero-padded unique step ids (for example 000sh, 020gpt).
 
- -- Lenik <pub.lenik@bodz.net>  Mon, 31 Aug 2026 21:30:00 +0800
+ -- Lenik <pub.lenik@bodz.net>  Tue, 01 Sep 2026 03:05:00 +0800
 
 soptools (0.0.1) unstable; urgency=medium
 

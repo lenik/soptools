@@ -42,8 +42,8 @@ meson compile -C build
 meson install -C build --destdir=%{buildroot}
 
 %files
-%{_bindir}/soptools
-%{_datadir}/bash-completion/completions/soptools
+%{_bindir}/sopwin
+%{_datadir}/bash-completion/completions/sopwin
 %{_datadir}/bash-completion/completions/ar-soptools
 %{_datadir}/bash-completion/completions/de-soptools
 %{_datadir}/bash-completion/completions/es_MX-soptools
@@ -61,6 +61,7 @@ meson install -C build --destdir=%{buildroot}
 %{_datadir}/bash-completion/completions/zh_CN-soptools
 %{_datadir}/soptools/
 %{_datadir}/locale/*/LC_MESSAGES/soptools.mo
+%{_mandir}/man1/sopwin.1*
 %{_mandir}/*/man1/ar-soptools.1*
 %{_mandir}/*/man1/de-soptools.1*
 %{_mandir}/*/man1/es_MX-soptools.1*
@@ -73,6 +74,8 @@ meson install -C build --destdir=%{buildroot}
 %{_datadir}/doc/soptools/
 %{_datadir}/doc/%{name}/
 %changelog
+* Tue Sep 01 2026 Lenik <soptools@bodz.net>
+- Package sopwin binary, completion, and man page from Meson install.
 * Thu Aug 20 2026 Lenik <soptools@bodz.net>
 - Align spec with debian/control (Meson, AGPL-3.0-or-later).
 - Version comes from `zfr version`, the same method meson.build uses.

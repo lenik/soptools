@@ -282,9 +282,9 @@ public:
         SetBackgroundColour(ios_bg());
         CreateMenu();
         CreateAppToolBar();
-        CreateUi();
         CreateStatusBar(1);
         SetStatusText(wxString::FromUTF8("Ready"));
+        CreateUi();
         SetupAccelerators();
         engine_->set_log_fn([this](int level, const std::string &msg) { append_log(level, msg); });
         engine_->set_notify_fn([this]() {
@@ -322,6 +322,7 @@ public:
         });
         RefreshAll();
         UpdateWindowTitle();
+        RelayoutMainPanes();
         Bind(wxEVT_SIZE, &MainFrame::OnFrameSize, this);
     }
 
@@ -361,6 +362,7 @@ private:
     bool graph_layout_dirty_ = true;
     bool preview_mode_ = false;
     std::string preview_step_id_;
+    std::string last_current_step_id_;
     wxString sticky_status_;
     size_t sticky_status_index_ = static_cast<size_t>(-1);
 
@@ -464,15 +466,15 @@ private:
     }
 
     void CreateUi() {
-        // wxGTK: frame sizer must not host content directly alongside native toolbar.
-        content_panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
+        content_panel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                                     wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
         content_panel_->SetBackgroundColour(ios_bg());
 
         auto *root = new wxBoxSizer(wxVERTICAL);
 
         splitter_ = new wxSplitterWindow(content_panel_, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                                          wxSP_LIVE_UPDATE | wxSP_3D);
-        splitter_->SetMinimumPaneSize(120);
+        splitter_->SetMinimumPaneSize(80);
         splitter_->SetSashGravity(0.0);
 
         graph_pane_ = new wxPanel(splitter_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL | wxCLIP_CHILDREN);
@@ -482,7 +484,7 @@ private:
                                         [this]() { ToggleGraphDetach(); }),
                          0, wxEXPAND);
         graph_ = new SopGraphCanvas(graph_pane_, engine_);
-        graph_sizer->Add(graph_, 1, wxEXPAND);
+        graph_sizer->Add(graph_, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 8);
         graph_pane_->SetSizer(graph_sizer);
 
         main_pane_ = new wxPanel(splitter_);
@@ -564,18 +566,61 @@ private:
 
         main_pane_->SetSizer(main_sizer);
         splitter_->SplitHorizontally(graph_pane_, main_pane_, graph_split_sash_);
-        root->Add(splitter_, 1, wxEXPAND | wxALL, 12);
+        root->Add(splitter_, 1, wxEXPAND | wxALL, 8);
         content_panel_->SetSizer(root);
+    }
 
-        auto *frame_root = new wxBoxSizer(wxVERTICAL);
-        frame_root->Add(content_panel_, 1, wxEXPAND);
-        SetSizer(frame_root);
+    /* content_panel_ only between toolbar bottom and status-bar top. */
+    wxRect ContentAreaRect() const {
+        int cw = 0;
+        int ch = 0;
+        GetClientSize(&cw, &ch);
+
+        int top = 0;
+        int bottom = ch;
+
+        if (toolbar_ && toolbar_->IsShown()) {
+            const wxRect tb = toolbar_->GetRect();
+            top = std::max(0, tb.GetBottom() + 1);
+        }
+
+        if (wxStatusBar *sb = GetStatusBar()) {
+            if (sb->IsShown()) {
+                const int sb_h = std::max(sb->GetSize().GetHeight(), sb->GetBestSize().GetHeight());
+                int cand = ch - sb_h;
+                const int sb_y = sb->GetPosition().y;
+                if (sb_y > top && sb_y <= ch) {
+                    cand = std::min(cand, sb_y);
+                }
+                bottom = std::min(bottom, cand);
+            }
+        }
+
+        if (bottom < top) {
+            bottom = top;
+        }
+        return wxRect(0, top, std::max(0, cw), bottom - top);
     }
 
     void RelayoutMainPanes() {
-        if (content_panel_) {
-            content_panel_->Layout();
+        if (!content_panel_) {
+            return;
         }
+        const wxRect area = ContentAreaRect();
+        if (area.GetWidth() <= 0 || area.GetHeight() <= 0) {
+            return;
+        }
+        if (content_panel_->GetRect() != area) {
+            content_panel_->SetSize(area);
+        }
+        /* Keep chrome above content. */
+        if (toolbar_) {
+            toolbar_->Raise();
+        }
+        if (wxStatusBar *sb = GetStatusBar()) {
+            sb->Raise();
+        }
+        content_panel_->Layout();
         if (graph_pane_) {
             graph_pane_->Layout();
         }
@@ -588,18 +633,21 @@ private:
             if (splitter_->IsSplit()) {
                 const int client_h = splitter_->GetClientSize().y;
                 const int min_pane = splitter_->GetMinimumPaneSize();
+                int sash = splitter_->GetSashPosition();
                 const int max_sash = std::max(min_pane, client_h - min_pane - 4);
-                if (splitter_->GetSashPosition() > max_sash) {
-                    graph_split_sash_ = max_sash;
-                    splitter_->SetSashPosition(max_sash);
+                if (sash < min_pane) {
+                    sash = min_pane;
+                }
+                if (sash > max_sash) {
+                    sash = max_sash;
+                }
+                if (sash != splitter_->GetSashPosition()) {
+                    graph_split_sash_ = sash;
+                    splitter_->SetSashPosition(sash);
                 }
             }
         }
-        if (GetSizer()) {
-            GetSizer()->Layout();
-        }
-        Layout();
-        if (graph_) {
+        if (graph_ && graph_->IsShown()) {
             graph_->SendSizeEvent();
         }
     }
@@ -607,6 +655,12 @@ private:
     void OnFrameSize(wxSizeEvent &evt) {
         evt.Skip();
         RelayoutMainPanes();
+        if (toolbar_) {
+            toolbar_->Refresh(true);
+        }
+        if (wxStatusBar *sb = GetStatusBar()) {
+            sb->Refresh(true);
+        }
     }
 
     void append_log(int level, const std::string &msg) {
@@ -719,13 +773,19 @@ private:
             graph_->SyncNodeStates();
         }
         graph_->SetCurrentIndex(current);
+        std::string step_id;
         if (current < engine_->active_steps().size()) {
-            const std::string step_id = engine_->active_steps()[current];
+            step_id = engine_->active_steps()[current];
+        }
+        const bool current_changed = step_id != last_current_step_id_;
+        last_current_step_id_ = step_id;
+        /* Auto-scroll only when the running step changes (Back/Next/Start/…),
+         * and ScrollToStepId itself no-ops if the node is already in view. */
+        if (current_changed && !step_id.empty()) {
             CallAfter([this, step_id]() {
                 if (!graph_) {
                     return;
                 }
-                RelayoutMainPanes();
                 graph_->ScrollToStepId(step_id, false);
             });
         }
@@ -742,7 +802,9 @@ private:
         preview_step_id_ = step_id;
 
         role_icon_->SetBitmap(role_icon(step, wxSize(28, 28)));
-        role_label_->SetLabel(wxString::FromUTF8(step.role_label()));
+        role_label_->SetLabel(wxString::Format(wxString::FromUTF8("%s  ·  %s"),
+                                               wxString::FromUTF8(step_id),
+                                               wxString::FromUTF8(step.role_label())));
         title_label_->SetLabel(wxString::FromUTF8(step.display_title()));
         desc_label_->SetLabel(wxString::FromUTF8(step.description));
         status_label_->SetLabel(status_text(step));
@@ -760,8 +822,11 @@ private:
             return;
         }
 
+        const std::string step_id = engine_->current_step_id();
         role_icon_->SetBitmap(role_icon(*step, wxSize(28, 28)));
-        role_label_->SetLabel(wxString::FromUTF8(step->role_label()));
+        role_label_->SetLabel(wxString::Format(wxString::FromUTF8("%s  ·  %s"),
+                                               wxString::FromUTF8(step_id),
+                                               wxString::FromUTF8(step->role_label())));
         title_label_->SetLabel(wxString::FromUTF8(step->display_title()));
         desc_label_->SetLabel(wxString::FromUTF8(step->description));
         status_label_->SetLabel(status_text(*step));
@@ -869,6 +934,9 @@ private:
         }
         if (visible) {
             graph_pane_->Show();
+            if (graph_) {
+                graph_->Show();
+            }
             if (!splitter_->IsSplit()) {
                 splitter_->SplitHorizontally(graph_pane_, main_pane_, graph_split_sash_);
             }
@@ -878,11 +946,17 @@ private:
                 splitter_->Unsplit(graph_pane_);
             }
             graph_pane_->Hide();
+            if (graph_) {
+                graph_->Hide();
+            }
         }
         RelayoutMainPanes();
-        if (graph_ && engine_->current_index() < engine_->active_steps().size()) {
-            graph_->ScrollToStepId(engine_->active_steps()[engine_->current_index()], false);
+        if (toolbar_) {
+            toolbar_->Raise();
+            toolbar_->Refresh(true);
         }
+        Refresh(true);
+        Update();
     }
 
     void SetLoggingVisible(bool visible) {
@@ -944,9 +1018,6 @@ private:
             graph_pane_->Hide();
         }
         RelayoutMainPanes();
-        if (graph_ && engine_->current_index() < engine_->active_steps().size()) {
-            graph_->ScrollToStepId(engine_->active_steps()[engine_->current_index()], false);
-        }
     }
 
     void DetachLogPane() {

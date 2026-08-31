@@ -53,6 +53,7 @@ public:
     void SetCurrentIndex(size_t index);
     void ScrollToCurrentNode(bool animated = true);
     void ScrollToStepId(const std::string &step_id, bool animated = true);
+    bool IsNodeInViewport(const SopGraphNode &node) const;
     void SetSelectedStep(const std::string &step_id);
     void SetStepSelectHandler(StepSelectFn fn) { step_select_ = std::move(fn); }
     void SetMoveToHandler(StepMoveFn fn) { move_to_fn_ = std::move(fn); }
