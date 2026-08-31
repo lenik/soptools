@@ -15,11 +15,12 @@ sop_model_test = executable(
         '../src/sop_model.cpp',
     ],
     include_directories: include_directories('../src'),
+    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'figma.sop')],
     install: false,
 )
 
 test('stream_copy', test_exe)
-test('sop_model', sop_model_test)
+test('sop_model', sop_model_test, workdir: meson.current_build_dir())
 
 sop_project_test = executable(
     'sop_project_test',

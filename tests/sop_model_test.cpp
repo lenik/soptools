@@ -7,7 +7,14 @@
 #include "sop_model.hpp"
 
 #include <cstdio>
+#include <filesystem>
 #include <string>
+
+#ifndef TEST_SOP_DIR
+#define TEST_SOP_DIR "../figma.sop"
+#endif
+
+namespace fs = std::filesystem;
 
 static int failures;
 
@@ -26,9 +33,15 @@ static void expect_eq_int(const char *name, int got, int want) {
 }
 
 int main(void) {
+    const fs::path sop_dir = fs::path(TEST_SOP_DIR);
+    if (!fs::is_directory(sop_dir)) {
+        fprintf(stderr, "FAIL missing figma.sop at %s\n", TEST_SOP_DIR);
+        return 1;
+    }
+
     expect_true("humanize create_prd", humanize_name("create_prd") == "Create Prd");
 
-    auto step = parse_sop_file("../figma.sop/000sh.refactor_figma.md");
+    auto step = parse_sop_file((sop_dir / "000sh.refactor_figma.md").string());
     expect_true("parse shell step", step.has_value());
     if (step) {
         expect_eq_int("seq", step->seq, 0);
@@ -41,7 +54,7 @@ int main(void) {
         expect_true("shell not prompt copy", step->is_automatable() && !step->is_prompt_copy());
     }
 
-    auto gpt = parse_sop_file("../figma.sop/020gpt.create_prd.md");
+    auto gpt = parse_sop_file((sop_dir / "020gpt.create_prd.md").string());
     expect_true("parse gpt step", gpt.has_value());
     if (gpt) {
         expect_true("kind ai", gpt->kind == SopStepKind::AiOutput);
@@ -51,7 +64,7 @@ int main(void) {
         expect_true("gpt prompt copy", gpt->is_prompt_copy());
     }
 
-    auto codex = parse_sop_file("../figma.sop/010codex.refactor_web.md");
+    auto codex = parse_sop_file((sop_dir / "010codex.refactor_web.md").string());
     expect_true("parse codex step", codex.has_value());
     if (codex) {
         expect_true("codex user", codex->is_user());
@@ -59,7 +72,7 @@ int main(void) {
         expect_true("codex prompt copy", codex->is_prompt_copy());
     }
 
-    SopDefinition def = load_sop_directory("../figma.sop");
+    SopDefinition def = load_sop_directory(sop_dir.string());
     expect_true("load sop dir", !def.steps.empty());
     expect_true("branch at 020", def.branch_groups[20].step_ids.size() >= 2);
 

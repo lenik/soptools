@@ -104,7 +104,7 @@ debian/*.debhelper.log
 debian/*.substvars
 debian/.debhelper
 debian/build/
-debian/zephyr/
+debian/soptools/
 debian/files
 depcomp
 dist/

@@ -236,7 +236,7 @@ endforeach
 meson.add_install_script(
   'sh', '-euc', '''
     build="@0@"
-    prefix="${MESON_INSTALL_DESTDIR_PREFIX}${MESON_INSTALL_PREFIX}"
+    prefix="${MESON_INSTALL_DESTDIR_PREFIX:-${DESTDIR:-}${MESON_INSTALL_PREFIX:-}}"
     for loc in @1@; do
       src="$build/${loc}-soptools.1"
       [ -f "$src" ] || continue
