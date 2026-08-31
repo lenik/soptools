@@ -8,6 +8,7 @@
 #include <wx/textctrl.h>
 #include <wx/frame.h>
 #include <chrono>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,7 @@ public:
     void Detach();
     void AttachTo(wxWindow *parent, wxSizer *sizer);
     bool IsDetached() const { return detached_frame_ != nullptr; }
+    void SetAttachHandler(std::function<void()> fn) { attach_fn_ = std::move(fn); }
     void SetLoggingVisible(bool visible);
     bool IsLoggingVisible() const;
 
@@ -36,6 +38,7 @@ private:
     wxFrame *detached_frame_ = nullptr;
     wxSizer *host_sizer_ = nullptr;
     wxWindow *host_parent_ = nullptr;
+    std::function<void()> attach_fn_;
     std::vector<SopLogEntry> entries_;
 
     void RefreshList();

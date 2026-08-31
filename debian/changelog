@@ -7,9 +7,12 @@ soptools (0.0.2) unstable; urgency=medium
     .config/sopwin/<sopname>/<id>.log.
   * sopwin GUI: improve workflow graph layout, edge routing, arrows, and
     auto-scroll to the current step.
-  * sopwin GUI: View menu adds Toggle Graph (F2) and Toggle Loggings (Ctrl+L).
-  * sopwin GUI: replace Detach menu items with pane-header detach icons for
-    Graph and Loggings; closing a detached window re-attaches the pane.
+  * sopwin GUI: fix graph pane hide/detach unsplitting the main window by mistake.
+  * sopwin GUI: fix Toggle Graph (F2) and Toggle Loggings (Ctrl+L) accelerator handling.
+  * sopwin GUI: pane detach icons toggle attach/detach state; detached log window
+    includes attach control.
+  * sopwin GUI: align keyboard shortcuts dialog with monospace layout.
+  * sopwin GUI: improve graph edge routing, auto-scroll, and zoom-safe node text.
   * sop_model: use zero-padded unique step ids (for example 000sh, 020gpt).
 
  -- Lenik <pub.lenik@bodz.net>  Mon, 31 Aug 2026 21:30:00 +0800

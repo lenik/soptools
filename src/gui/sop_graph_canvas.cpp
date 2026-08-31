@@ -168,28 +168,44 @@ constexpr double kArrowHeadActive = 16.0;
 constexpr double kArrowHeadFork = 11.0;
 constexpr double kArrowMid = 8.0;
 
-std::vector<wxPoint> RouteSpine(const wxPoint &from, const wxPoint &to, int from_row, int to_row, int lane_y) {
+std::vector<wxPoint> RouteSpine(const wxPoint &from, const wxPoint &to, int from_row, int to_row, int gutter_y) {
     std::vector<wxPoint> pts;
     pts.push_back(from);
-    if (from_row == to_row) {
-        if (std::abs(from.y - to.y) <= 2) {
-            pts.push_back(to);
-            return pts;
-        }
-        const int bend_x = (to.x < from.x - 4) ? to.x : from.x + kEdgeOutGap + 4;
-        pts.emplace_back(bend_x, from.y);
-        pts.emplace_back(bend_x, to.y);
+    if (std::abs(from.y - to.y) <= 2 && to.x >= from.x - 4) {
         pts.push_back(to);
         return pts;
     }
 
-    const int exit_x = from.x + kEdgeOutGap + 4;
-    const int approach_x = to.x;
-    pts.emplace_back(exit_x, from.y);
-    pts.emplace_back(exit_x, lane_y);
-    pts.emplace_back(approach_x, lane_y);
-    pts.emplace_back(approach_x, to.y);
+    const int out_x = from.x + kEdgeOutGap + 4;
+    if (from_row == to_row) {
+        const int bend_x = (to.x < from.x - 4) ? to.x : out_x;
+        if (bend_x != from.x || from.y != to.y) {
+            pts.emplace_back(bend_x, from.y);
+            pts.emplace_back(bend_x, to.y);
+        }
+        pts.push_back(to);
+        return pts;
+    }
+
+    pts.emplace_back(out_x, from.y);
+    pts.emplace_back(out_x, gutter_y);
+    pts.emplace_back(to.x, gutter_y);
+    if (to.y != gutter_y) {
+        pts.emplace_back(to.x, to.y);
+    }
     pts.push_back(to);
+    return pts;
+}
+
+std::vector<wxPoint> RouteForkSpoke(const wxPoint &hub, const wxPoint &node_in, int branch_y) {
+    std::vector<wxPoint> pts;
+    pts.push_back(hub);
+    if (hub.y != branch_y) {
+        pts.emplace_back(hub.x, branch_y);
+    }
+    if (pts.back().x != node_in.x || pts.back().y != node_in.y) {
+        pts.push_back(node_in);
+    }
     return pts;
 }
 
@@ -333,8 +349,8 @@ void SopGraphCanvas::ScrollToCurrentNode(bool animated) {
         CallAfter([this, animated]() { ScrollToCurrentNode(animated); });
         return;
     }
-    const wxPoint target = PanToShowNode(*current, true);
     user_panned_ = false;
+    const wxPoint target = PanToShowNode(*current, false);
     if (animated && (target.x != pan_.x || target.y != pan_.y)) {
         StartPanAnimation(target);
     } else if (target.x != pan_.x || target.y != pan_.y) {
@@ -604,11 +620,11 @@ void SopGraphCanvas::LayoutGraph() {
         if (count > 1) {
             const int hub_x = col.x - kForkHubGap;
             const int spine_y = have_active ? active_center.y : center_y;
-            const int lane_y = row_y[prev_wrap_row] + row_block_h[prev_wrap_row] + kRowGap / 2;
+            const int gutter_y = row_y[prev_wrap_row] + row_block_h[prev_wrap_row] + kRowGap / 2;
 
             if (have_prev) {
                 AppendEdge(edges_,
-                           RouteSpine(prev_out, wxPoint(hub_x, spine_y), prev_wrap_row, col.wrap_row, lane_y),
+                           RouteSpine(prev_out, wxPoint(hub_x, spine_y), prev_wrap_row, col.wrap_row, gutter_y),
                            true, false);
             }
 
@@ -616,15 +632,15 @@ void SopGraphCanvas::LayoutGraph() {
                 if (!bn.included) {
                     continue;
                 }
-                std::vector<wxPoint> spoke = {wxPoint(hub_x, spine_y), wxPoint(bn.node_in.x, bn.center.y), bn.node_in};
-                AppendEdge(edges_, spoke, bn.on_active && bn.included, true);
+                AppendEdge(edges_,
+                           RouteForkSpoke(wxPoint(hub_x, spine_y), bn.node_in, bn.center.y),
+                           bn.on_active && bn.included, true);
             }
         } else if (have_prev && have_active) {
-            const int lane_y = row_y[prev_wrap_row] + row_block_h[prev_wrap_row] + kRowGap / 2;
+            const int gutter_y = row_y[prev_wrap_row] + row_block_h[prev_wrap_row] + kRowGap / 2;
+            const wxPoint node_in(active_center.x - active_w / 2 - kEdgeInGap, active_center.y);
             AppendEdge(edges_,
-                       RouteSpine(prev_out,
-                                  wxPoint(active_center.x - active_w / 2 - kEdgeInGap, active_center.y),
-                                  prev_wrap_row, col.wrap_row, lane_y),
+                       RouteSpine(prev_out, node_in, prev_wrap_row, col.wrap_row, gutter_y),
                        true, false);
         }
 
@@ -702,10 +718,13 @@ void SopGraphCanvas::DrawNode(wxGraphicsContext *gc, const SopGraphNode &node) {
     gc->DrawBitmap(icon, r.x + 8, r.y + kPadY, 18, 18);
 
     wxFont font = NodeFont(GetFont());
+    font.SetPointSize(std::max(6, static_cast<int>(std::lround(font.GetPointSize() / zoom_))));
     if (st.bold) {
         font.MakeBold();
     }
     gc->SetFont(font, st.text);
+
+    gc->Clip(r.x + 1.0, r.y + 1.0, r.width - 2.0, r.height - 2.0);
 
     wxArrayString lines = wxSplit(node.title_text, '\n');
     double line_h = 0;
@@ -729,6 +748,7 @@ void SopGraphCanvas::DrawNode(wxGraphicsContext *gc, const SopGraphNode &node) {
     if (node.show_error) {
         DrawErrorMark(gc, r.x + r.width - kStatusW + 7, r.y + kPadY);
     }
+    gc->ResetClip();
 }
 
 void SopGraphCanvas::DrawEdge(wxGraphicsContext *gc, const SopGraphEdge &edge) const {
@@ -761,7 +781,7 @@ void SopGraphCanvas::DrawEdge(wxGraphicsContext *gc, const SopGraphEdge &edge) c
         const double uy = dy / len;
         const bool terminal = i + 1 == edge.points.size();
 
-        if (len >= kLongSegScreen) {
+        if (len >= kLongSegScreen && terminal) {
             for (double d = kMidArrowScreen; d < len - kMidArrowScreen * 0.6; d += kMidArrowScreen) {
                 DrawArrowHead(gc, ax + ux * d, ay + uy * d, ux, uy, kArrowMid, col);
             }
@@ -802,7 +822,6 @@ void SopGraphCanvas::OnSize(wxSizeEvent &evt) {
     }
     RelayoutIfNeeded();
     if (!user_panned_) {
-        CenterPan();
         ScrollToCurrentNode(false);
     }
     Refresh(false);

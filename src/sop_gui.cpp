@@ -198,27 +198,42 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
     return wxString::FromUTF8("Ready");
 }
 
-wxBitmapButton *MakeDetachButton(wxWindow *parent, const wxString &tooltip,
-                                 const std::function<void()> &on_click) {
-    auto *btn =
-        new wxBitmapButton(parent, wxID_ANY,
-                           wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON, wxSize(16, 16)),
-                           wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+wxBitmapButton *MakeDetachButton(wxWindow *parent, bool detached) {
+    const wxArtID art = detached ? wxART_UNDO : wxART_NEW;
+    const wxString tip = detached ? wxString::FromUTF8("Attach to main window")
+                                  : wxString::FromUTF8("Detach to separate window");
+    auto *btn = new wxBitmapButton(parent, wxID_ANY,
+                                   wxArtProvider::GetBitmap(art, wxART_BUTTON, wxSize(16, 16)),
+                                   wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
     btn->SetBackgroundColour(parent->GetBackgroundColour());
-    btn->SetToolTip(tooltip);
-    btn->Bind(wxEVT_BUTTON, [on_click](wxCommandEvent &) { on_click(); });
+    btn->SetToolTip(tip);
     return btn;
 }
 
-wxPanel *MakePaneHeader(wxWindow *parent, const wxString &detach_tooltip,
-                        const std::function<void()> &on_detach) {
+void UpdateDetachButton(wxBitmapButton *btn, wxWindow *parent, bool detached) {
+    if (!btn) {
+        return;
+    }
+    const wxArtID art = detached ? wxART_UNDO : wxART_NEW;
+    btn->SetBitmap(wxArtProvider::GetBitmap(art, wxART_BUTTON, wxSize(16, 16)));
+    btn->SetToolTip(detached ? wxString::FromUTF8("Attach to main window")
+                             : wxString::FromUTF8("Detach to separate window"));
+    btn->SetBackgroundColour(parent->GetBackgroundColour());
+}
+
+wxPanel *MakePaneHeader(wxWindow *parent, wxBitmapButton **button_out,
+                        const std::function<void()> &on_click) {
     auto *header = new wxPanel(parent);
     header->SetBackgroundColour(parent->GetBackgroundColour());
     auto *row = new wxBoxSizer(wxHORIZONTAL);
     row->AddStretchSpacer(1);
-    row->Add(MakeDetachButton(header, detach_tooltip, on_detach), 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxRIGHT,
-             4);
+    wxBitmapButton *btn = MakeDetachButton(header, false);
+    btn->Bind(wxEVT_BUTTON, [on_click](wxCommandEvent &) { on_click(); });
+    row->Add(btn, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxRIGHT, 4);
     header->SetSizer(row);
+    if (button_out) {
+        *button_out = btn;
+    }
     return header;
 }
 
@@ -280,6 +295,8 @@ private:
     wxPanel *graph_pane_ = nullptr;
     wxPanel *main_pane_ = nullptr;
     wxFrame *graph_detached_frame_ = nullptr;
+    wxBitmapButton *graph_detach_btn_ = nullptr;
+    wxBitmapButton *log_detach_btn_ = nullptr;
     int graph_split_sash_ = 220;
     wxGauge *progress_gauge_ = nullptr;
     wxStaticText *progress_label_ = nullptr;
@@ -413,8 +430,8 @@ private:
         graph_pane_ = new wxPanel(splitter_);
         graph_pane_->SetBackgroundColour(ios_bg());
         auto *graph_sizer = new wxBoxSizer(wxVERTICAL);
-        graph_sizer->Add(MakePaneHeader(graph_pane_, wxString::FromUTF8("Detach graph to separate window"),
-                                        [this]() { DetachGraphPane(); }),
+        graph_sizer->Add(MakePaneHeader(graph_pane_, &graph_detach_btn_,
+                                        [this]() { ToggleGraphDetach(); }),
                          0, wxEXPAND);
         graph_ = new SopGraphCanvas(graph_pane_, engine_);
         graph_sizer->Add(graph_, 1, wxEXPAND);
@@ -488,10 +505,10 @@ private:
         log_host_ = new wxPanel(main_pane_);
         log_host_->SetBackgroundColour(ios_bg());
         log_host_sizer_ = new wxBoxSizer(wxVERTICAL);
-        log_host_sizer_->Add(MakePaneHeader(log_host_, wxString::FromUTF8("Detach loggings to separate window"),
-                                            [this]() { DetachLogPane(); }),
-                             0, wxEXPAND);
+        log_host_sizer_->Add(MakePaneHeader(log_host_, &log_detach_btn_, [this]() { ToggleLogDetach(); }), 0,
+                             wxEXPAND);
         log_view_ = new SopLogView(log_host_);
+        log_view_->SetAttachHandler([this]() { ReattachLogPane(); });
         log_host_sizer_->Add(log_view_, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 12);
         log_host_->SetSizer(log_host_sizer_);
         log_host_->Hide();
@@ -742,7 +759,7 @@ private:
         } else {
             if (splitter_->IsSplit()) {
                 graph_split_sash_ = splitter_->GetSashPosition();
-                splitter_->Unsplit(main_pane_);
+                splitter_->Unsplit(graph_pane_);
             }
             graph_pane_->Hide();
         }
@@ -763,16 +780,20 @@ private:
         Layout();
     }
 
-    void DetachGraphPane() {
+    void ToggleGraphDetach() {
         if (graph_detached_frame_) {
-            graph_detached_frame_->Raise();
+            AttachGraphPane();
             return;
         }
-        if (!splitter_ || !splitter_->IsSplit()) {
+        DetachGraphPane();
+    }
+
+    void DetachGraphPane() {
+        if (graph_detached_frame_ || !splitter_ || !splitter_->IsSplit()) {
             return;
         }
         graph_split_sash_ = splitter_->GetSashPosition();
-        splitter_->Unsplit(main_pane_);
+        splitter_->Unsplit(graph_pane_);
 
         graph_detached_frame_ =
             new wxFrame(nullptr, wxID_ANY, wxString::FromUTF8("sopwin — Graph"), wxDefaultPosition, wxSize(900, 520));
@@ -783,6 +804,7 @@ private:
         graph_detached_frame_->SetSizer(frame_sizer);
         graph_detached_frame_->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnGraphDetachedClose, this);
         graph_detached_frame_->Show(true);
+        UpdateDetachButton(graph_detach_btn_, graph_pane_, true);
         Layout();
     }
 
@@ -795,27 +817,46 @@ private:
         graph_detached_frame_->Hide();
         graph_detached_frame_->Destroy();
         graph_detached_frame_ = nullptr;
+        UpdateDetachButton(graph_detach_btn_, graph_pane_, false);
         if (show_graph_) {
-            splitter_->SplitHorizontally(graph_pane_, main_pane_, graph_split_sash_);
             graph_pane_->Show();
+            splitter_->SplitHorizontally(graph_pane_, main_pane_, graph_split_sash_);
         } else {
-            splitter_->Unsplit(main_pane_);
             graph_pane_->Hide();
         }
         Layout();
+        if (graph_) {
+            graph_->ScrollToCurrentNode(false);
+        }
     }
 
     void DetachLogPane() {
         SetLoggingVisible(true);
         if (log_view_->IsDetached()) {
-            if (auto *frame = wxDynamicCast(log_view_->GetParent(), wxFrame)) {
-                frame->Raise();
-            }
             return;
         }
         log_view_->Detach();
         log_host_->Hide();
+        UpdateDetachButton(log_detach_btn_, log_host_, true);
         Layout();
+    }
+
+    void ReattachLogPane() {
+        if (!log_view_->IsDetached()) {
+            return;
+        }
+        log_view_->AttachTo(log_host_, log_host_sizer_);
+        log_host_->Show(show_log_);
+        UpdateDetachButton(log_detach_btn_, log_host_, false);
+        Layout();
+    }
+
+    void ToggleLogDetach() {
+        if (log_view_->IsDetached()) {
+            ReattachLogPane();
+        } else {
+            DetachLogPane();
+        }
     }
 
     void RefreshAll() {
@@ -891,9 +932,9 @@ private:
         AttachGraphPane();
     }
 
-    void OnToggleGraph(wxCommandEvent &evt) { SetGraphVisible(evt.IsChecked()); }
+    void OnToggleGraph(wxCommandEvent &) { SetGraphVisible(!show_graph_); }
 
-    void OnToggleLog(wxCommandEvent &evt) { SetLoggingVisible(evt.IsChecked()); }
+    void OnToggleLog(wxCommandEvent &) { SetLoggingVisible(!show_log_); }
 
     void OnEngineUpdate() {
         engine_->poll_completion();
@@ -969,24 +1010,38 @@ private:
     }
 
     void OnHelpShortcuts(wxCommandEvent &) {
-        const wxString text = wxString::FromUTF8(
+        wxDialog dlg(this, wxID_ANY, wxString::FromUTF8("Keyboard Shortcuts"), wxDefaultPosition, wxSize(460, 360));
+        auto *txt = new wxTextCtrl(&dlg, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize,
+                                   wxTE_MULTILINE | wxTE_READONLY | wxBORDER_NONE);
+        wxFont mono = txt->GetFont();
+        mono.SetFamily(wxFONTFAMILY_TELETYPE);
+        txt->SetFont(mono);
+        txt->SetValue(wxString::FromUTF8(
             "File\n"
-            "  Ctrl+O   Open Project\n"
-            "  Ctrl+S   Save project configuration\n"
-            "  Ctrl+Q   Quit\n\n"
+            "  Ctrl+O         Open Project\n"
+            "  Ctrl+S         Save project configuration\n"
+            "  Ctrl+Q         Quit\n"
+            "\n"
             "Procedure\n"
-            "  Ctrl+U   Load SOP\n"
-            "  PgUp     Back\n"
-            "  PgDn     Next\n"
-            "  F5       Start / Resume auto-run\n"
-            "  F8       Pause auto-run\n"
-            "  Ctrl+Enter  Execute / Copy current step\n\n"
-            "Help\n"
-            "  F1       Keyboard Shortcuts\n\n"
+            "  Ctrl+U         Load SOP\n"
+            "  PgUp           Back\n"
+            "  PgDn           Next\n"
+            "  F5             Start / Resume auto-run\n"
+            "  F8             Pause auto-run\n"
+            "  Ctrl+Enter     Execute / Copy current step\n"
+            "\n"
             "View\n"
-            "  F2       Toggle Graph\n"
-            "  Ctrl+L   Toggle Loggings");
-        wxMessageBox(text, wxString::FromUTF8("Keyboard Shortcuts"), wxOK | wxICON_INFORMATION);
+            "  F2             Toggle Graph\n"
+            "  Ctrl+L         Toggle Loggings\n"
+            "\n"
+            "Help\n"
+            "  F1             Keyboard Shortcuts\n"));
+        auto *sizer = new wxBoxSizer(wxVERTICAL);
+        sizer->Add(txt, 1, wxEXPAND | wxALL, 12);
+        auto *close_btn = new wxButton(&dlg, wxID_OK, wxString::FromUTF8("Close"));
+        sizer->Add(close_btn, 0, wxALIGN_CENTER | wxBOTTOM, 12);
+        dlg.SetSizer(sizer);
+        dlg.ShowModal();
     }
 
     void OnHelpLicense(wxCommandEvent &) {

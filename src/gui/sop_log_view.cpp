@@ -8,9 +8,10 @@
 
 #include <wx/sizer.h>
 #include <wx/listctrl.h>
-#include <wx/button.h>
 #include <wx/stattext.h>
 #include <wx/frame.h>
+#include <wx/bmpbuttn.h>
+#include <wx/artprov.h>
 #include <iomanip>
 #include <sstream>
 
@@ -150,9 +151,27 @@ void SopLogView::Detach() {
     Hide();
 
     detached_frame_ = new wxFrame(nullptr, wxID_ANY, wxString::FromUTF8("sopwin — Loggings"),
-                                    wxDefaultPosition, wxSize(760, 420));
+                                  wxDefaultPosition, wxSize(760, 420));
     detached_frame_->SetBackgroundColour(ios_card());
     auto *frame_sizer = new wxBoxSizer(wxVERTICAL);
+    auto *header = new wxPanel(detached_frame_);
+    header->SetBackgroundColour(ios_card());
+    auto *header_row = new wxBoxSizer(wxHORIZONTAL);
+    header_row->AddStretchSpacer(1);
+    auto *attach_btn =
+        new wxBitmapButton(header, wxID_ANY,
+                           wxArtProvider::GetBitmap(wxART_UNDO, wxART_BUTTON, wxSize(16, 16)),
+                           wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+    attach_btn->SetBackgroundColour(ios_card());
+    attach_btn->SetToolTip(wxString::FromUTF8("Attach to main window"));
+    attach_btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent &) {
+        if (attach_fn_) {
+            attach_fn_();
+        }
+    });
+    header_row->Add(attach_btn, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxRIGHT, 4);
+    header->SetSizer(header_row);
+    frame_sizer->Add(header, 0, wxEXPAND);
     Reparent(detached_frame_);
     frame_sizer->Add(this, 1, wxEXPAND);
     detached_frame_->SetSizer(frame_sizer);
@@ -182,6 +201,10 @@ void SopLogView::AttachTo(wxWindow *parent, wxSizer *sizer) {
 
 void SopLogView::OnDetachClose(wxCloseEvent &evt) {
     evt.Veto();
+    if (attach_fn_) {
+        attach_fn_();
+        return;
+    }
     if (host_parent_ && host_sizer_) {
         AttachTo(host_parent_, host_sizer_);
     } else {
