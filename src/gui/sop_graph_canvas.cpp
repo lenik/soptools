@@ -15,25 +15,27 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <set>
 
 namespace {
 
 constexpr int kColGap = 18;
-constexpr int kBranchGap = 10;
+constexpr int kBranchGap = 14;
+/* Orthogonal bends need stub + turn; branch columns use 2x horizontal gap. */
+constexpr int kBranchColGap = kColGap * 2;
 constexpr int kMarginX = 48;
 constexpr int kMarginY = 36;
 constexpr int kRowGap = 28;
 constexpr int kHitPad = 4;
-constexpr int kForkHubGap = 24;
 constexpr int kMinNodeW = 88;
 constexpr int kMaxNodeW = 132;
 constexpr int kMinNodeH = 40;
-constexpr int kEdgeOutGap = 12;
-constexpr int kEdgeInGap = 6;
 constexpr int kTextLeft = 30;
 constexpr int kPadX = 8;
 constexpr int kPadY = 8;
 constexpr int kStatusW = 16;
+constexpr int kRouteStub = 10;
+constexpr int kRouteCornerGraph = 8;
 
 const wxString kCheckMark = wxString::FromUTF8("\u2714");
 
@@ -160,52 +162,44 @@ void DrawErrorMark(wxGraphicsContext *gc, double x, double y) {
     gc->DrawText("!", x - 2.5, y + 1.0);
 }
 
-constexpr int kLongSegScreen = 72;
-constexpr int kMidArrowScreen = 56;
 constexpr int kEdgePenActive = 2;
 constexpr int kEdgePenFork = 1;
-constexpr double kArrowHeadActive = 16.0;
-constexpr double kArrowHeadFork = 11.0;
-constexpr double kArrowMid = 8.0;
+constexpr double kArrowHeadActive = 10.0;
 
-std::vector<wxPoint> RouteSpine(const wxPoint &from, const wxPoint &to, int from_row, int to_row, int gutter_y) {
-    std::vector<wxPoint> pts;
-    pts.push_back(from);
-    if (std::abs(from.y - to.y) <= 2 && to.x >= from.x - 4) {
-        pts.push_back(to);
-        return pts;
-    }
-
-    const int out_x = from.x + kEdgeOutGap + 4;
-    if (from_row == to_row) {
-        const int bend_x = (to.x < from.x - 4) ? to.x : out_x;
-        if (bend_x != from.x || from.y != to.y) {
-            pts.emplace_back(bend_x, from.y);
-            pts.emplace_back(bend_x, to.y);
-        }
-        pts.push_back(to);
-        return pts;
-    }
-
-    pts.emplace_back(out_x, from.y);
-    pts.emplace_back(out_x, gutter_y);
-    pts.emplace_back(to.x, gutter_y);
-    if (to.y != gutter_y) {
-        pts.emplace_back(to.x, to.y);
-    }
-    pts.push_back(to);
-    return pts;
+wxPoint NodeLeftPort(const wxPoint &pos, const wxSize &size) {
+    return wxPoint(pos.x, pos.y + size.y / 2);
 }
 
-std::vector<wxPoint> RouteForkSpoke(const wxPoint &hub, const wxPoint &node_in, int branch_y) {
+wxPoint NodeRightPort(const wxPoint &pos, const wxSize &size) {
+    return wxPoint(pos.x + size.x, pos.y + size.y / 2);
+}
+
+void DedupePoints(std::vector<wxPoint> &pts) {
+    std::vector<wxPoint> out;
+    for (const wxPoint &p : pts) {
+        if (out.empty() || out.back().x != p.x || out.back().y != p.y) {
+            out.push_back(p);
+        }
+    }
+    pts.swap(out);
+}
+
+// Connect right-mid of source to left-mid of destination.
+std::vector<wxPoint> RouteBetweenPorts(const wxPoint &from_right, const wxPoint &to_left) {
     std::vector<wxPoint> pts;
-    pts.push_back(hub);
-    if (hub.y != branch_y) {
-        pts.emplace_back(hub.x, branch_y);
+    pts.push_back(from_right);
+
+    if (from_right.y == to_left.y) {
+        pts.push_back(to_left);
+        DedupePoints(pts);
+        return pts;
     }
-    if (pts.back().x != node_in.x || pts.back().y != node_in.y) {
-        pts.push_back(node_in);
-    }
+
+    const int x_stub = from_right.x + kRouteStub;
+    pts.emplace_back(x_stub, from_right.y);
+    pts.emplace_back(x_stub, to_left.y);
+    pts.push_back(to_left);
+    DedupePoints(pts);
     return pts;
 }
 
@@ -219,7 +213,7 @@ void DrawArrowHead(wxGraphicsContext *gc, double tip_x, double tip_y, double dir
     const double uy = dir_y / len;
     const double back_x = tip_x - ux * size;
     const double back_y = tip_y - uy * size;
-    const double wing = size * 0.5;
+    const double wing = size * 0.45;
     wxGraphicsPath path = gc->CreatePath();
     path.MoveToPoint(tip_x, tip_y);
     path.AddLineToPoint(back_x - uy * wing, back_y + ux * wing);
@@ -230,8 +224,55 @@ void DrawArrowHead(wxGraphicsContext *gc, double tip_x, double tip_y, double dir
     gc->FillPath(path);
 }
 
+void StrokeRoundedPath(wxGraphicsContext *gc, const std::vector<wxPoint> &pts, double corner_r) {
+    if (pts.size() < 2) {
+        return;
+    }
+    if (pts.size() == 2) {
+        gc->StrokeLine(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
+        return;
+    }
+
+    wxGraphicsPath path = gc->CreatePath();
+    path.MoveToPoint(pts[0].x, pts[0].y);
+
+    for (size_t i = 1; i + 1 < pts.size(); i++) {
+        const wxPoint &prev = pts[i - 1];
+        const wxPoint &corner = pts[i];
+        const wxPoint &next = pts[i + 1];
+
+        const double in_x = corner.x - prev.x;
+        const double in_y = corner.y - prev.y;
+        const double out_x = next.x - corner.x;
+        const double out_y = next.y - corner.y;
+        const double in_len = std::hypot(in_x, in_y);
+        const double out_len = std::hypot(out_x, out_y);
+        if (in_len < 0.001 || out_len < 0.001) {
+            path.AddLineToPoint(corner.x, corner.y);
+            continue;
+        }
+
+        const double r = std::min(corner_r, std::min(in_len, out_len) * 0.45);
+        const double in_ux = in_x / in_len;
+        const double in_uy = in_y / in_len;
+        const double out_ux = out_x / out_len;
+        const double out_uy = out_y / out_len;
+
+        const double start_x = corner.x - in_ux * r;
+        const double start_y = corner.y - in_uy * r;
+        const double end_x = corner.x + out_ux * r;
+        const double end_y = corner.y + out_uy * r;
+
+        path.AddLineToPoint(start_x, start_y);
+        path.AddQuadCurveToPoint(corner.x, corner.y, end_x, end_y);
+    }
+
+    path.AddLineToPoint(pts.back().x, pts.back().y);
+    gc->StrokePath(path);
+}
+
 void AppendEdge(std::vector<SopGraphEdge> &edges, const std::vector<wxPoint> &pts, bool on_active,
-                bool is_fork) {
+                bool is_fork, bool show_arrow = false) {
     if (pts.size() < 2) {
         return;
     }
@@ -239,7 +280,51 @@ void AppendEdge(std::vector<SopGraphEdge> &edges, const std::vector<wxPoint> &pt
     edge.points = pts;
     edge.on_active_path = on_active;
     edge.is_fork = is_fork;
+    edge.show_arrow = show_arrow;
     edges.push_back(edge);
+}
+
+std::vector<std::string> BuildPathForBranchChoice(const SopDefinition &def, SopEngine *engine, int seq,
+                                                  const std::string &step_id) {
+    auto branches = engine->active_branches();
+    auto excl = engine->excluded_steps();
+    excl[step_id] = false;
+    const auto git = def.branch_groups.find(seq);
+    if (git != def.branch_groups.end()) {
+        if (git->second.kind == SopBranchKind::Select) {
+            branches[seq] = step_id;
+            for (const std::string &id : git->second.step_ids) {
+                excl[id] = (id != step_id);
+            }
+        }
+    }
+    return build_active_step_order(def, branches, excl);
+}
+
+using StepEdgeKey = std::pair<std::string, std::string>;
+
+void AddPathEdges(std::vector<SopGraphEdge> &edges, const std::map<std::string, const SopGraphNode *> &node_by_id,
+                  const std::vector<std::string> &path, bool on_active, bool show_arrow,
+                  const std::set<StepEdgeKey> *active_segments, std::set<StepEdgeKey> *seen) {
+    for (size_t i = 0; i + 1 < path.size(); i++) {
+        const StepEdgeKey key{path[i], path[i + 1]};
+        if (!on_active && active_segments && active_segments->count(key) > 0) {
+            continue;
+        }
+        if (seen && !seen->insert(key).second) {
+            continue;
+        }
+        const auto it_a = node_by_id.find(path[i]);
+        const auto it_b = node_by_id.find(path[i + 1]);
+        if (it_a == node_by_id.end() || it_b == node_by_id.end()) {
+            continue;
+        }
+        const SopGraphNode *a = it_a->second;
+        const SopGraphNode *b = it_b->second;
+        const wxPoint from = NodeRightPort(a->pos, a->size);
+        const wxPoint to = NodeLeftPort(b->pos, b->size);
+        AppendEdge(edges, RouteBetweenPorts(from, to), on_active, false, show_arrow);
+    }
 }
 
 } /* namespace */
@@ -262,11 +347,12 @@ wxBEGIN_EVENT_TABLE(SopGraphCanvas, wxPanel)
 wxEND_EVENT_TABLE()
 
 SopGraphCanvas::SopGraphCanvas(wxWindow *parent, SopEngine *engine)
-    : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(-1, 200), wxBORDER_NONE),
+    : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(-1, 200), wxBORDER_NONE | wxCLIP_CHILDREN),
       engine_(engine),
       pan_anim_timer_(this) {
     SetBackgroundColour(SopGraphBgColour());
     SetBackgroundStyle(wxBG_STYLE_PAINT);
+    SetDoubleBuffered(true);
     SetMinSize(wxSize(-1, 120));
     SetFocus();
     pan_anim_timer_.Bind(wxEVT_TIMER, &SopGraphCanvas::OnPanAnimTimer, this);
@@ -279,7 +365,7 @@ void SopGraphCanvas::SetCurrentIndex(size_t index) {
         n.is_current = n.on_active_path && n.path_index == index;
         n.selected = false;
     }
-    ScrollToCurrentNode(true);
+    Refresh(false);
 }
 
 wxPoint SopGraphCanvas::PanToShowNode(const SopGraphNode &node, bool center_in_view) const {
@@ -333,29 +419,43 @@ void SopGraphCanvas::FinishPanAnimation() {
     Refresh(false);
 }
 
-void SopGraphCanvas::ScrollToCurrentNode(bool animated) {
-    const SopGraphNode *current = nullptr;
+void SopGraphCanvas::ScrollToStepId(const std::string &step_id, bool animated) {
+    const SopGraphNode *target = nullptr;
     for (const auto &node : nodes_) {
-        if (node.is_current) {
-            current = &node;
+        if (node.step_id == step_id) {
+            target = &node;
             break;
         }
     }
-    if (!current) {
+    if (!target) {
         return;
     }
     const wxSize client = GetClientSize();
     if (client.x < 20 || client.y < 20) {
-        CallAfter([this, animated]() { ScrollToCurrentNode(animated); });
+        CallAfter([this, step_id, animated]() {
+            CallAfter([this, step_id, animated]() { ScrollToStepId(step_id, animated); });
+        });
         return;
     }
     user_panned_ = false;
-    const wxPoint target = PanToShowNode(*current, false);
-    if (animated && (target.x != pan_.x || target.y != pan_.y)) {
-        StartPanAnimation(target);
-    } else if (target.x != pan_.x || target.y != pan_.y) {
-        pan_ = target;
+    if (pan_anim_timer_.IsRunning()) {
+        pan_anim_timer_.Stop();
+    }
+    const wxPoint pan_target = PanToShowNode(*target, true);
+    if (animated) {
+        StartPanAnimation(pan_target);
+    } else {
+        pan_ = pan_target;
         Refresh(false);
+    }
+}
+
+void SopGraphCanvas::ScrollToCurrentNode(bool animated) {
+    for (const auto &node : nodes_) {
+        if (node.is_current) {
+            ScrollToStepId(node.step_id, animated);
+            return;
+        }
     }
 }
 
@@ -426,7 +526,8 @@ int SopGraphCanvas::LayoutColumnsPerRow() const {
     if (client_w <= 0) {
         client_w = 800;
     }
-    const int col_pitch = kMaxNodeW + kColGap;
+    /* Use branch column pitch so wrapping leaves room for bent edges. */
+    const int col_pitch = kMaxNodeW + kBranchColGap;
     const int usable = static_cast<int>(client_w / zoom_) - kMarginX * 2;
     return std::max(1, usable / col_pitch);
 }
@@ -455,11 +556,35 @@ void SopGraphCanvas::CenterPan() {
     pan_.y = (client.y - static_cast<int>(graph_size_.y * zoom_)) / 2;
 }
 
+void SopGraphCanvas::ClampPan() {
+    const wxSize client = GetClientSize();
+    if (client.x < 1 || client.y < 1) {
+        return;
+    }
+
+    const int margin = 8;
+    const int gw = static_cast<int>(graph_size_.x * zoom_);
+    const int gh = static_cast<int>(graph_size_.y * zoom_);
+
+    if (gw + 2 * margin <= client.x) {
+        pan_.x = std::clamp(pan_.x, margin, client.x - gw - margin);
+    } else {
+        pan_.x = std::clamp(pan_.x, client.x - gw - margin, margin);
+    }
+
+    if (gh + 2 * margin <= client.y) {
+        pan_.y = std::clamp(pan_.y, margin, client.y - gh - margin);
+    } else {
+        pan_.y = std::clamp(pan_.y, client.y - gh - margin, margin);
+    }
+}
+
 std::vector<wxPoint> SopGraphCanvas::RouteEdge(const wxPoint &from, const wxPoint &to, int from_row,
                                                int to_row, bool is_fork) const {
+    (void)from_row;
+    (void)to_row;
     (void)is_fork;
-    const int lane_y = from.y + kMinNodeH / 2 + kRowGap / 2;
-    return RouteSpine(from, to, from_row, to_row, lane_y);
+    return RouteBetweenPorts(from, to);
 }
 
 void SopGraphCanvas::LayoutGraph() {
@@ -526,9 +651,14 @@ void SopGraphCanvas::LayoutGraph() {
         std::sort(kv.second.begin(), kv.second.end(),
                   [](const SeqCol *a, const SeqCol *b) { return a->wrap_col < b->wrap_col; });
         int x = kMarginX;
-        for (SeqCol *col : kv.second) {
+        for (size_t i = 0; i < kv.second.size(); i++) {
+            SeqCol *col = kv.second[i];
             col->x = x;
-            x += col->col_w + kColGap;
+            const bool branch_col = col->step_ids.size() > 1;
+            const bool next_branch =
+                i + 1 < kv.second.size() && kv.second[i + 1]->step_ids.size() > 1;
+            const int gap = (branch_col || next_branch) ? kBranchColGap : kColGap;
+            x += col->col_w + gap;
         }
     }
 
@@ -544,15 +674,10 @@ void SopGraphCanvas::LayoutGraph() {
         y_cursor += kv.second + kRowGap;
     }
 
-    wxPoint prev_out;
-    int prev_wrap_row = 0;
-    bool have_prev = false;
-
     for (const SeqCol &col : columns) {
         const int count = static_cast<int>(col.step_ids.size());
         const int base_y = row_y[col.wrap_row];
         const int block_h = row_block_h[col.wrap_row];
-        const int center_y = base_y + block_h / 2;
 
         int stack_h = 0;
         for (const std::string &id : col.step_ids) {
@@ -561,20 +686,7 @@ void SopGraphCanvas::LayoutGraph() {
         if (count > 1) {
             stack_h += (count - 1) * kBranchGap;
         }
-        int y = center_y - stack_h / 2;
-
-        wxPoint active_center;
-        int active_w = 0;
-        bool have_active = false;
-
-        struct BranchNode {
-            wxPoint center;
-            wxPoint node_in;
-            wxPoint node_out;
-            bool on_active = false;
-            bool included = false;
-        };
-        std::vector<BranchNode> branch_nodes;
+        int y = base_y + (block_h - stack_h) / 2;
 
         for (int i = 0; i < count; i++) {
             const std::string &id = col.step_ids[static_cast<size_t>(i)];
@@ -600,56 +712,53 @@ void SopGraphCanvas::LayoutGraph() {
             }
             nodes_.push_back(node);
 
-            BranchNode bn;
-            bn.center = wxPoint(node.pos.x + node.size.x / 2, node.pos.y + node.size.y / 2);
-            bn.node_in = wxPoint(node.pos.x - kEdgeInGap, bn.center.y);
-            bn.node_out = wxPoint(node.pos.x + node.size.x + kEdgeOutGap, bn.center.y);
-            bn.on_active = node.on_active_path;
-            bn.included = node.included;
-            branch_nodes.push_back(bn);
-
-            if (node.on_active_path && node.included) {
-                active_center = bn.center;
-                active_w = node.size.x;
-                have_active = true;
-            }
-
             y += m.size.y + kBranchGap;
         }
+    }
 
-        if (count > 1) {
-            const int hub_x = col.x - kForkHubGap;
-            const int spine_y = have_active ? active_center.y : center_y;
-            const int gutter_y = row_y[prev_wrap_row] + row_block_h[prev_wrap_row] + kRowGap / 2;
+    std::map<std::string, const SopGraphNode *> node_by_id;
+    for (const auto &node : nodes_) {
+        node_by_id[node.step_id] = &node;
+    }
 
-            if (have_prev) {
-                AppendEdge(edges_,
-                           RouteSpine(prev_out, wxPoint(hub_x, spine_y), prev_wrap_row, col.wrap_row, gutter_y),
-                           true, false);
+    std::set<StepEdgeKey> active_segments;
+    for (size_t i = 0; i + 1 < order.size(); i++) {
+        active_segments.insert(StepEdgeKey{order[i], order[i + 1]});
+    }
+
+    std::set<StepEdgeKey> inactive_seen;
+    for (int seq : def.seq_order) {
+        const auto git = def.branch_groups.find(seq);
+        if (git == def.branch_groups.end() || git->second.step_ids.size() <= 1) {
+            continue;
+        }
+        const SopBranchGroup &group = git->second;
+
+        std::set<std::string> active_in_group;
+        for (const std::string &sid : order) {
+            if (def.steps.at(sid).seq == seq) {
+                active_in_group.insert(sid);
             }
-
-            for (const BranchNode &bn : branch_nodes) {
-                if (!bn.included) {
-                    continue;
-                }
-                AppendEdge(edges_,
-                           RouteForkSpoke(wxPoint(hub_x, spine_y), bn.node_in, bn.center.y),
-                           bn.on_active && bn.included, true);
-            }
-        } else if (have_prev && have_active) {
-            const int gutter_y = row_y[prev_wrap_row] + row_block_h[prev_wrap_row] + kRowGap / 2;
-            const wxPoint node_in(active_center.x - active_w / 2 - kEdgeInGap, active_center.y);
-            AppendEdge(edges_,
-                       RouteSpine(prev_out, node_in, prev_wrap_row, col.wrap_row, gutter_y),
-                       true, false);
         }
 
-        if (have_active) {
-            prev_out = wxPoint(active_center.x + active_w / 2 + kEdgeOutGap, active_center.y);
-            prev_wrap_row = col.wrap_row;
-            have_prev = true;
+        const auto bit = engine_->active_branches().find(seq);
+        const std::string select_active =
+            bit != engine_->active_branches().end() ? bit->second : group.step_ids.front();
+
+        for (const std::string &id : group.step_ids) {
+            if (group.kind == SopBranchKind::Select && id == select_active) {
+                continue;
+            }
+            if (group.kind == SopBranchKind::Parallel && active_in_group.count(id) > 0) {
+                continue;
+            }
+            const std::vector<std::string> alt_path = BuildPathForBranchChoice(def, engine_, seq, id);
+            AddPathEdges(edges_, node_by_id, alt_path, false, false, &active_segments, &inactive_seen);
         }
     }
+
+    std::set<StepEdgeKey> active_seen;
+    AddPathEdges(edges_, node_by_id, order, true, true, nullptr, &active_seen);
 
     int max_x = kMarginX;
     for (const SeqCol &col : columns) {
@@ -755,46 +864,36 @@ void SopGraphCanvas::DrawEdge(wxGraphicsContext *gc, const SopGraphEdge &edge) c
     if (edge.points.size() < 2) {
         return;
     }
-    const int pen_w = edge.on_active_path ? kEdgePenActive : kEdgePenFork;
-    const wxPen pen(edge.on_active_path ? SopGraphAccentColour() : SopGraphForkColour(), pen_w,
-                    edge.on_active_path ? wxPENSTYLE_SOLID : wxPENSTYLE_SHORT_DASH);
-    const double head = edge.on_active_path ? kArrowHeadActive : kArrowHeadFork;
-    const wxColour col = pen.GetColour();
 
-    for (size_t i = 1; i < edge.points.size(); i++) {
-        const wxPoint &a = edge.points[i - 1];
-        const wxPoint &b = edge.points[i];
-        const double ax = pan_.x + a.x * zoom_;
-        const double ay = pan_.y + a.y * zoom_;
-        const double bx = pan_.x + b.x * zoom_;
-        const double by = pan_.y + b.y * zoom_;
-        gc->SetPen(pen);
-        gc->StrokeLine(ax, ay, bx, by);
+    const wxColour col = edge.on_active_path ? SopGraphAccentColour() : SopGraphForkColour();
+    const double pen_w = (edge.on_active_path ? kEdgePenActive : kEdgePenFork) / zoom_;
+    const wxPenStyle style = edge.on_active_path ? wxPENSTYLE_SOLID : wxPENSTYLE_SHORT_DASH;
+    gc->SetPen(wxPen(col, std::max(1, static_cast<int>(std::lround(pen_w))), style));
 
-        const double dx = bx - ax;
-        const double dy = by - ay;
-        const double len = std::hypot(dx, dy);
-        if (len < 1.0) {
-            continue;
-        }
-        const double ux = dx / len;
-        const double uy = dy / len;
-        const bool terminal = i + 1 == edge.points.size();
+    const double corner_r = kRouteCornerGraph / zoom_;
+    StrokeRoundedPath(gc, edge.points, corner_r);
 
-        if (len >= kLongSegScreen && terminal) {
-            for (double d = kMidArrowScreen; d < len - kMidArrowScreen * 0.6; d += kMidArrowScreen) {
-                DrawArrowHead(gc, ax + ux * d, ay + uy * d, ux, uy, kArrowMid, col);
-            }
-        }
-        if (terminal) {
-            const double inset = std::min(len * 0.5, head + 4.0);
-            DrawArrowHead(gc, bx - ux * inset, by - uy * inset, ux, uy, head, col);
-        }
+    if (!edge.show_arrow || edge.points.size() < 2) {
+        return;
     }
+
+    const wxPoint &entry = edge.points.back();
+    const wxPoint &before = edge.points[edge.points.size() - 2];
+    const double dx = entry.x - before.x;
+    const double dy = entry.y - before.y;
+    const double len = std::hypot(dx, dy);
+    if (len < 0.5) {
+        return;
+    }
+
+    const double head = kArrowHeadActive / zoom_;
+    DrawArrowHead(gc, entry.x, entry.y, dx / len, dy / len, head, col);
 }
 
 void SopGraphCanvas::OnPaint(wxPaintEvent &) {
     wxAutoBufferedPaintDC dc(this);
+    const wxSize client = GetClientSize();
+    dc.SetClippingRegion(0, 0, client.x, client.y);
     dc.SetBackground(wxBrush(SopGraphBgColour()));
     dc.Clear();
 
@@ -803,12 +902,20 @@ void SopGraphCanvas::OnPaint(wxPaintEvent &) {
         return;
     }
 
-    for (const SopGraphEdge &edge : edges_) {
-        DrawEdge(gc.get(), edge);
-    }
-
+    gc->Clip(0, 0, client.x, client.y);
     gc->Translate(pan_.x, pan_.y);
     gc->Scale(zoom_, zoom_);
+
+    for (const SopGraphEdge &edge : edges_) {
+        if (!edge.on_active_path) {
+            DrawEdge(gc.get(), edge);
+        }
+    }
+    for (const SopGraphEdge &edge : edges_) {
+        if (edge.on_active_path) {
+            DrawEdge(gc.get(), edge);
+        }
+    }
 
     for (const SopGraphNode &node : nodes_) {
         DrawNode(gc.get(), node);
@@ -820,10 +927,9 @@ void SopGraphCanvas::OnSize(wxSizeEvent &evt) {
     if (!engine_) {
         return;
     }
+    /* Keep pan_.x/y so the graph stays visually fixed to the viewport left;
+     * only column wrapping may change with width. */
     RelayoutIfNeeded();
-    if (!user_panned_) {
-        ScrollToCurrentNode(false);
-    }
     Refresh(false);
 }
 
@@ -839,6 +945,7 @@ void SopGraphCanvas::OnMouseWheel(wxMouseEvent &evt) {
     pan_.y = mouse.y - static_cast<int>((mouse.y - pan_.y) * (zoom_ / old_zoom));
     user_panned_ = true;
     RelayoutIfNeeded();
+    ClampPan();
     Refresh(false);
 }
 
@@ -928,6 +1035,7 @@ void SopGraphCanvas::OnMouseUp(wxMouseEvent &) {
 void SopGraphCanvas::OnMouseMove(wxMouseEvent &evt) {
     if (panning_) {
         pan_ = pan_origin_ + (evt.GetPosition() - pan_start_);
+        ClampPan();
         Refresh(false);
         return;
     }

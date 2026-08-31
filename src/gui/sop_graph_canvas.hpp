@@ -35,6 +35,7 @@ struct SopGraphEdge {
     std::vector<wxPoint> points;
     bool on_active_path = false;
     bool is_fork = false;
+    bool show_arrow = false;
 };
 
 class SopGraphCanvas : public wxPanel {
@@ -51,6 +52,7 @@ public:
     void SyncNodeStates();
     void SetCurrentIndex(size_t index);
     void ScrollToCurrentNode(bool animated = true);
+    void ScrollToStepId(const std::string &step_id, bool animated = true);
     void SetSelectedStep(const std::string &step_id);
     void SetStepSelectHandler(StepSelectFn fn) { step_select_ = std::move(fn); }
     void SetMoveToHandler(StepMoveFn fn) { move_to_fn_ = std::move(fn); }
@@ -127,6 +129,7 @@ private:
     void DrawEdge(wxGraphicsContext *gc, const SopGraphEdge &edge) const;
     void RelayoutIfNeeded();
     int LayoutColumnsKey() const;
+    void ClampPan();
 };
 
 #endif /* SOP_GRAPH_CANVAS_HPP */
