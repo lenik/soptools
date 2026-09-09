@@ -37,7 +37,7 @@ Shell steps use extension `.sh` (code-first, documentation in comments). They us
 . sop-script
 ```
 
-`sopwin` runs them with `cwd` = project directory and exports `PATH` (including `<pkgdatadir>/sopenv/bash`), `SOP_PROJECT_DIR`, `SOP_DIR`, `SOP_STEP_ID`, `SOP_LOGLEVEL`, `LOGLEVEL`, and `SOP_PROGRESS_FIFO`. A running script reports **its own** progress with `set_progress 10%` (or `30.78%`) — not the overall SOP session progress. sopwin reads the FIFO and updates the gauge for that script. Codex prompt steps remain Markdown (`.md`).
+`sopwin` runs them with `cwd` = project directory and exports `PATH` (including `<pkgdatadir>/extension/bash`), `SOP_PROJECT_DIR`, `SOP_DIR`, `SOP_STEP_ID`, `SOP_LOGLEVEL`, `LOGLEVEL`, and `SOP_PROGRESS_FIFO`. A running script reports **its own** progress with `set_progress 10%` (or `30.78%`) — not the overall SOP session progress. sopwin reads the FIFO and updates the gauge for that script. Codex prompt steps remain Markdown (`.md`).
 
 GPT steps use extension `.get`. They begin with optional RFC822-style headers (names case-insensitive), then a blank line, then the prompt body. Use `Discard:` for editor modelines and other ignored lines.
 

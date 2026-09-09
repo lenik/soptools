@@ -2,9 +2,10 @@ Source: soptools
 Section: utils
 Priority: optional
 Maintainer: Lenik <soptools@bodz.net>
-Build-Depends: debhelper-compat (= 13), meson, ninja-build, pkgconf, asciidoctor
-Standards-Version: 4.6.0
 Homepage: https://github.com/lenik/soptools
+Build-Depends: debhelper-compat (= 13), meson, ninja-build, pkgconf, asciidoctor,
+ libbas-cpp-dev, libwxgtk3.2-dev
+Standards-Version: 4.6.0
 Rules-Requires-Root: no
 
 Package: soptools

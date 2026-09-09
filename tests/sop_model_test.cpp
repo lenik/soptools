@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "sop_model.hpp"
+#include "model/model.hpp"
 
 #include <cstdio>
 #include <filesystem>

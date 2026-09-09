@@ -36,7 +36,7 @@ DESTDIR=$PWD/stage meson install -C builddir
 - `worldman.sop/` — 默认英文 SOP 步骤
 - `worldman-zh_CN.sop/` — 简体中文 SOP
 - `worldman-ja.sop/` — 日文 SOP
-- `sopenv/bash/` — SOP 脚本 PATH 辅助（`sop-script`）
+- `extension/bash/` — SOP 脚本 PATH 辅助（`sop-script`）
 - `docs/` — AsciiDoc 手册页（英文及翻译）
 - `po/` — gettext 翻译目录
 - `debian/`、`packaging/` — 打包元数据

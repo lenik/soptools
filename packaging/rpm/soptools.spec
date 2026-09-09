@@ -51,17 +51,20 @@ meson install -C build --destdir=%{buildroot}
 %{_datadir}/bash-completion/completions/it-soptools
 %{_datadir}/bash-completion/completions/ja-soptools
 %{_datadir}/bash-completion/completions/ko-soptools
-%{_datadir}/bash-completion/completions/sop_ai_output
-%{_datadir}/bash-completion/completions/sop_console
-%{_datadir}/bash-completion/completions/sop_gui
-%{_datadir}/bash-completion/completions/sop_model
-%{_datadir}/bash-completion/completions/sop_paths
-%{_datadir}/bash-completion/completions/sop_runtime
-%{_datadir}/bash-completion/completions/stream_copy
+%{_datadir}/bash-completion/completions/soptools
 %{_datadir}/bash-completion/completions/zh_CN-soptools
+%{_mandir}/man1/ar-soptools.1*
+%{_mandir}/man1/de-soptools.1*
+%{_mandir}/man1/es_MX-soptools.1*
+%{_mandir}/man1/fr-soptools.1*
+%{_mandir}/man1/it-soptools.1*
+%{_mandir}/man1/ja-soptools.1*
+%{_mandir}/man1/ko-soptools.1*
+%{_mandir}/man1/soptools.1*
+%{_mandir}/man1/sopwin.1*
+%{_mandir}/man1/zh_CN-soptools.1*
 %{_datadir}/soptools/
 %{_datadir}/locale/*/LC_MESSAGES/soptools.mo
-%{_mandir}/man1/sopwin.1*
 %{_mandir}/*/man1/ar-soptools.1*
 %{_mandir}/*/man1/de-soptools.1*
 %{_mandir}/*/man1/es_MX-soptools.1*
@@ -70,9 +73,9 @@ meson install -C build --destdir=%{buildroot}
 %{_mandir}/*/man1/ja-soptools.1*
 %{_mandir}/*/man1/ko-soptools.1*
 %{_mandir}/*/man1/soptools.1*
+%{_mandir}/*/man1/sopwin.1*
 %{_mandir}/*/man1/zh_CN-soptools.1*
 %{_datadir}/doc/soptools/
-%{_datadir}/doc/%{name}/
 %changelog
 * Tue Sep 01 2026 Lenik <soptools@bodz.net>
 - Package sopwin binary, completion, and man page from Meson install.

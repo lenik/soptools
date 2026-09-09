@@ -1,3 +1,18 @@
+soptools (0.1.0) unstable; urgency=medium
+
+  * Reorganize src/ by layer (util, model, engine, ui); drop redundant
+    sop_ file prefixes.
+  * Rename packaged sopenv/ to extension/bash for SOP script PATH
+    helpers.
+  * Split oversized GUI/runtime units to satisfy zfr lint source.long
+    under -w.
+  * Align packaging with zfr ize: bas-cpp i18n/logger, LOCALEDIR, locale
+    man scaffolds, completions.
+  * Ship WorldMan SOP packs (en/zh_CN/ja) with GPT .get capture,
+    paste/render dialogs, and progress FIFO.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 09 Sep 2026 18:22:48 +0800
+
 soptools (0.0.2) unstable; urgency=medium
 
   * sopwin GUI: reorganize menus into File, Procedure, View, and Help.
@@ -26,10 +41,10 @@ soptools (0.0.2) unstable; urgency=medium
     the outer clip).
   * sop_model: use zero-padded unique step ids (for example 000sh, 020gpt).
 
- -- Lenik <pub.lenik@bodz.net>  Tue, 01 Sep 2026 03:05:00 +0800
+ -- Lenik (谢继雷) <lenik@bodz.net>  Tue, 01 Sep 2026 03:05:00 +0800
 
 soptools (0.0.1) unstable; urgency=medium
 
   * Initial release
 
- -- Lenik <pub.lenik@bodz.net>  Mon, 31 Aug 2026 16:15:19 +0800
+ -- Lenik (谢继雷) <lenik@bodz.net>  Mon, 31 Aug 2026 16:15:19 +0800

@@ -36,6 +36,7 @@ prefix = get_option('prefix')
 bindir = prefix / get_option('bindir')
 datadir = prefix / get_option('datadir')
 mandir = prefix / get_option('mandir')
+localedir = prefix / get_option('localedir')
 pkgdocdir = datadir / 'doc' / meson.project_name()
 
 source_root = meson.project_source_root()
@@ -50,11 +51,17 @@ config_h.set('PROJECT_YEAR', project_year)
 config_h.set_quoted('SOURCE_ROOT', source_root)
 config_h.set_quoted('SOP_BUILTIN_DIR', sop_builtin_dir)
 config_h.set_quoted('SOP_PKGDATADIR', get_option('prefix') / sop_pkgdatadir)
+config_h.set_quoted('LOCALEDIR', localedir)
 
 configure_file(
     output: 'config.h',
     configuration: config_h,
 )
+bas_cpp_dep = dependency('bas-cpp', required: true)
+bas_args = ['-DLOGGER_NAME=' + meson.project_name(), '-DTEXT_DOMAIN=' + meson.project_name()]
+cpp_args_bas = bas_args
+
+
 
 inc = include_directories('src', '.')
 
@@ -68,26 +75,37 @@ wxwidgets = declare_dependency(
 
 app_sources = [
     'src/sopwin.cpp',
-    'src/sop_model.cpp',
-    'src/sop_runtime.cpp',
-    'src/sop_paths.cpp',
-    'src/sop_project.cpp',
-    'src/sop_ai_output.cpp',
-    'src/sop_gpt_response.cpp',
-    'src/sop_console.cpp',
-    'src/sop_gui.cpp',
-    'src/gui/sop_graph_canvas.cpp',
-    'src/gui/sop_graph_style.cpp',
-    'src/gui/sop_log_view.cpp',
-    'src/gui/sop_paste_response_dialog.cpp',
-    'src/gui/sop_render_response_dialog.cpp',
+    'src/util/paths.cpp',
+    'src/model/model.cpp',
+    'src/model/model_parse.cpp',
+    'src/engine/engine.cpp',
+    'src/engine/shell.cpp',
+    'src/engine/apply.cpp',
+    'src/engine/ai_output.cpp',
+    'src/engine/gpt_response.cpp',
+    'src/engine/project.cpp',
+    'src/ui/console.cpp',
+    'src/ui/gui/app.cpp',
+    'src/ui/gui/theme.cpp',
+    'src/ui/gui/main_frame.cpp',
+    'src/ui/gui/main_frame_actions.cpp',
+    'src/ui/gui/main_frame_panes.cpp',
+    'src/ui/gui/help_dialogs.cpp',
+    'src/ui/gui/graph_canvas.cpp',
+    'src/ui/gui/graph_canvas_layout.cpp',
+    'src/ui/gui/graph_canvas_paint.cpp',
+    'src/ui/gui/graph_style.cpp',
+    'src/ui/gui/log_view.cpp',
+    'src/ui/gui/paste_response_dialog.cpp',
+    'src/ui/gui/render_response_dialog.cpp',
 ]
 
 executable(
     'sopwin',
     app_sources,
     include_directories: inc,
-    dependencies: [wxwidgets],
+    dependencies: [bas_cpp_dep, wxwidgets],
+    cpp_args: cpp_args_bas,
     install: true,
     install_dir: bindir,
 )
@@ -108,7 +126,7 @@ install_subdir(
     strip_directory: false,
 )
 install_subdir(
-    'sopenv',
+    'extension',
     install_dir: datadir / meson.project_name(),
     strip_directory: false,
 )
@@ -122,13 +140,7 @@ bash_files = [
     'completions/it-soptools.bash',
     'completions/ja-soptools.bash',
     'completions/ko-soptools.bash',
-    'completions/sop_ai_output.bash',
-    'completions/sop_console.bash',
-    'completions/sop_gui.bash',
-    'completions/sop_model.bash',
-    'completions/sop_paths.bash',
-    'completions/sop_runtime.bash',
-    'completions/stream_copy.bash',
+    'completions/soptools.bash',
     'completions/zh_CN-soptools.bash',
 ]
 
@@ -205,7 +217,10 @@ run_target(
     ],
 )
 
+
+
 man_puffs = [
+    'soptools',
     'sopwin',
 ]
 foreach puff : man_puffs
@@ -230,27 +245,30 @@ foreach puff : man_puffs
 endforeach
 
 man_locales = ['ar', 'de', 'es_MX', 'fr', 'it', 'ja', 'ko', 'zh_CN']
+man_names = ['soptools', 'sopwin']
 foreach locale : man_locales
-  man_src = 'docs' / locale / 'soptools.adoc'
-  if fs.exists(man_src)
-    custom_target(
-      'soptools-man-' + locale,
-      input: man_src,
-      output: locale + '-soptools.1',
-      command: [
-        asciidoctor,
-        '-b', 'manpage',
-        '-a', 'project-version=' + meson.project_version(),
-        '-a', 'project-year=@0@'.format(project_year),
-        '-a', 'project-author=' + project_author,
-        '-a', 'project-email=' + project_email,
-        '-o', '@OUTPUT@',
-        '@INPUT@',
-      ],
-      build_by_default: true,
-      install: false,
-    )
-  endif
+  foreach man_name : man_names
+    man_src = 'docs' / locale / (man_name + '.adoc')
+    if fs.exists(man_src)
+      custom_target(
+        man_name + '-man-' + locale,
+        input: man_src,
+        output: locale + '-' + man_name + '.1',
+        command: [
+          asciidoctor,
+          '-b', 'manpage',
+          '-a', 'project-version=' + meson.project_version(),
+          '-a', 'project-year=@0@'.format(project_year),
+          '-a', 'project-author=' + project_author,
+          '-a', 'project-email=' + project_email,
+          '-o', '@OUTPUT@',
+          '@INPUT@',
+        ],
+        build_by_default: true,
+        install: false,
+      )
+    endif
+  endforeach
 endforeach
 
 meson.add_install_script(
@@ -258,11 +276,13 @@ meson.add_install_script(
     build="@0@"
     prefix="${MESON_INSTALL_DESTDIR_PREFIX:-${DESTDIR:-}${MESON_INSTALL_PREFIX:-}}"
     for loc in @1@; do
-      src="$build/${loc}-soptools.1"
-      [ -f "$src" ] || continue
-      dest="$prefix/share/man/${loc}/man1/soptools.1"
-      mkdir -p "$(dirname "$dest")"
-      install -m644 "$src" "$dest"
+      for name in soptools sopwin; do
+        src="$build/${loc}-${name}.1"
+        [ -f "$src" ] || continue
+        dest="$prefix/share/man/${loc}/man1/${name}.1"
+        mkdir -p "$(dirname "$dest")"
+        install -m644 "$src" "$dest"
+      done
     done
   '''.format(meson.current_build_dir(), ' '.join(man_locales)),
 )

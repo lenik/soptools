@@ -6,7 +6,7 @@
 
 #define _POSIX_C_SOURCE 200809L
 
-#include "stream_copy.hpp"
+#include "util/stream_copy.hpp"
 
 #include <stdio.h>
 #include <string.h>

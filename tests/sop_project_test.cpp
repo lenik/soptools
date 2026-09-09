@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "sop_project.hpp"
-#include "sop_runtime.hpp"
+#include "engine/project.hpp"
+#include "engine/engine.hpp"
 
 #include <cstdio>
 #include <filesystem>

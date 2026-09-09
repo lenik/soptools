@@ -19,6 +19,8 @@ endforeach
 _zfr_i18n = find_program('zfr', native: true, required: false)
 if _zfr_i18n.found()
   # Run from project source so zfr can discover package metadata / docs/.
+  # Stamp must be absolute: command cds to source, so relative @OUTPUT@ would
+  # be written under source po/ and ninja would rebuild every time.
   custom_target(
     'i18n-derive',
     command: [
@@ -28,7 +30,7 @@ if _zfr_i18n.found()
       meson.project_source_root(),
       _zfr_i18n, 'i18n', '-b',
       '--po-dir', _po_build,
-      '--stamp', '@OUTPUT@',
+      '--stamp', _po_build / 'i18n-derive.stamp',
       '--compile-mo',
       '--domain', meson.project_name(),
     ],
@@ -37,17 +39,18 @@ if _zfr_i18n.found()
     build_by_default: true,
     console: true,
   )
-  # i18n.gettext only installs LINGUAS; copy derived *.mo marked by .derive.sig.
+  # i18n.gettext only installs LINGUAS; copy .mo for each flat derived *.po.
   meson.add_install_script(
     _sh, '-c',
     # sh -c SCRIPT $0 $1 $2 — first arg after SCRIPT is $0.
-    'po="$0"; domain="$1"; loc="$2"; base="${MESON_INSTALL_DESTDIR_PREFIX:-${DESTDIR:-}${MESON_INSTALL_PREFIX:-}}"; for sig in "$po"/*.po.derive.sig; do [ -e "$sig" ] || continue; lang=${sig##*/}; lang=${lang%.po.derive.sig}; mo="$po/$lang/LC_MESSAGES/$domain.mo"; [ -f "$mo" ] || continue; dest="$base/$loc/$lang/LC_MESSAGES/$domain.mo"; mkdir -p "$(dirname "$dest")"; install -m644 "$mo" "$dest"; done',
+    'po="$0"; domain="$1"; loc="$2"; base="${MESON_INSTALL_DESTDIR_PREFIX:-${DESTDIR:-}${MESON_INSTALL_PREFIX:-}}"; for f in "$po"/*.po; do [ -e "$f" ] || continue; lang=${f##*/}; lang=${lang%.po}; mo="$po/$lang/LC_MESSAGES/$domain.mo"; [ -f "$mo" ] || continue; dest="$base/$loc/$lang/LC_MESSAGES/$domain.mo"; mkdir -p "$(dirname "$dest")"; install -m644 "$mo" "$dest"; done',
     _po_build,
     meson.project_name(),
     get_option('localedir'),
   )
 endif
 # zfr: i18n-derive-end
+
 
 i18n.gettext(
     'soptools',

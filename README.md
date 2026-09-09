@@ -36,7 +36,7 @@ DESTDIR=$PWD/stage meson install -C builddir
 - `worldman.sop/` — default English SOP step definitions
 - `worldman-zh_CN.sop/` — Simplified Chinese SOP pack
 - `worldman-ja.sop/` — Japanese SOP pack
-- `sopenv/bash/` — shell helpers on PATH for SOP scripts (`sop-script`)
+- `extension/bash/` — shell helpers on PATH for SOP scripts (`sop-script`)
 - `docs/` — AsciiDoc man page sources (English + translations)
 - `po/` — gettext catalogs
 - `debian/`, `packaging/` — distribution metadata

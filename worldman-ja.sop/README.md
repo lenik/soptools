@@ -39,7 +39,7 @@ shell 手順は拡張子 `.sh`（コード主体、説明はコメント）。�
 . sop-script
 ```
 
-`sopwin` はプロジェクトディレクトリを `cwd` として実行し、`PATH`（`<pkgdatadir>/sopenv/bash` を含む）、`SOP_PROJECT_DIR`、`SOP_DIR`、`SOP_STEP_ID`、`SOP_LOGLEVEL`、`LOGLEVEL`、`SOP_PROGRESS_FIFO` をエクスポートします。スクリプトは `set_progress 10%`（または `30.78%`）で**当該スクリプト自身**の進捗を報告します（SOP セッション全体の進捗ではありません）。sopwin は FIFO を読み、そのスクリプト用ゲージを更新します。Codex プロンプト手順は Markdown（`.md`）のままです。
+`sopwin` はプロジェクトディレクトリを `cwd` として実行し、`PATH`（`<pkgdatadir>/extension/bash` を含む）、`SOP_PROJECT_DIR`、`SOP_DIR`、`SOP_STEP_ID`、`SOP_LOGLEVEL`、`LOGLEVEL`、`SOP_PROGRESS_FIFO` をエクスポートします。スクリプトは `set_progress 10%`（または `30.78%`）で**当該スクリプト自身**の進捗を報告します（SOP セッション全体の進捗ではありません）。sopwin は FIFO を読み、そのスクリプト用ゲージを更新します。Codex プロンプト手順は Markdown（`.md`）のままです。
 
 GPT 手順は拡張子 `.get` です。任意の RFC822 風ヘッダ（名前は大文字小文字を区別しない）、空行のあとにプロンプト本文。エディタ modeline などは `Discard:` で書き、sopwin は無視します。
 

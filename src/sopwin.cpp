@@ -7,16 +7,24 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "config.h"
-#include "sop_console.hpp"
-#include "sop_gui.hpp"
-#include "sop_paths.hpp"
-#include "sop_runtime.hpp"
+#include "ui/console.hpp"
+#include "ui/gui.hpp"
+#include "util/paths.hpp"
+#include "engine/engine.hpp"
 
 #include <cstdlib>
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <bas/locale/i18n.h>
+#include <bas/log/deflog.h>
+
+extern "C" {
+#include <bas/proc/env.h>
+}
+
+
 
 enum {
     OPT_VERSION = 256,
@@ -25,6 +33,9 @@ enum {
     OPT_GUI = 259,
     OPT_CHDIR = 260,
 };
+
+
+define_logger();
 
 static int verbose;
 
@@ -49,6 +60,9 @@ static bool has_display() {
 }
 
 int main(int argc, char **argv) {
+    const char *exe = self_exe();
+    (void)exe;
+    init_i18n(LOCALEDIR);
     std::string sop_dir;
     std::string chdir_dir;
     std::string project_arg;

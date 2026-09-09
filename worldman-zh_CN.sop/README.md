@@ -39,7 +39,7 @@ Shell 步骤使用扩展名 `.sh`（以代码为主，说明写在注释里）�
 . sop-script
 ```
 
-`sopwin` 以项目目录为 `cwd` 运行，并导出 `PATH`（含 `<pkgdatadir>/sopenv/bash`）、`SOP_PROJECT_DIR`、`SOP_DIR`、`SOP_STEP_ID`、`SOP_LOGLEVEL`、`LOGLEVEL`、`SOP_PROGRESS_FIFO`。脚本用 `set_progress 10%`（或 `30.78%`）报告**本脚本自身**进度，不是整个 SOP 会话进度；sopwin 从 FIFO 读取并更新该脚本的进度条。Codex 提示词步骤仍为 Markdown（`.md`）。
+`sopwin` 以项目目录为 `cwd` 运行，并导出 `PATH`（含 `<pkgdatadir>/extension/bash`）、`SOP_PROJECT_DIR`、`SOP_DIR`、`SOP_STEP_ID`、`SOP_LOGLEVEL`、`LOGLEVEL`、`SOP_PROGRESS_FIFO`。脚本用 `set_progress 10%`（或 `30.78%`）报告**本脚本自身**进度，不是整个 SOP 会话进度；sopwin 从 FIFO 读取并更新该脚本的进度条。Codex 提示词步骤仍为 Markdown（`.md`）。
 
 GPT 步骤使用扩展名 `.get`。可选 RFC822 风格文件头（名称不分大小写），空行后是提示词正文。编辑器 modeline 等用 `Discard:` 写出，sopwin 忽略。
 
