@@ -1,20 +1,22 @@
+Save-As: web-e2e/workflows.md
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
 # Create complete testing workflows
 
 Based on the complete discussion and the previously produced:
 
-```text
-docs/PRD.md
-prisma/schema.prisma
-prisma/seed.ts
-backend design
-```
+- `sop/PRD.md`
+- `sop/TUC.md` (if present)
+- `sop/NTC.md` (if present)
+- `sop/ECS.md` (if present)
+- `prisma/schema.prisma`
+- `prisma/seed.ts`
+- backend design
 
-write complete testing-reference workflows as:
+write complete testing-reference workflows as `web-e2e/workflows.md`.
 
-```text
-web-e2e/workflows.md
-```
-
+Prefer covering cases already listed in `sop/TUC.md`, `sop/NTC.md`, and `sop/ECS.md`, and extend those files when discussion reveals additional scenarios.
 These workflows are behavioral specifications for Playwright E2E testing.
 
 They are not Playwright code.
@@ -27,34 +29,32 @@ Cover the product with finite but broad functional coverage.
 
 Include:
 
-```text
-route access
-navigation
-create flows
-edit flows
-delete/archive flows
-detail views
-search
-filter
-sort
-pagination
-tabs
-dialogs
-sheets
-menus
-context menus
-bulk actions
-state transitions
-validation failures
-cancel paths
-empty states
-confirmation flows
-media interactions
-import/export where relevant
-cross-entity navigation
-important error paths
-important boundary cases
-```
+- route access
+- navigation
+- create flows
+- edit flows
+- delete/archive flows
+- detail views
+- search
+- filter
+- sort
+- pagination
+- tabs
+- dialogs
+- sheets
+- menus
+- context menus
+- bulk actions
+- state transitions
+- validation failures
+- cancel paths
+- empty states
+- confirmation flows
+- media interactions
+- import/export where relevant
+- cross-entity navigation
+- important error paths
+- important boundary cases
 
 Do not create artificial branches such as `{correct/error}` unless the underlying business action genuinely has that semantic distinction.
 
@@ -79,14 +79,12 @@ Login
 
 Workflows may contain:
 
-```text
-sequence
-branch
-repeat
-selection
-precondition
-expected visible result
-```
+- sequence
+- branch
+- repeat
+- selection
+- precondition
+- expected visible result
 
 but should remain readable and practical rather than formally specified.
 

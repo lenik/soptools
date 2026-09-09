@@ -31,7 +31,7 @@ static int verbose;
 static void usage(FILE *out) {
     fputs("Usage: sopwin [OPTIONS] [PROJECTDIR]\n"
           "Guide project construction through SOP workflow steps.\n\n"
-          "  -s, --sop SOPDIR     SOP directory (default: builtin figma.sop)\n"
+          "  -s, --sop SOPDIR     SOP directory (default: builtin worldman.sop)\n"
           "  -c, --console        console-only mode (no GUI)\n"
           "  -g, --gui            force GUI mode\n"
           "  -C, --chdir DIR      project directory (default: cwd or nearest .git)\n"

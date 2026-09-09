@@ -1,0 +1,88 @@
+Save-As: sop/PRD.md
+File-Link: inode
+Parse: multi-parts
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
+# Create PRD
+
+## WorldMan architecture (read first)
+
+Before writing the PRD, introduce and apply this module architecture:
+
+- WorldMan apps are lightweight microservice-style modules: each can run **fully independently**, or **integrate** with peer apps.
+- **Standalone**: the app may own a **minimal local table** for shared basics (for example contact name + phone only). A dedicated peer app (for example contacts) may model the same concept far more completely.
+- **Integrated**: peer master data is stored only as an **opaque cuid2 reference** and resolved through that peer’s API — not a cross-database foreign key.
+- Master-data primary keys use **`cuid(2)`** so identities stay stable across standalone and integrated deployments.
+- Standard layout: `prisma/`, `backend/`, `web/`, `web-e2e/`, optional `mobile/` / `mobile-e2e/`, `sop/`, `docs/`, `docker/`, `i-local/`, `i-medium/`, `worldman.json`.
+- Deploy as direct processes, Apache/Nginx reverse proxy, or containers. Port base `N` from `wm port -n <name>` (HTTPS = HTTP+1 except bridge web `80`/`443`; see SOP README).
+
+The PRD must reflect these constraints where they apply to this module.
+
+## Produce the PRD
+
+From prior discussion and the current product design, produce a complete `sop/PRD.md`.
+
+Requirements:
+
+- Suitable for development and later acceptance, not only executive summary material.
+- Stick to requirements already confirmed in discussion.
+- Do not silently expand product scope.
+- Complete and normalize content that already has clear business meaning.
+- Explicitly state constraints that were implied earlier and can already be derived.
+
+The PRD must at least cover:
+
+- Product overview
+- Goals
+- Scope
+- Out of scope
+- Terminology
+- User roles
+- Domain concepts
+- Core entities
+- Entity relationships
+- Business rules
+- Lifecycle/state transitions
+- CRUD behavior
+- Search
+- Filter
+- Sort
+- Pagination where relevant
+- Bulk operations
+- Import/export where relevant
+- Media
+- History/audit behavior where relevant
+- External references
+- Validation rules
+- Deletion/archive behavior
+- Empty states
+- Error behavior
+- Important edge cases
+- Main UI workflows
+- Non-functional expectations
+- WorldMan standalone vs integration model
+
+WorldMan module constraints (must appear in the PRD):
+
+- Standalone vs integrated operation for this module.
+- Which entities are owned master data vs opaque cuid2 references to peer modules.
+- `cuid(2)` identity for master-data primary keys.
+- Deployment/port expectations when relevant.
+
+For cross-application references:
+
+- State the logical referent and owning module.
+- Do not assume a database foreign key.
+- When using stable cuid2 fields such as `<xxx>_id`, document whether this module owns the entity or only references it.
+
+Also initialize or update under `sop/` when discussion yields testable material:
+
+- `TODO.md` — remaining PRD / implementation tasks; keep status current
+- `TUC.md` — test use-case reference set extracted or constructed from the discussion
+- `NTC.md` — negative / anti test cases
+- `ECS.md` — edge-case scenarios
+
+These files feed later e2e workflows and tool/support-class work.
+
+Provide a download link for `sop/PRD.md`.

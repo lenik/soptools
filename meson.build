@@ -39,7 +39,8 @@ mandir = prefix / get_option('mandir')
 pkgdocdir = datadir / 'doc' / meson.project_name()
 
 source_root = meson.project_source_root()
-sop_builtin_dir = source_root / 'figma.sop'
+sop_builtin_dir = source_root / 'worldman.sop'
+sop_pkgdatadir = datadir / meson.project_name()
 
 config_h = configuration_data()
 config_h.set_quoted('PROJECT_VERSION', meson.project_version())
@@ -48,6 +49,7 @@ config_h.set_quoted('PROJECT_EMAIL', project_email)
 config_h.set('PROJECT_YEAR', project_year)
 config_h.set_quoted('SOURCE_ROOT', source_root)
 config_h.set_quoted('SOP_BUILTIN_DIR', sop_builtin_dir)
+config_h.set_quoted('SOP_PKGDATADIR', get_option('prefix') / sop_pkgdatadir)
 
 configure_file(
     output: 'config.h',
@@ -71,11 +73,14 @@ app_sources = [
     'src/sop_paths.cpp',
     'src/sop_project.cpp',
     'src/sop_ai_output.cpp',
+    'src/sop_gpt_response.cpp',
     'src/sop_console.cpp',
     'src/sop_gui.cpp',
     'src/gui/sop_graph_canvas.cpp',
     'src/gui/sop_graph_style.cpp',
     'src/gui/sop_log_view.cpp',
+    'src/gui/sop_paste_response_dialog.cpp',
+    'src/gui/sop_render_response_dialog.cpp',
 ]
 
 executable(
@@ -88,7 +93,22 @@ executable(
 )
 
 install_subdir(
-    'figma.sop',
+    'worldman.sop',
+    install_dir: datadir / meson.project_name(),
+    strip_directory: false,
+)
+install_subdir(
+    'worldman-zh_CN.sop',
+    install_dir: datadir / meson.project_name(),
+    strip_directory: false,
+)
+install_subdir(
+    'worldman-ja.sop',
+    install_dir: datadir / meson.project_name(),
+    strip_directory: false,
+)
+install_subdir(
+    'sopenv',
     install_dir: datadir / meson.project_name(),
     strip_directory: false,
 )

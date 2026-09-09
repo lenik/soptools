@@ -15,7 +15,7 @@ sop_model_test = executable(
         '../src/sop_model.cpp',
     ],
     include_directories: include_directories('../src'),
-    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'figma.sop')],
+    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'worldman.sop')],
     install: false,
 )
 
@@ -31,9 +31,10 @@ sop_project_test = executable(
         '../src/sop_model.cpp',
         '../src/sop_paths.cpp',
         '../src/sop_ai_output.cpp',
+        '../src/sop_gpt_response.cpp',
     ],
     include_directories: include_directories('../src', '..'),
-    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'figma.sop')],
+    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'worldman.sop')],
     install: false,
 )
 

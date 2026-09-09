@@ -173,12 +173,198 @@ void extract_markdown_metadata(SopStep &step) {
         step.completion.files_exist.end());
 }
 
+std::string ascii_lower(std::string s) {
+    for (char &c : s) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return s;
+}
+
 std::string strip_role_padding(const std::string &raw) {
     size_t i = 0;
     while (i < raw.size() && raw[i] == '_') {
         i++;
     }
     return raw.substr(i);
+}
+
+SopFileLink parse_file_link(const std::string &value) {
+    const std::string v = ascii_lower(trim(value));
+    if (v.empty() || v == "default" || v == "auto") {
+        return SopFileLink::Default;
+    }
+    if (v == "none" || v == "copy") {
+        return SopFileLink::None;
+    }
+    if (v == "inode" || v == "hard" || v == "hardlink") {
+        return SopFileLink::Inode;
+    }
+    if (v == "sym" || v == "symlink" || v == "symbolic") {
+        return SopFileLink::Sym;
+    }
+    return SopFileLink::Default;
+}
+
+SopInteraction parse_interaction(const std::string &value) {
+    const std::string v = ascii_lower(trim(value));
+    if (v == "select" || v == "ui" || v == "dialog") {
+        return SopInteraction::Select;
+    }
+    return SopInteraction::None;
+}
+
+bool is_editor_modeline(const std::string &line) {
+    const std::string t = trim(line);
+    if (t.empty()) {
+        return false;
+    }
+    /* Emacs: -*- mode: markdown -*-  or  -*- Mode: Markdown; -*- */
+    if (t.find("-*-") != std::string::npos) {
+        const std::string lower = ascii_lower(t);
+        if (lower.find("mode:") != std::string::npos || lower.find("filetype:") != std::string::npos) {
+            return true;
+        }
+        /* bare -*- markdown -*- also common */
+        if (lower.find("markdown") != std::string::npos) {
+            return true;
+        }
+    }
+    /* Vim: vim: set ft=markdown :  /  vi: set filetype=markdown : */
+    static const std::regex vim_re(
+        R"(^(?:#\s*)?(?:vi|vim|ex):\s*.*\b(?:ft|filetype|syntax)\s*=\s*markdown\b.*)",
+        std::regex::icase);
+    if (std::regex_match(t, vim_re)) {
+        return true;
+    }
+    /* Also ignore shorter "vim: set ft=markdown :" without requiring markdown in regex above —
+     * already covered. Accept any vim modeline mentioning ft=/filetype=. */
+    static const std::regex vim_any(
+        R"(^(?:#\s*)?(?:vi|vim|ex):\s*set?\s+.*)",
+        std::regex::icase);
+    return std::regex_match(t, vim_any);
+}
+
+void parse_get_header_line(const std::string &line, SopStep &step) {
+    if (is_editor_modeline(line)) {
+        return;
+    }
+    const size_t colon = line.find(':');
+    if (colon == std::string::npos) {
+        return;
+    }
+    const std::string key = ascii_lower(trim(line.substr(0, colon)));
+    const std::string value = trim(line.substr(colon + 1));
+    if (key == "save-as" || key == "save_as" || key == "saveas") {
+        step.save_as = value;
+        if (!value.empty() &&
+            std::find(step.output_paths.begin(), step.output_paths.end(), value) ==
+                step.output_paths.end()) {
+            step.output_paths.push_back(value);
+        }
+        if (!value.empty() &&
+            std::find(step.completion.files_exist.begin(), step.completion.files_exist.end(),
+                      value) == step.completion.files_exist.end()) {
+            step.completion.files_exist.push_back(value);
+        }
+    } else if (key == "file-link" || key == "file_link" || key == "filelink") {
+        step.file_link = parse_file_link(value);
+    } else if (key == "parse") {
+        std::stringstream ss(value);
+        std::string item;
+        while (std::getline(ss, item, ',')) {
+            item = ascii_lower(trim(item));
+            if (!item.empty()) {
+                step.parse_formats.push_back(item);
+            }
+        }
+    } else if (key == "interaction") {
+        step.interaction = parse_interaction(value);
+    } else if (key == "discard") {
+        /* Editor modelines / ignored metadata, e.g. Discard: vim: set ft=markdown : */
+        return;
+    }
+}
+
+/* Leading RFC822-style headers on .get files until a blank line. */
+std::string strip_get_headers(std::string content, SopStep &step) {
+    std::istringstream in(content);
+    std::string line;
+    std::ostringstream rest;
+    bool in_headers = true;
+    bool saw_any = false;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (in_headers) {
+            if (trim(line).empty()) {
+                if (saw_any) {
+                    in_headers = false;
+                    continue;
+                }
+                /* Leading blank before headers — keep scanning. */
+                continue;
+            }
+            if (is_editor_modeline(line)) {
+                saw_any = true;
+                continue;
+            }
+            if (line.find(':') != std::string::npos && line.rfind("#", 0) != 0) {
+                parse_get_header_line(line, step);
+                saw_any = true;
+                continue;
+            }
+            /* Not a header line — treat remainder as body including this line. */
+            in_headers = false;
+            rest << line << '\n';
+            continue;
+        }
+        /* Skip trailing/leading modelines that leaked into body. */
+        if (is_editor_modeline(line) && rest.tellp() == 0) {
+            continue;
+        }
+        rest << line << '\n';
+    }
+    if (!in.eof() && !content.empty() && content.back() != '\n') {
+        /* keep trailing content from stream already handled */
+    }
+    std::string body = rest.str();
+    if (body.empty() && !saw_any) {
+        return content;
+    }
+    return body;
+}
+
+
+void extract_shell_script_metadata(SopStep &step) {
+    std::istringstream in(step.body);
+    std::string line;
+    bool saw_shebang = false;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        const std::string t = trim(line);
+        if (t.empty()) {
+            continue;
+        }
+        if (!saw_shebang && t.rfind("#!", 0) == 0) {
+            saw_shebang = true;
+            continue;
+        }
+        if (step.title.empty() && t.rfind("#", 0) == 0) {
+            std::string title = trim(t.substr(1));
+            if (!title.empty()) {
+                step.title = title;
+            }
+            break;
+        }
+        if (t.rfind("#", 0) != 0) {
+            break;
+        }
+    }
+    step.shell_script = step.body;
+    step.kind = SopStepKind::Shell;
 }
 
 } /* namespace */
@@ -284,6 +470,22 @@ bool SopStep::is_prompt_copy() const {
     return role == SopRole::Gpt || role == SopRole::Codex || role == SopRole::AltCodex;
 }
 
+bool SopStep::is_gpt_get() const {
+    return role == SopRole::Gpt &&
+           (extension == "get" ||
+            (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".get") == 0));
+}
+
+bool SopStep::has_parse_format(const std::string &fmt) const {
+    const std::string want = ascii_lower(fmt);
+    for (const auto &f : parse_formats) {
+        if (f == want) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::optional<SopStep> parse_sop_file(const std::string &path) {
     std::ifstream in(path);
     if (!in) {
@@ -293,9 +495,9 @@ std::optional<SopStep> parse_sop_file(const std::string &path) {
     const size_t slash = path.find_last_of("/\\");
     const std::string filename = slash == std::string::npos ? path : path.substr(slash + 1);
 
-    /* New: 020a.___gpt.create_prd.md / 020z._codex.create_prd.md
+    /* New: 020a.___gpt.create_prd.get / 000a._shell.refactor_figma.sh
      * Legacy: 020gpt.create_prd.md / 020alt_codex.create_prd.md */
-    static const std::regex name_re_new(R"(^(\d{3})([a-zA-Z])\.(_*[^.]+)\.([^.]+)\.md$)");
+    static const std::regex name_re_new(R"(^(\d{3})([a-zA-Z])\.(_*[^.]+)\.([^.]+)\.(md|sh|get)$)");
     static const std::regex name_re_legacy(R"(^(\d{3})([^.]+)\.([^.]+)\.md$)");
     std::smatch m;
 
@@ -303,25 +505,40 @@ std::optional<SopStep> parse_sop_file(const std::string &path) {
     step.filename = filename;
     step.filepath = path;
 
+    std::string ext;
     if (std::regex_match(filename, m, name_re_new)) {
         step.seq = std::stoi(m[1].str());
         step.variant = static_cast<char>(std::tolower(static_cast<unsigned char>(m[2].str()[0])));
         step.role_slug = strip_role_padding(m[3].str());
         step.name = m[4].str();
+        ext = m[5].str();
     } else if (std::regex_match(filename, m, name_re_legacy)) {
         step.seq = std::stoi(m[1].str());
         step.role_slug = m[2].str();
         step.name = m[3].str();
         step.variant = step.role_slug.rfind("alt_", 0) == 0 ? 'z' : 'a';
+        ext = "md";
     } else {
         return std::nullopt;
     }
 
+    step.extension = ext;
     step.role = parse_role_slug(step.role_slug);
 
     std::ostringstream body;
     body << in.rdbuf();
     std::string content = body.str();
+
+    if (ext == "sh") {
+        step.body = content;
+        extract_shell_script_metadata(step);
+        step.completion.wait_shell = true;
+        return step;
+    }
+
+    if (ext == "get") {
+        content = strip_get_headers(std::move(content), step);
+    }
 
     if (content.rfind("---", 0) == 0) {
         const size_t end = content.find("\n---", 3);

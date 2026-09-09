@@ -7,6 +7,8 @@
 #include "sop_gui.hpp"
 #include "gui/sop_graph_canvas.hpp"
 #include "gui/sop_log_view.hpp"
+#include "gui/sop_paste_response_dialog.hpp"
+#include "gui/sop_render_response_dialog.hpp"
 #include "sop_project.hpp"
 
 #include <wx/wx.h>
@@ -157,6 +159,16 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
         return wxString::FromUTF8("Shell script is running…");
     }
     if (step->is_prompt_copy()) {
+        if (step->is_gpt_get()) {
+            switch (step->status) {
+            case SopStepStatus::Complete:
+                return wxString::FromUTF8("Step completed.");
+            case SopStepStatus::Waiting:
+                return wxString::FromUTF8("Paste the GPT response in the dialog, then Save.");
+            default:
+                return wxString::FromUTF8("Click Copy to copy the prompt, then paste the GPT response.");
+            }
+        }
         switch (step->status) {
         case SopStepStatus::Complete:
             return wxString::FromUTF8("Step completed.");
@@ -680,6 +692,33 @@ private:
         }
     }
 
+    bool OpenGptPasteFlow(const SopStep &step) {
+        wxString err;
+        if (!CopyStepPrompt(step, &err)) {
+            SetStatusBarMessage(err, true);
+            return false;
+        }
+        const std::string step_id = sop_step_id(step);
+        SopPasteResponseDialog paste(this, engine_->options().project_dir, step);
+        if (paste.ShowModal() != wxID_OK || !paste.saved()) {
+            SetStatusBarMessage(wxString::FromUTF8("Paste Response cancelled."), true);
+            return false;
+        }
+        auto applied = engine_->apply_gpt_save_result(step_id, paste.save_result());
+        append_log(applied.ok ? 1 : 0, applied.message);
+        if (!applied.ok) {
+            wxMessageBox(wxString::FromUTF8(applied.message), wxString::FromUTF8("Save failed"),
+                         wxOK | wxICON_ERROR, this);
+            return false;
+        }
+        SetStatusBarMessage(wxString::FromUTF8(applied.message), true);
+        if (step.interaction == SopInteraction::Select) {
+            SopRenderResponseDialog render(this, paste.save_result());
+            render.ShowModal();
+        }
+        return true;
+    }
+
     bool CopyStepPrompt(const SopStep &step, wxString *err = nullptr) {
         if (!step.is_prompt_copy()) {
             if (err) {
@@ -710,6 +749,11 @@ private:
             return;
         }
         const SopStep &step = engine_->definition().steps.at(step_id);
+        if (step.is_gpt_get()) {
+            OpenGptPasteFlow(step);
+            RefreshAll();
+            return;
+        }
         if (step.is_prompt_copy()) {
             wxString err;
             if (!CopyStepPrompt(step, &err)) {
@@ -747,6 +791,11 @@ private:
         if (!step) {
             return;
         }
+        if (step->is_gpt_get()) {
+            OpenGptPasteFlow(*step);
+            RefreshAll();
+            return;
+        }
         wxString err;
         if (!CopyStepPrompt(*step, &err)) {
             SetStatusBarMessage(err, true);
@@ -761,11 +810,32 @@ private:
         const size_t total = engine_->active_steps().size();
         const size_t current = engine_->current_index();
         int pct = 0;
-        if (total > 0) {
+        wxString label;
+        std::string step_id;
+        if (current < engine_->active_steps().size()) {
+            step_id = engine_->active_steps()[current];
+        }
+        const double shell_pct =
+            step_id.empty() ? -1.0 : engine_->shell_progress_pct(step_id);
+        if (shell_pct >= 0.0 && engine_->is_shell_running(step_id)) {
+            pct = static_cast<int>(shell_pct + 0.5);
+            if (pct > 100) {
+                pct = 100;
+            }
+            const std::string shell_label = engine_->shell_progress_label(step_id);
+            if (!shell_label.empty()) {
+                label = wxString::FromUTF8(shell_label);
+            } else {
+                label = wxString::Format("%.0f%%", shell_pct);
+            }
+        } else if (total > 0) {
             pct = static_cast<int>(current * 100 / total);
+            label = wxString::Format("%zu / %zu", current + 1, total);
+        } else {
+            label = wxString::FromUTF8("0 / 0");
         }
         progress_gauge_->SetValue(pct);
-        progress_label_->SetLabel(wxString::Format("%zu / %zu", current + 1, total));
+        progress_label_->SetLabel(label);
         if (graph_layout_dirty_) {
             graph_->Rebuild();
             graph_layout_dirty_ = false;
@@ -773,10 +843,6 @@ private:
             graph_->SyncNodeStates();
         }
         graph_->SetCurrentIndex(current);
-        std::string step_id;
-        if (current < engine_->active_steps().size()) {
-            step_id = engine_->active_steps()[current];
-        }
         const bool current_changed = step_id != last_current_step_id_;
         last_current_step_id_ = step_id;
         /* Auto-scroll only when the running step changes (Back/Next/Start/…),
@@ -810,7 +876,7 @@ private:
         status_label_->SetLabel(status_text(step));
         status_label_->SetForegroundColour(status_colour(step));
         body_view_->SetValue(wxString::FromUTF8(step.body));
-        ai_panel_->Show(step.is_user());
+        ai_panel_->Show(step.is_user() && !step.is_gpt_get());
         Layout();
     }
 
@@ -832,7 +898,7 @@ private:
         status_label_->SetLabel(status_text(*step));
         status_label_->SetForegroundColour(status_colour(*step));
         body_view_->SetValue(wxString::FromUTF8(step->body));
-        ai_panel_->Show(step->is_user());
+        ai_panel_->Show(step->is_user() && !step->is_gpt_get());
         Layout();
     }
 

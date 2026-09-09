@@ -13,7 +13,7 @@
 #include <string>
 
 #ifndef TEST_SOP_DIR
-#define TEST_SOP_DIR "../figma.sop"
+#define TEST_SOP_DIR "../worldman.sop"
 #endif
 
 namespace fs = std::filesystem;
@@ -42,7 +42,7 @@ int main(void) {
 
     const fs::path sop_dir = fs::path(TEST_SOP_DIR);
     if (!fs::is_directory(sop_dir)) {
-        fprintf(stderr, "FAIL missing figma.sop at %s\n", TEST_SOP_DIR);
+        fprintf(stderr, "FAIL missing worldman.sop at %s\n", TEST_SOP_DIR);
         return 1;
     }
 
@@ -58,10 +58,10 @@ int main(void) {
         return 1;
     }
 
-    expect_eq_str("config name", sop_config_name(opts.sop_dir), "figma.sop");
+    expect_eq_str("config name", sop_config_name(opts.sop_dir), "worldman.sop");
     expect_eq_str("config path suffix",
                   fs::path(sop_config_path(opts.project_dir, opts.sop_dir)).filename().string(),
-                  "figma.sop.conf");
+                  "worldman.sop.conf");
 
     if (engine.active_steps().size() > 1) {
         const std::string saved = engine.active_steps()[1];

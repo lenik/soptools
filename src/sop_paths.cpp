@@ -8,6 +8,8 @@
 
 #include "sop_paths.hpp"
 
+#include "config.h"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -37,8 +39,8 @@ std::string resolve_sop_dir(const std::string &requested, const std::string &sou
     }
 #endif
     const fs::path candidates[] = {
-        fs::path(source_root) / "figma.sop",
-        fs::current_path() / "figma.sop",
+        fs::path(source_root) / "worldman.sop",
+        fs::current_path() / "worldman.sop",
     };
     for (const auto &c : candidates) {
         std::error_code ec;
@@ -46,5 +48,40 @@ std::string resolve_sop_dir(const std::string &requested, const std::string &sou
             return fs::absolute(c).string();
         }
     }
-    return fs::absolute(fs::path(source_root) / "figma.sop").string();
+    return fs::absolute(fs::path(source_root) / "worldman.sop").string();
+}
+
+std::string resolve_sopenv_bash_dir(const std::string &source_root) {
+    std::error_code ec;
+#ifdef SOP_PKGDATADIR
+    {
+        const fs::path installed = fs::path(SOP_PKGDATADIR) / "sopenv" / "bash";
+        if (fs::is_directory(installed, ec)) {
+            return fs::absolute(installed).string();
+        }
+    }
+#endif
+    const fs::path candidates[] = {
+        fs::path(source_root) / "sopenv" / "bash",
+        fs::current_path() / "sopenv" / "bash",
+    };
+    for (const auto &c : candidates) {
+        if (fs::is_directory(c, ec)) {
+            return fs::absolute(c).string();
+        }
+    }
+    return fs::absolute(fs::path(source_root) / "sopenv" / "bash").string();
+}
+
+std::string shell_single_quote(const std::string &value) {
+    std::string out = "'";
+    for (char ch : value) {
+        if (ch == '\'') {
+            out += "'\\''";
+        } else {
+            out.push_back(ch);
+        }
+    }
+    out.push_back('\'');
+    return out;
 }

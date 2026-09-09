@@ -1,22 +1,16 @@
+Save-As: prisma/seed.ts
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
 # Create seed data
 
-Create:
-
-```text
-prisma/seed.ts
-```
-
-based on the previously defined Prisma schema.
+Create `prisma/seed.ts` based on the previously defined Prisma schema.
 
 Before writing the seed, review the schema and product model against realistic demo and testing scenarios.
 
 Do not modify or silently redesign `schema.prisma` during this step.
 
-If seed design reveals that the existing schema cannot adequately represent an important product requirement, relationship, lifecycle state, constraint, historical case, or realistic test scenario, also create:
-
-```text
-prisma/request-for-refactor.md
-```
+If seed design reveals that the existing schema cannot adequately represent an important product requirement, relationship, lifecycle state, constraint, historical case, or realistic test scenario, also create `prisma/request-for-refactor.md`.
 
 The refactor request should describe:
 

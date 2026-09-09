@@ -1,6 +1,6 @@
 # soptools
 
-`soptools` guides project construction through Standard Operating Procedure (SOP) workflows. It loads step definitions from Markdown files (`<seq><role>.<name>.md`), runs shell steps, captures AI output, and tracks branch selection in a wxWidgets GUI or console mode.
+`soptools` guides project construction through Standard Operating Procedure (SOP) workflows. It loads step definitions from Markdown files (`<seq><variant>.<_role>.<title>.md`), runs shell steps, captures AI output, and tracks branch selection in a wxWidgets GUI or console mode.
 
 ## Usage
 
@@ -10,7 +10,7 @@ soptools [OPTIONS] [PROJECTDIR]
 
 Common options:
 
-- `-s, --sop SOPDIR` — SOP directory (default: builtin `figma.sop`)
+- `-s, --sop SOPDIR` — SOP directory (default: builtin `worldman.sop`; also ships `worldman-zh_CN.sop`, `worldman-ja.sop`)
 - `-g, --gui` / `-c, --console` — force GUI or console mode
 - `-C, --chdir DIR` — project directory (walks up to find `.git`)
 - `-v, --verbose` / `-q, --quiet` — logging level
@@ -33,7 +33,10 @@ DESTDIR=$PWD/stage meson install -C builddir
 ## Layout
 
 - `src/` — application (`soptools.cpp`, SOP engine, GUI)
-- `figma.sop/` — default SOP step definitions
+- `worldman.sop/` — default English SOP step definitions
+- `worldman-zh_CN.sop/` — Simplified Chinese SOP pack
+- `worldman-ja.sop/` — Japanese SOP pack
+- `sopenv/bash/` — shell helpers on PATH for SOP scripts (`sop-script`)
 - `docs/` — AsciiDoc man page sources (English + translations)
 - `po/` — gettext catalogs
 - `debian/`, `packaging/` — distribution metadata

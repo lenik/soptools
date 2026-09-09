@@ -2,6 +2,7 @@
 #define SOP_RUNTIME_HPP
 
 #include "sop_model.hpp"
+#include "sop_gpt_response.hpp"
 
 #include <functional>
 #include <map>
@@ -25,7 +26,11 @@ struct SopApplyResult {
 struct SopShellRun {
     bool running = false;
     int exit_code = -1;
+    /* -1 = unknown; otherwise 0..100 from script set_progress (not session %). */
+    double progress_pct = -1.0;
+    std::string progress_label;
     std::string log;
+    std::string progress_fifo;
 };
 
 enum class SopAutoRunState {
@@ -79,9 +84,13 @@ public:
 
     void poll_completion();
     SopApplyResult apply_ai_output(const std::string &step_id, const std::string &text);
+    SopApplyResult apply_gpt_save_result(const std::string &step_id, const SopGptSaveResult &saved);
     bool run_shell(const std::string &step_id);
     void stop_shell(const std::string &step_id);
     bool is_shell_running(const std::string &step_id) const;
+    /* Returns shell progress percent for step_id, or -1 if unknown/not running. */
+    double shell_progress_pct(const std::string &step_id) const;
+    std::string shell_progress_label(const std::string &step_id) const;
 
     void mark_complete(const std::string &step_id, bool complete);
     bool is_complete(const std::string &step_id) const;

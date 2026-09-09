@@ -1,13 +1,15 @@
+Save-As: prisma/schema.prisma
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
 # Create Prisma schema
 
 Create complete Prisma schema for PostgreSQL.
 
 Output:
 
-```text
-prisma/schema.prisma
-prisma/comments.sql
-```
+- `prisma/schema.prisma`
+- `prisma/comments.sql`
 
 Requirements:
 
@@ -17,21 +19,19 @@ Requirements:
 - use `snake_case` for database column names
 - include meaningful Prisma documentation comments
 - convert relevant Prisma comments into PostgreSQL `COMMENT ON` statements
-- use PostgreSQL schema:
-
-```text
-<appname>
-```
-
+- use PostgreSQL schema `<appname>`
 Design requirements:
 
-- model the complete product domain, not merely the currently visible Figma screens
+- model the complete product domain for this WorldMan module, not merely the currently visible screens
 - preserve historical information where the domain requires it
 - distinguish lifecycle state from deletion where appropriate
 - provide useful indexes for common lookup/search patterns
 - add unique constraints only when they represent actual domain rules
+- support standalone vs integrated operation: owned master data stays in this schema; peer master data is a scalar cuid2 reference only
+- when standalone, basic entities (user/contact/…) may be a **minimal local table**; when integrated, prefer opaque id + API resolution over duplicating the peer’s full model
 - avoid unnecessary database coupling to other applications
-- cross-application IDs should normally be scalar cuid2-compatible fields without database foreign-key constraints unless explicitly required
+- cross-application IDs should normally be scalar cuid2 fields without database foreign-key constraints unless explicitly required
+- record owned vs referenced entities consistently with `worldman.json` `masterData` / `references` when present
 - avoid using JSON when a stable relational structure is clearly known
 - use JSON when the structure is genuinely dynamic or extension-oriented
 

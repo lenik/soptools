@@ -40,6 +40,18 @@ struct SopCompletionRule {
     bool wait_shell = false;
 };
 
+enum class SopFileLink {
+    Default, /* resolve at save: inode on ext2/3/4, else copy */
+    None,
+    Inode,
+    Sym,
+};
+
+enum class SopInteraction {
+    None,   /* save only; no post-save dialog */
+    Select, /* show rendered response / part picker after save */
+};
+
 struct SopStep {
     int seq = 0;
     /* 'a' = default / preferred; 'z' = optional / alternative branch. */
@@ -49,6 +61,7 @@ struct SopStep {
     std::string name;
     std::string filename;
     std::string filepath;
+    std::string extension;
 
     std::string title;
     std::string description;
@@ -59,6 +72,12 @@ struct SopStep {
     std::vector<std::string> output_paths;
     SopCompletionRule completion;
     SopBranchKind branch_kind = SopBranchKind::None;
+
+    /* .get headers (GPT steps). */
+    std::string save_as;
+    SopFileLink file_link = SopFileLink::Default;
+    std::vector<std::string> parse_formats;
+    SopInteraction interaction = SopInteraction::None;
 
     SopStepStatus status = SopStepStatus::Pending;
     std::string status_message;
@@ -72,6 +91,8 @@ struct SopStep {
     bool is_action() const;
     bool is_automatable() const;
     bool is_prompt_copy() const;
+    bool is_gpt_get() const;
+    bool has_parse_format(const std::string &fmt) const;
 };
 
 struct SopBranchGroup {

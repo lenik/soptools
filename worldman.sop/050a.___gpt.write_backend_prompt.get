@@ -1,0 +1,91 @@
+Parse: multi-parts
+Interaction: select
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
+# Write Codex prompt for backend implementation
+
+Write a complete Codex prompt to create the backend for this WorldMan module.
+
+Backend stack:
+
+- `pnpm`
+- Node.js
+- TypeScript
+- Fastify
+- Prisma
+
+API prefix: `/api/v1/`
+
+Port / deploy expectations (include in the prompt):
+
+- base `N` from `wm port -n <name>` (or `worldman.json` `portBase`)
+- direct-run backend HTTP/HTTPS: `2000+N` / `2001+N`
+- Apache/published map HTTP/HTTPS: `6000+N` / `6001+N`
+- container bridge internal HTTP/HTTPS: `3000` / `3001`
+- rule: HTTPS = HTTP + 1, except bridge web `80`/`443`
+
+Identity / integration constraints:
+
+- master-data primary keys use `cuid(2)`
+- peer-module entities are opaque cuid2 references + API resolution, not cross-DB foreign keys
+- the module must remain runnable standalone with minimal local basic-data tables when peers are absent
+
+The backend API must cover the useful capabilities of the domain, not only the functions currently used by the web application.
+
+Analyze the nature of each domain object and expose functionality that allows the data to be fully reused by:
+
+- the current web application
+- future mobile applications
+- other internal systems
+- external integrations
+- automation
+- reporting
+- AI agents where appropriate
+
+For every resource, evaluate whether it needs:
+
+- CRUD
+- list
+- detail
+- search
+- lookup
+- autocomplete
+- filtering
+- sorting
+- pagination
+- batch retrieval
+- bulk create/update/delete
+- relation traversal
+- tree traversal
+- state transitions
+- history
+- version access
+- validation
+- statistics
+- aggregation
+- import
+- export
+- media operations
+- external reference resolution
+
+Do not mechanically implement all of these for every model.
+
+Implement them when meaningful for the domain.
+
+Backend architecture should separate:
+
+- route/controller layer
+- validation
+- service/domain logic
+- data access
+- shared errors
+- API serialization
+
+Avoid putting domain logic directly in route handlers.
+
+Include robust validation and consistent API errors.
+
+The prompt should instruct Codex to implement the backend against the existing Prisma schema.
+
+Do not require Codex to redesign the product unless an implementation-blocking contradiction is found.
