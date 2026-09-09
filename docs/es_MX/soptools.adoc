@@ -25,8 +25,11 @@ SOP files use the naming convention:
 
 [source]
 ----
-<seq><role>.<name>.md
+<seq><variant>.<_padded_role>.<title>.md
 ----
+
+Variant *a* is the default branch choice; *z* is optional/alternative.
+The builtin SOP is *worldman.sop* for WorldMan module construction.
 
 The GUI shows a workflow graph, branch selection, forward/back navigation,
 automated run controls, and optional logging. Console mode provides a text
@@ -35,7 +38,7 @@ interface with the same workflow engine.
 == Options
 
 *-s, --sop* _SOPDIR_::
-  SOP directory to load. Defaults to the builtin *figma.sop* shipped with
+  SOP directory to load. Defaults to the builtin *worldman.sop* shipped with
   *soptools*.
 
 *-c, --console*::

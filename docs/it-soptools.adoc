@@ -23,7 +23,7 @@ SOP files use the naming convention:
 
 ____
 ....
-<seq><role>.<name>.md
+<seq><variant>.<_padded_role>.<title>.md
 ....
 ____
 
@@ -34,7 +34,7 @@ The GUI shows a workflow graph, branch selection, forward/back navigation, autom
 *-s, --sop* _SOPDIR_
 
 ____
-SOP directory to load. Defaults to the builtin *figma.sop* shipped with *soptools*.
+SOP directory to load. Defaults to the builtin *worldman.sop* shipped with *soptools*. Localized packs *worldman-zh_CN.sop* and *worldman-ja.sop* are also installed.
 ____
 
 *-c, --console*

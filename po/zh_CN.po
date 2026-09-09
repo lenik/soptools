@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 
 #: src/soptools.cpp:34
-msgid "  -s, --sop SOPDIR     SOP directory (default: builtin figma.sop)\n"
+msgid "  -s, --sop SOPDIR     SOP directory (default: builtin worldman.sop)\n"
 msgstr ""
 
 #: src/soptools.cpp:35
