@@ -46,15 +46,6 @@ meson install -C build --destdir=%{buildroot}
 %files
 %{_bindir}/sopwin
 %{_datadir}/bash-completion/completions/sopwin
-%{_datadir}/bash-completion/completions/ar-soptools
-%{_datadir}/bash-completion/completions/de-soptools
-%{_datadir}/bash-completion/completions/es_MX-soptools
-%{_datadir}/bash-completion/completions/fr-soptools
-%{_datadir}/bash-completion/completions/it-soptools
-%{_datadir}/bash-completion/completions/ja-soptools
-%{_datadir}/bash-completion/completions/ko-soptools
-%{_datadir}/bash-completion/completions/soptools
-%{_datadir}/bash-completion/completions/zh_CN-soptools
 %{_mandir}/man1/soptools.1*
 %{_mandir}/man1/sopwin.1*
 %{_mandir}/*/man1/soptools.1*

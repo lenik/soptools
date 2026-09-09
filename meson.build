@@ -133,15 +133,6 @@ install_subdir(
 
 bash_files = [
     'sopwin.bash',
-    'completions/ar-soptools.bash',
-    'completions/de-soptools.bash',
-    'completions/es_MX-soptools.bash',
-    'completions/fr-soptools.bash',
-    'completions/it-soptools.bash',
-    'completions/ja-soptools.bash',
-    'completions/ko-soptools.bash',
-    'completions/soptools.bash',
-    'completions/zh_CN-soptools.bash',
 ]
 
 foreach file : bash_files
