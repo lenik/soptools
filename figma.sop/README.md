@@ -5,20 +5,30 @@ This archive contains the project workflow split into independently reusable pro
 Naming convention:
 
 ```text
-<seq><role>.<title>.md
+<seq><variant>.<_padded_role>.<title>.md
 ```
 
 Examples:
 
 ```text
-000sh.refactor_figma.md
-010codex.refactor_web.md
-020gpt.create_prd.md
+000a._shell.refactor_figma.md
+010a._codex.refactor_web.md
+020a.___gpt.create_prd.md
+020z._codex.create_prd.md
 ```
 
-Roles:
+Sequence (`seq`):
 
-- `sh` — shell/project operation
+- Three-digit order key shared by branch alternatives (for example `020`).
+
+Variant:
+
+- `a` — default / preferred branch choice
+- `z` — optional / alternative branch choice
+
+Roles (leading underscores are visual padding for `ls` alignment and are ignored):
+
+- `shell` — shell/project operation
 - `gpt` — GPT specification/artifact generation step
 - `codex` — Codex repository implementation step
 
