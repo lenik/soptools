@@ -1,0 +1,93 @@
+Save-As: web-e2e/workflows.md
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
+# 创建完整测试工作流
+
+基于完整讨论以及此前产出的：
+
+- `sop/PRD.md`
+- `sop/TUC.md`（若存在）
+- `sop/NTC.md`（若存在）
+- `sop/ECS.md`（若存在）
+- `prisma/schema.prisma`
+- `prisma/seed.ts`
+- 后端设计
+
+将完整测试参考工作流写为 `web-e2e/workflows.md`。
+
+优先覆盖已在 `sop/TUC.md`、`sop/NTC.md`、`sop/ECS.md` 中列出的用例，并在讨论揭示额外场景时扩展这些文件。
+这些工作流是 Playwright E2E 测试的行为规格。
+
+它们不是 Playwright 代码。
+
+工作流应代表预期产品行为，不要仅为迁就偶然实现限制而改写。
+
+使用可读的工作流式伪语法。
+
+以有限但广泛的功能覆盖产品。
+
+包含：
+
+- 路由访问
+- 导航
+- 创建流程
+- 编辑流程
+- 删除/归档流程
+- 详情视图
+- 搜索
+- 过滤
+- 排序
+- 分页
+- 标签页
+- 对话框
+- 面板（Sheet）
+- 菜单
+- 上下文菜单
+- 批量操作
+- 状态转换
+- 校验失败
+- 取消路径
+- 空状态
+- 确认流程
+- 媒体交互
+- 导入/导出（如相关）
+- 跨实体导航
+- 重要错误路径
+- 重要边界情况
+
+不要创建诸如 `{correct/error}` 这类人为分支，除非底层业务动作确实有该语义区分。
+
+分支应描述真实条件。
+
+示例：
+
+```text
+Login
+    enter phone
+    enter password
+
+    if password matches:
+        submit
+        dashboard opens
+
+    if password does not match:
+        submit
+        login remains open
+        error message appears
+```
+
+工作流可包含：
+
+- 顺序
+- 分支
+- 重复
+- 选择
+- 前置条件
+- 预期可见结果
+
+但应保持可读实用，而不是形式化规格。
+
+在能使工作流可复现处使用 seed 数据。
+
+提供下载链接。

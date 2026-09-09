@@ -1,0 +1,41 @@
+Save-As: prisma/schema.prisma
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
+# 创建 Prisma schema
+
+为 PostgreSQL 创建完整 Prisma schema。
+
+输出：
+
+- `prisma/schema.prisma`
+- `prisma/comments.sql`
+
+要求：
+
+- 目标 PostgreSQL
+- ID 列使用 `cuid(2)`
+- 数据库表名使用 `snake_case`
+- 数据库列名使用 `snake_case`
+- 包含有意义的 Prisma 文档注释
+- 将相关 Prisma 注释转换为 PostgreSQL `COMMENT ON` 语句
+- 使用 PostgreSQL schema `<appname>`
+
+设计要求：
+
+- 建模完整产品领域，而不仅是当前可见屏幕
+- 领域需要时保留历史信息
+- 在合适处区分生命周期状态与删除
+- 为常见查找/搜索模式提供有用索引
+- 仅在表示真实领域规则时添加唯一约束
+- 支持独立 vs 集成：本模块拥有的主数据留在本 schema；对等主数据仅为标量 cuid2 引用
+- 独立运行时，基础实体（用户/联系人等）可以是**最小本地表**；集成时优先用不透明 id + API 解析，而不是复制对等应用的完整模型
+- 避免与其他应用产生不必要的数据库耦合
+- 跨应用 ID 通常应为无外键的标量 cuid2 字段，除非明确要求
+- 与 `worldman.json` 的 `masterData` / `references`（若存在）保持一致地区分拥有与引用
+- 结构稳定且已知时避免 JSON
+- 结构确实动态或面向扩展时再使用 JSON
+
+本步不要生成 `seed.ts`。
+
+提供下载链接。

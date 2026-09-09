@@ -1,0 +1,41 @@
+Save-As: prisma/schema.prisma
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
+# Prisma スキーマを作成する
+
+PostgreSQL 向けの完全な Prisma スキーマを作成してください。
+
+出力：
+
+- `prisma/schema.prisma`
+- `prisma/comments.sql`
+
+要件：
+
+- 対象は PostgreSQL
+- ID 列は `cuid(2)`
+- DB 表名は `snake_case`
+- DB 列名は `snake_case`
+- 意味のある Prisma ドキュメントコメントを付ける
+- 関連コメントを PostgreSQL `COMMENT ON` に変換する
+- PostgreSQL schema `<appname>`
+
+設計要件：
+
+- 今見えている画面だけでなく、製品ドメイン全体をモデル化する
+- ドメインが要するなら履歴情報を残す
+- 適切な箇所でライフサイクル状態と削除を区別する
+- よくある検索／ルックアップ用の有用な索引を付ける
+- 実ドメイン規則のときだけ UNIQUE を付ける
+- 独立 vs 統合を支える：所有マスタはこの schema、対等マスタはスカラー cuid2 参照のみ
+- 独立時、基礎実体（ユーザー／連絡先など）は**最小ローカル表**でよい。統合時は不透明 id＋API 解決を優先し、対等アプリの完全モデルを複製しない
+- 他アプリとの不要な DB 結合を避ける
+- アプリ横断 ID は明示要求がなければ FK なしの cuid2 スカラー
+- 存在すれば `worldman.json` の `masterData` / `references` と所有／参照を一致させる
+- 安定な関係構造が分かるときは JSON を避ける
+- 真に動的／拡張向きのときだけ JSON を使う
+
+この手順では `seed.ts` を生成しない。
+
+ダウンロードリンクを提示する。

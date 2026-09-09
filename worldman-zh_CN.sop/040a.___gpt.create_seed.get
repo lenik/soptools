@@ -1,0 +1,63 @@
+Save-As: prisma/seed.ts
+Discard: -*- mode: markdown -*-
+Discard: vim: set ft=markdown :
+
+# 创建种子数据
+
+基于此前定义的 Prisma schema 创建 `prisma/seed.ts`。
+
+编写 seed 之前，对照现实演示与测试场景审阅 schema 与产品模型。
+
+本步不要修改或默默重新设计 `schema.prisma`。
+
+若 seed 设计暴露出现有 schema 无法充分表达重要产品需求、关系、生命周期状态、约束、历史案例或现实测试场景，同时创建 `prisma/request-for-refactor.md`。
+
+重构请求应描述：
+
+- 受影响的模型
+- 暴露问题的具体 seed 场景
+- 当前 schema 为何不足
+- 严重程度：`blocking` 或 `recommended`
+- 建议的最小 schema 变更
+- 对现有数据的预期影响
+- 对 seed 逻辑的预期影响
+- 对后端 API 的预期影响
+- 对测试的预期影响
+
+不要自动应用所提议的 schema 变更。
+
+若不需要 schema 变更，不要创建 `request-for-refactor.md`。
+
+将 seed 交付物输出为包含以下内容的 ZIP 归档：
+
+```text
+prisma/
+    seed.ts
+    request-for-refactor.md   # 仅在需要时
+```
+
+种子数据不应只是填充行。它应锻炼领域。
+
+在适用处包含：
+
+- 多个代表性实体
+- 多个分类/类型
+- 现实关系
+- 不同生命周期状态
+- 启用/停用示例
+- 相关时的草稿/已发布/已完成/已取消示例
+- 父子关系
+- 多对多关系
+- 历史/版本示例
+- 空或可选字段示例
+- 对测试有用的边界示例
+- 可区分搜索/过滤的值
+- 日期/时间变化
+- 演示媒体 URL
+- 图片
+- 相关时的音视频 URL
+- 相关时的文件/附件
+
+种子数据应足够确定，以支持自动化测试。
+
+优先使用稳定、可读的演示名称，而不是随机数据。
