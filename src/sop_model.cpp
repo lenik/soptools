@@ -173,10 +173,18 @@ void extract_markdown_metadata(SopStep &step) {
         step.completion.files_exist.end());
 }
 
+std::string strip_role_padding(const std::string &raw) {
+    size_t i = 0;
+    while (i < raw.size() && raw[i] == '_') {
+        i++;
+    }
+    return raw.substr(i);
+}
+
 } /* namespace */
 
 SopRole parse_role_slug(const std::string &slug) {
-    if (slug == "sh") {
+    if (slug == "sh" || slug == "shell") {
         return SopRole::Shell;
     }
     if (slug == "gpt") {
@@ -206,7 +214,7 @@ SopStepKind infer_step_kind(const SopStep &step) {
 
 std::string sop_step_id(const SopStep &step) {
     char buf[64];
-    std::snprintf(buf, sizeof(buf), "%03d%s", step.seq, step.role_slug.c_str());
+    std::snprintf(buf, sizeof(buf), "%03d%c%s", step.seq, step.variant, step.role_slug.c_str());
     return buf;
 }
 
@@ -253,6 +261,9 @@ std::string SopStep::role_label() const {
 }
 
 bool SopStep::is_alt_branch() const {
+    if (variant == 'z' || variant == 'Z') {
+        return true;
+    }
     return role == SopRole::AltCodex || role_slug.rfind("alt_", 0) == 0;
 }
 
@@ -270,7 +281,7 @@ bool SopStep::is_automatable() const {
 }
 
 bool SopStep::is_prompt_copy() const {
-    return role == SopRole::Gpt || role == SopRole::Codex;
+    return role == SopRole::Gpt || role == SopRole::Codex || role == SopRole::AltCodex;
 }
 
 std::optional<SopStep> parse_sop_file(const std::string &path) {
@@ -282,19 +293,31 @@ std::optional<SopStep> parse_sop_file(const std::string &path) {
     const size_t slash = path.find_last_of("/\\");
     const std::string filename = slash == std::string::npos ? path : path.substr(slash + 1);
 
-    static const std::regex name_re(R"(^(\d{3})([^.]+)\.([^.]+)\.md$)");
+    /* New: 020a.___gpt.create_prd.md / 020z._codex.create_prd.md
+     * Legacy: 020gpt.create_prd.md / 020alt_codex.create_prd.md */
+    static const std::regex name_re_new(R"(^(\d{3})([a-zA-Z])\.(_*[^.]+)\.([^.]+)\.md$)");
+    static const std::regex name_re_legacy(R"(^(\d{3})([^.]+)\.([^.]+)\.md$)");
     std::smatch m;
-    if (!std::regex_match(filename, m, name_re)) {
-        return std::nullopt;
-    }
 
     SopStep step;
     step.filename = filename;
     step.filepath = path;
-    step.seq = std::stoi(m[1].str());
-    step.role_slug = m[2].str();
+
+    if (std::regex_match(filename, m, name_re_new)) {
+        step.seq = std::stoi(m[1].str());
+        step.variant = static_cast<char>(std::tolower(static_cast<unsigned char>(m[2].str()[0])));
+        step.role_slug = strip_role_padding(m[3].str());
+        step.name = m[4].str();
+    } else if (std::regex_match(filename, m, name_re_legacy)) {
+        step.seq = std::stoi(m[1].str());
+        step.role_slug = m[2].str();
+        step.name = m[3].str();
+        step.variant = step.role_slug.rfind("alt_", 0) == 0 ? 'z' : 'a';
+    } else {
+        return std::nullopt;
+    }
+
     step.role = parse_role_slug(step.role_slug);
-    step.name = m[3].str();
 
     std::ostringstream body;
     body << in.rdbuf();
@@ -369,6 +392,9 @@ SopDefinition load_sop_directory(const std::string &dir) {
         std::sort(ids.begin(), ids.end(), [&](const std::string &a, const std::string &b) {
             const SopStep &sa = def.steps.at(a);
             const SopStep &sb = def.steps.at(b);
+            if (sa.variant != sb.variant) {
+                return sa.variant < sb.variant;
+            }
             if (sa.is_alt_branch() != sb.is_alt_branch()) {
                 return !sa.is_alt_branch();
             }

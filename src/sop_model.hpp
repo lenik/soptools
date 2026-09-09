@@ -42,6 +42,8 @@ struct SopCompletionRule {
 
 struct SopStep {
     int seq = 0;
+    /* 'a' = default / preferred; 'z' = optional / alternative branch. */
+    char variant = 'a';
     std::string role_slug;
     SopRole role = SopRole::Other;
     std::string name;

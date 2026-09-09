@@ -32,6 +32,13 @@ static void expect_eq_int(const char *name, int got, int want) {
     }
 }
 
+static void expect_eq_str(const char *name, const std::string &got, const std::string &want) {
+    if (got != want) {
+        fprintf(stderr, "FAIL %s: got '%s' want '%s'\n", name, got.c_str(), want.c_str());
+        failures++;
+    }
+}
+
 int main(void) {
     const fs::path sop_dir = fs::path(TEST_SOP_DIR);
     if (!fs::is_directory(sop_dir)) {
@@ -41,40 +48,58 @@ int main(void) {
 
     expect_true("humanize create_prd", humanize_name("create_prd") == "Create Prd");
 
-    auto step = parse_sop_file((sop_dir / "000sh.refactor_figma.md").string());
+    auto step = parse_sop_file((sop_dir / "000a._shell.refactor_figma.md").string());
     expect_true("parse shell step", step.has_value());
     if (step) {
         expect_eq_int("seq", step->seq, 0);
-        expect_true("step id", sop_step_id(*step) == "000sh");
-        expect_true("role sh", step->role == SopRole::Shell);
+        expect_eq_str("step id", sop_step_id(*step), "000ashell");
+        expect_true("variant a", step->variant == 'a');
+        expect_true("role shell", step->role == SopRole::Shell);
         expect_true("has shell script", !step->shell_script.empty());
         expect_true("kind shell", step->kind == SopStepKind::Shell);
         expect_true("action node", step->is_action());
         expect_true("not user", !step->is_user());
         expect_true("shell not prompt copy", step->is_automatable() && !step->is_prompt_copy());
+        expect_true("shell not alt", !step->is_alt_branch());
     }
 
-    auto gpt = parse_sop_file((sop_dir / "020gpt.create_prd.md").string());
+    auto gpt = parse_sop_file((sop_dir / "020a.___gpt.create_prd.md").string());
     expect_true("parse gpt step", gpt.has_value());
     if (gpt) {
+        expect_eq_str("gpt id", sop_step_id(*gpt), "020agpt");
         expect_true("kind ai", gpt->kind == SopStepKind::AiOutput);
         expect_true("output path", !gpt->output_paths.empty());
         expect_true("user node", gpt->is_user());
         expect_true("not automatable", !gpt->is_automatable());
         expect_true("gpt prompt copy", gpt->is_prompt_copy());
+        expect_true("gpt default", !gpt->is_alt_branch());
     }
 
-    auto codex = parse_sop_file((sop_dir / "010codex.refactor_web.md").string());
+    auto codex = parse_sop_file((sop_dir / "010a._codex.refactor_web.md").string());
     expect_true("parse codex step", codex.has_value());
     if (codex) {
+        expect_eq_str("codex id", sop_step_id(*codex), "010acodex");
         expect_true("codex user", codex->is_user());
         expect_true("codex not automatable", !codex->is_automatable());
         expect_true("codex prompt copy", codex->is_prompt_copy());
     }
 
+    auto alt = parse_sop_file((sop_dir / "020z._codex.create_prd.md").string());
+    expect_true("parse z alt step", alt.has_value());
+    if (alt) {
+        expect_eq_str("alt id", sop_step_id(*alt), "020zcodex");
+        expect_true("alt variant z", alt->variant == 'z');
+        expect_true("alt role codex", alt->role == SopRole::Codex);
+        expect_true("alt is alt branch", alt->is_alt_branch());
+        expect_true("alt prompt copy", alt->is_prompt_copy());
+    }
+
     SopDefinition def = load_sop_directory(sop_dir.string());
     expect_true("load sop dir", !def.steps.empty());
     expect_true("branch at 020", def.branch_groups[20].step_ids.size() >= 2);
+    if (def.branch_groups[20].step_ids.size() >= 2) {
+        expect_eq_str("020 default first", def.branch_groups[20].step_ids.front(), "020agpt");
+    }
 
     auto order = build_active_step_order(def, {});
     expect_true("active order", !order.empty());
