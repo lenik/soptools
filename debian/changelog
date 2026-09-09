@@ -1,5 +1,6 @@
 soptools (0.1.0) unstable; urgency=medium
 
+  [ Lenik (谢继雷) ]
   * Reorganize src/ by layer (util, model, engine, ui); drop redundant
     sop_ file prefixes.
   * Rename packaged sopenv/ to extension/bash for SOP script PATH
@@ -10,6 +11,10 @@ soptools (0.1.0) unstable; urgency=medium
     man scaffolds, completions.
   * Ship WorldMan SOP packs (en/zh_CN/ja) with GPT .get capture,
     paste/render dialogs, and progress FIFO.
+
+  [ Lenik ]
+  * Fix RPM %%description typo and locale man %%files; skip mingw when
+    cross bas-cpp is missing.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 09 Sep 2026 18:22:48 +0800
 

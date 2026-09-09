@@ -18,8 +18,10 @@ BuildRequires:  meson
 BuildRequires:  ninja-build
 BuildRequires:  pkgconf
 BuildRequires:  asciidoctor
+BuildRequires:  pkgconfig(bas-cpp)
+BuildRequires:  wxGTK3-devel
 
-%sdescription
+%description
 soptools guides project construction through Standard Operating Procedure
 workflows with a wxWidgets GUI or console interface. It ships builtin SOP
 definitions, gettext translations, AsciiDoc man pages, and bash completion.
@@ -53,30 +55,16 @@ meson install -C build --destdir=%{buildroot}
 %{_datadir}/bash-completion/completions/ko-soptools
 %{_datadir}/bash-completion/completions/soptools
 %{_datadir}/bash-completion/completions/zh_CN-soptools
-%{_mandir}/man1/ar-soptools.1*
-%{_mandir}/man1/de-soptools.1*
-%{_mandir}/man1/es_MX-soptools.1*
-%{_mandir}/man1/fr-soptools.1*
-%{_mandir}/man1/it-soptools.1*
-%{_mandir}/man1/ja-soptools.1*
-%{_mandir}/man1/ko-soptools.1*
 %{_mandir}/man1/soptools.1*
 %{_mandir}/man1/sopwin.1*
-%{_mandir}/man1/zh_CN-soptools.1*
-%{_datadir}/soptools/
-%{_datadir}/locale/*/LC_MESSAGES/soptools.mo
-%{_mandir}/*/man1/ar-soptools.1*
-%{_mandir}/*/man1/de-soptools.1*
-%{_mandir}/*/man1/es_MX-soptools.1*
-%{_mandir}/*/man1/fr-soptools.1*
-%{_mandir}/*/man1/it-soptools.1*
-%{_mandir}/*/man1/ja-soptools.1*
-%{_mandir}/*/man1/ko-soptools.1*
 %{_mandir}/*/man1/soptools.1*
 %{_mandir}/*/man1/sopwin.1*
-%{_mandir}/*/man1/zh_CN-soptools.1*
+%{_datadir}/soptools/
+%{_datadir}/locale/*/LC_MESSAGES/soptools.mo
 %{_datadir}/doc/soptools/
 %changelog
+* Wed Sep 09 2026 Lenik <soptools@bodz.net>
+- Fix %%description typo; package locale man pages and bas-cpp/wx deps.
 * Tue Sep 01 2026 Lenik <soptools@bodz.net>
 - Package sopwin binary, completion, and man page from Meson install.
 * Thu Aug 20 2026 Lenik <soptools@bodz.net>

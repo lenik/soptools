@@ -29,17 +29,25 @@ stage:
 	if [ -n "$$OS" ] && [ "$$OS" = Windows_NT ]; then \
 		meson setup "$(BUILD)" --prefix=/ --buildtype=release; \
 	elif [ -n "$(MINGW_CC)" ]; then \
+		if ! x86_64-w64-mingw32-pkg-config --exists bas-cpp 2>/dev/null; then \
+			echo "mingw: skip (no cross-compiled bas-cpp)" >&2; \
+			exit 0; \
+		fi; \
 		meson setup "$(BUILD)" --cross-file "$(CROSS)" --prefix=/ --buildtype=release; \
 	else \
 		echo "mingw: need MSYS/MinGW or x86_64-w64-mingw32-gcc" >&2; \
 		exit 1; \
-	fi
-	meson compile -C "$(BUILD)"
+	fi; \
+	meson compile -C "$(BUILD)"; \
 	DESTDIR="$(STAGE)" meson install -C "$(BUILD)"
 
 $(ARTIFACT): stage
 	mkdir -p "$(OUTDIR)"
 	@set -e; \
+	if [ ! -f "$(BUILD)/build.ninja" ]; then \
+		echo "mingw: skipped (no cross bas-cpp); no artifact" >&2; \
+		exit 0; \
+	fi; \
 	exes=$$(find "$(STAGE)" -type f -name '*.exe' | sort); \
 	n=$$(printf '%s\n' "$$exes" | sed '/^$$/d' | wc -l); \
 	if [ "$$n" -eq 1 ]; then \
@@ -56,8 +64,8 @@ $(ARTIFACT): stage
 	else \
 		echo "mingw: no .exe in stage and no 7z/zip to pack" >&2; \
 		exit 1; \
-	fi
-	@echo "$(ARTIFACT)"
+	fi; \
+	echo "$(ARTIFACT)"
 
 exe: $(ARTIFACT)
 
