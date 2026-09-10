@@ -1,4 +1,4 @@
-soptools (1.2.0) UNRELEASED; urgency=medium
+soptools (1.2.0) unstable; urgency=medium
 
   * Move Morandi to vibe; add Gal, Tomboy, Liaozhai, Game of Thrones
     themes.
@@ -12,7 +12,7 @@ soptools (1.2.0) UNRELEASED; urgency=medium
     Gyaru).
   * minor themes: add Gym Bro (morning lifter / 晨光型男).
 
- -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 17:47:04 +0800
+ -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 18:28:27 +0800
 
 soptools (1.1.0) unstable; urgency=medium
 

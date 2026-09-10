@@ -163,7 +163,9 @@ int main(void) {
         expect_true("010 body has theme extend", body.find("Theme") != std::string::npos ||
                                                      body.find("styleclass") != std::string::npos ||
                                                      body.find("sop/themes") != std::string::npos);
-        expect_true("no yaml header in merged body", body.find("extend: previous") == std::string::npos);
+        /* Frontmatter is stripped before merge; body prose may still mention the key. */
+        expect_true("no yaml frontmatter fence in merged body",
+                    body.rfind("---", 0) != 0 && body.find("\n---\n") == std::string::npos);
     }
     expect_true("no seq 11 after merge",
                 std::find(def.seq_order.begin(), def.seq_order.end(), 11) == def.seq_order.end());
