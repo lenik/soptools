@@ -216,9 +216,12 @@ meson.add_install_script(
       for name in soptools sopwin; do
         src="$build/${loc}-${name}.1"
         [ -f "$src" ] || continue
-        dest="$prefix/share/man/${loc}/man1/${name}.1"
-        mkdir -p "$(dirname "$dest")"
-        install -m644 "$src" "$dest"
+        dest_dir="$prefix/share/man/${loc}/man1"
+        mkdir -p "$dest_dir"
+        # Packaged name matches Meson custom_target output (zfr lint ZL047).
+        install -m644 "$src" "$dest_dir/${loc}-${name}.1"
+        # man(1) looks up man/<locale>/man1/<name>.1
+        ln -sfn "${loc}-${name}.1" "$dest_dir/${name}.1"
       done
     done
   '''.format(meson.current_build_dir(), ' '.join(man_locales)),

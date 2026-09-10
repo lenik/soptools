@@ -50,10 +50,28 @@ meson install -C build --destdir=%{buildroot}
 %{_mandir}/man1/sopwin.1*
 %{_mandir}/*/man1/soptools.1*
 %{_mandir}/*/man1/sopwin.1*
+%{_mandir}/ar/man1/ar-soptools.1*
+%{_mandir}/ar/man1/ar-sopwin.1*
+%{_mandir}/de/man1/de-soptools.1*
+%{_mandir}/de/man1/de-sopwin.1*
+%{_mandir}/es_MX/man1/es_MX-soptools.1*
+%{_mandir}/es_MX/man1/es_MX-sopwin.1*
+%{_mandir}/fr/man1/fr-soptools.1*
+%{_mandir}/fr/man1/fr-sopwin.1*
+%{_mandir}/it/man1/it-soptools.1*
+%{_mandir}/it/man1/it-sopwin.1*
+%{_mandir}/ja/man1/ja-soptools.1*
+%{_mandir}/ja/man1/ja-sopwin.1*
+%{_mandir}/ko/man1/ko-soptools.1*
+%{_mandir}/ko/man1/ko-sopwin.1*
+%{_mandir}/zh_CN/man1/zh_CN-soptools.1*
+%{_mandir}/zh_CN/man1/zh_CN-sopwin.1*
 %{_datadir}/soptools/
 %{_datadir}/locale/*/LC_MESSAGES/soptools.mo
 %{_datadir}/doc/soptools/
 %changelog
+* Thu Sep 10 2026 Lenik <soptools@bodz.net>
+- Package locale-prefixed man pages for zfr lint ZL047.
 * Wed Sep 09 2026 Lenik <soptools@bodz.net>
 - Fix %%description typo; package locale man pages and bas-cpp/wx deps.
 * Tue Sep 01 2026 Lenik <soptools@bodz.net>
