@@ -198,10 +198,6 @@ const MINOR_KEYS = new Set([
     'darkInnocent',
     'maiden',
     'darkMaiden',
-    'girl',
-    'darkGirl',
-    'morandi',
-    'darkMorandi',
     'lgbtq',
     'darkLgbtq',
     'lesbian',
@@ -214,6 +210,10 @@ const VIBE_KEYS = new Set([
     'darkXfiles',
     'onlyYesterday',
     'darkOnlyYesterday',
+    'morandi',
+    'darkMorandi',
+    'aroma',
+    'darkAroma',
 ]);
 
 const minorUi = {};
@@ -231,10 +231,6 @@ const minorFiles = [
     'dark-innocent-color-theme.json',
     'light-maiden-color-theme.json',
     'dark-maiden-color-theme.json',
-    'light-girl-color-theme.json',
-    'dark-girl-color-theme.json',
-    'light-morandi-color-theme.json',
-    'dark-morandi-color-theme.json',
     'light-lgbtq-color-theme.json',
     'dark-lgbtq-color-theme.json',
     'light-lesbian-color-theme.json',
@@ -247,6 +243,10 @@ const vibeFiles = [
     'dark-x-files-color-theme.json',
     'light-only-yesterday-color-theme.json',
     'dark-only-yesterday-color-theme.json',
+    'light-morandi-color-theme.json',
+    'dark-morandi-color-theme.json',
+    'light-aroma-color-theme.json',
+    'dark-aroma-color-theme.json',
 ];
 
 const minorKeyMap = {
@@ -254,10 +254,6 @@ const minorKeyMap = {
     'dark-innocent': 'darkInnocent',
     'light-maiden': 'maiden',
     'dark-maiden': 'darkMaiden',
-    'light-girl': 'girl',
-    'dark-girl': 'darkGirl',
-    'light-morandi': 'morandi',
-    'dark-morandi': 'darkMorandi',
     'light-lgbtq': 'lgbtq',
     'dark-lgbtq': 'darkLgbtq',
     'light-lesbian': 'lesbian',
@@ -270,6 +266,10 @@ const vibeKeyMap = {
     'dark-x-files': 'darkXfiles',
     'light-only-yesterday': 'onlyYesterday',
     'dark-only-yesterday': 'darkOnlyYesterday',
+    'light-morandi': 'morandi',
+    'dark-morandi': 'darkMorandi',
+    'light-aroma': 'aroma',
+    'dark-aroma': 'darkAroma',
 };
 const countryKeyMap = {};
 {
@@ -356,7 +356,7 @@ const catalogs = [
             'Maiden — young woman; also the romantic, delicate sense of “maidenly.”',
         body: [
             ['Light Maiden', extractBlock(readme, '**Light Maiden**', '**Dark Maiden**')],
-            ['Dark Maiden', extractBlock(readme, '**Dark Maiden**', '### Girl')],
+            ['Dark Maiden', extractBlock(readme, '**Dark Maiden**', '### Morandi')],
         ],
         variants: [
             { id: 'light-maiden', label: 'Light Maiden', type: 'light', paletteKey: 'maiden' },
@@ -364,22 +364,8 @@ const catalogs = [
         ],
     },
     {
-        file: 'Girl.md',
-        group: 'minor',
-        meaning:
-            'Girl — youthful, bold, playful (not “girly” as in childish — more vivid and confident).',
-        body: [
-            ['Light Girl', extractBlock(readme, '**Light Girl**', '**Dark Girl**')],
-            ['Dark Girl', extractBlock(readme, '**Dark Girl**', '### Morandi')],
-        ],
-        variants: [
-            { id: 'light-girl', label: 'Light Girl', type: 'light', paletteKey: 'girl' },
-            { id: 'dark-girl', label: 'Dark Girl', type: 'dark', paletteKey: 'darkGirl' },
-        ],
-    },
-    {
         file: 'Morandi.md',
-        group: 'minor',
+        group: 'vibe',
         meaning:
             'Named after Italian painter Giorgio Morandi — dusty, muted, harmonious grays.',
         body: [
@@ -648,8 +634,13 @@ writeFileSync(
     `# Theme attachment schema
 
 - \`catalog/*.md\` — family color-language prose
-- \`catalog.tsv\` — id, label, type, group, family, paletteKey, catalog
+- \`catalog.tsv\` — id, label, type, group, family, paletteKey, catalog, locales
 - \`{minor,vibe,country}/{ui,token,web,erp}-palettes.mjs\` — grouped HSL defs
+- \`scripts/generate-theme-css.mjs\` — project-forkable CSS generator (seeded by SOP 000)
+
+Project \`sop/themes/\` is a **fork** of this attachment: evolve palettes and the
+generator for the product. App CSS should be **generated** from the fork, not
+hand-duplicated.
 
 Adapted from minor-themes@${pkg.version}; web + erp are WorldMan additions.
 `,

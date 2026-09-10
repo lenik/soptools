@@ -3,10 +3,6 @@ innocent	Innocent	light	minor	Innocent	innocent	catalog/Innocent.md
 dark-innocent	Dark Innocent	dark	minor	Innocent	darkInnocent	catalog/Innocent.md	
 light-maiden	Light Maiden	light	minor	Maiden	maiden	catalog/Maiden.md	
 dark-maiden	Dark Maiden	dark	minor	Maiden	darkMaiden	catalog/Maiden.md	
-light-girl	Light Girl	light	minor	Girl	girl	catalog/Girl.md	
-dark-girl	Dark Girl	dark	minor	Girl	darkGirl	catalog/Girl.md	
-light-morandi	Light Morandi	light	minor	Morandi	morandi	catalog/Morandi.md	
-dark-morandi	Dark Morandi	dark	minor	Morandi	darkMorandi	catalog/Morandi.md	
 light-lgbtq	Light LGBTQ	light	minor	LGBTQ	lgbtq	catalog/LGBTQ.md	
 dark-lgbtq	Dark LGBTQ	dark	minor	LGBTQ	darkLgbtq	catalog/LGBTQ.md	
 light-lesbian	Light Lesbian	light	minor	Lesbian	lesbian	catalog/Lesbian.md	
@@ -17,6 +13,26 @@ light-x-files	Light X-Files	light	vibe	X-Files	xfiles	catalog/X-Files.md
 dark-x-files	Dark X-Files	dark	vibe	X-Files	darkXfiles	catalog/X-Files.md	
 light-only-yesterday	Light Only Yesterday	light	vibe	Yesterday	onlyYesterday	catalog/Yesterday.md	
 dark-only-yesterday	Dark Only Yesterday	dark	vibe	Yesterday	darkOnlyYesterday	catalog/Yesterday.md	
+light-morandi	Light Morandi	light	vibe	Morandi	morandi	catalog/Morandi.md	
+dark-morandi	Dark Morandi	dark	vibe	Morandi	darkMorandi	catalog/Morandi.md	
+light-aroma	Light Aroma	light	vibe	Aroma	aroma	catalog/Aroma.md	
+dark-aroma	Dark Aroma	dark	vibe	Aroma	darkAroma	catalog/Aroma.md	
+light-lady	Light Lady	light	minor	Lady	lady	catalog/Lady.md	
+dark-lady	Dark Lady	dark	minor	Lady	darkLady	catalog/Lady.md	
+light-gal	Light Gal	light	minor	Gal	gal	catalog/Gal.md	
+dark-gal	Dark Gal	dark	minor	Gal	darkGal	catalog/Gal.md	
+light-tomboy	Light Tomboy	light	minor	Tomboy	tomboy	catalog/Tomboy.md	
+dark-tomboy	Dark Tomboy	dark	minor	Tomboy	darkTomboy	catalog/Tomboy.md	
+light-gym-bro	Light Gym Bro	light	minor	Gym-Bro	gymBro	catalog/Gym-Bro.md	
+dark-gym-bro	Dark Gym Bro	dark	minor	Gym-Bro	darkGymBro	catalog/Gym-Bro.md	
+light-femboy	Light Femboy	light	minor	Femboy	femboy	catalog/Femboy.md	
+dark-femboy	Dark Femboy	dark	minor	Femboy	darkFemboy	catalog/Femboy.md	
+light-moe-girl	Light Moe Girl	light	minor	Moe-Girl	moeGirl	catalog/Moe-Girl.md	
+dark-moe-girl	Dark Moe Girl	dark	minor	Moe-Girl	darkMoeGirl	catalog/Moe-Girl.md	
+light-liaozhai	Light Liaozhai	light	vibe	Liaozhai	liaozhai	catalog/Liaozhai.md	
+dark-liaozhai	Dark Liaozhai	dark	vibe	Liaozhai	darkLiaozhai	catalog/Liaozhai.md	
+light-thrones	Light Game of Thrones	light	vibe	Thrones	thrones	catalog/Thrones.md	
+dark-thrones	Dark Game of Thrones	dark	vibe	Thrones	darkThrones	catalog/Thrones.md	
 country-brasil	Country: Brasil	light	country	Brasil	countryBrasil	catalog/Brasil.md	pt_BR
 dark-country-brasil	Country: Brasil (Dark)	dark	country	Brasil	darkCountryBrasil	catalog/Brasil.md	pt_BR
 country-canada	Country: Canada	light	country	Canada	countryCanada	catalog/Canada.md	

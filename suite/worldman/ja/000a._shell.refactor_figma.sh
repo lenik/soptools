@@ -11,7 +11,9 @@ set -euo pipefail
 
 set_progress 5%
 
-# WorldMan スイートのテーマ添付（web .theme ファイル）をプロジェクトの sop/themes/ へ複製する。
+# WorldMan スイートのテーマ添付をプロジェクトの sop/themes/ へ複製する
+# （プロジェクト fork：パレット + scripts/generate-theme-css.mjs。製品に合わせて
+# 進化させてよい。011 はここからアプリ CSS を生成する）。
 # 添付は suite/worldman/themes/（言語ブランチの兄弟）。
 seed_sop_themes() {
     local src=""
@@ -28,7 +30,7 @@ seed_sop_themes() {
     fi
     mkdir -p sop/themes
     cp -a "$src"/. sop/themes/
-    sop_log 1 "WorldMan テーマ添付をプロジェクトの sop/themes/ へ投入しました。"
+    sop_log 1 "プロジェクトの sop/themes/ fork（パレット + 生成スクリプト）を投入しました。"
 }
 
 # 既に WorldMan レイアウトがある場合はスキップ。再実行すると backend/prisma/sop/… が
@@ -62,7 +64,7 @@ set_progress 55%
 
 # 移した UI の周りに標準 WorldMan レイアウトを作る。
 # sop/ は後続の構築／再構成手順で作業中の PRD/TODO/TUC/NTC/ECS を置く。
-# sop/themes/ はスイートのテーマ添付のコピー（手順 011 のテーマ化用）。
+# sop/themes/ はスイート添付のプロジェクト fork（scripts/ 生成スクリプト含む；011 用）。
 mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
 seed_sop_themes
 set_progress 70%

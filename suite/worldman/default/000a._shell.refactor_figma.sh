@@ -12,8 +12,10 @@ set -euo pipefail
 
 set_progress 5%
 
-# Seed project sop/themes/ from the WorldMan suite attachment (web .theme files).
+# Seed project sop/themes/ from the WorldMan suite attachment.
 # Attachment lives at suite/worldman/themes/ (sibling of language branches).
+# The copy is a project fork (palettes + scripts/generate-theme-css.mjs) that
+# may evolve with the product; 011 generates app CSS from it.
 seed_sop_themes() {
     local src=""
     if [ -n "${SOP_DIR:-}" ]; then
@@ -29,7 +31,7 @@ seed_sop_themes() {
     fi
     mkdir -p sop/themes
     cp -a "$src"/. sop/themes/
-    sop_log 1 "Seeded project sop/themes/ from WorldMan theme attachment."
+    sop_log 1 "Seeded project sop/themes/ fork (palettes + generate script) from suite attachment."
 }
 
 # Skip if a prior run already produced the WorldMan layout. Re-running would
@@ -61,9 +63,8 @@ set_progress 45%
 [ -f web/.gitignore ] && mv web/.gitignore .
 set_progress 55%
 
-# Standard WorldMan layout around the relocated UI.
-# sop/ holds working PRD/TODO/TUC/NTC/ECS during later build/refactor steps.
-# sop/themes/ is a copy of the suite theme attachment (for step 011 theming).
+# sop/themes/ is a fork of the suite theme attachment (palettes + generate
+# script) for step 011 theming.
 mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
 seed_sop_themes
 set_progress 70%

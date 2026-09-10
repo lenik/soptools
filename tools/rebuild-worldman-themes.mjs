@@ -28,6 +28,7 @@ import {
 import { l2ExtraUiPalettes, L2_LOCALE_TO_COUNTRY, TIER_I, TIER_II } from './data/l2-country-ui.mjs';
 import { l3ExtraUiPalettes, L3_LOCALE_TO_COUNTRY, TIER_III } from './data/l3-country-ui.mjs';
 import { CATALOG, COUNTRY_CATALOG } from './data/theme-catalog-prose.mjs';
+import { minorExtraUi, vibeExtraUi } from './data/extra-aesthetic-ui.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const themesRoot = join(root, 'suite/worldman/themes');
@@ -281,6 +282,17 @@ const minorTok = (await loadPalettes('minor', 'token-palettes.mjs')).tokenPalett
 const vibeTok = (await loadPalettes('vibe', 'token-palettes.mjs')).tokenPalettes;
 const countryTok = (await loadPalettes('country', 'token-palettes.mjs')).tokenPalettes;
 
+const minorUi = { ...minorUiMod.uiPalettes, ...minorExtraUi };
+const vibeUi = { ...vibeUiMod.uiPalettes, ...vibeExtraUi };
+const minorTokMerged = { ...minorTok };
+const vibeTokMerged = { ...vibeTok };
+for (const [k, ui] of Object.entries(minorExtraUi)) {
+    minorTokMerged[k] = deriveTokens(ui);
+}
+for (const [k, ui] of Object.entries(vibeExtraUi)) {
+    vibeTokMerged[k] = deriveTokens(ui);
+}
+
 const countryUi = {
     ...countryUiMod.uiPalettes,
     ...l2ExtraUiPalettes,
@@ -302,14 +314,14 @@ function buildWebErp(uiMap) {
 
 const groups = {
     minor: {
-        ui: { ...minorUiMod.uiPalettes },
-        tokens: { ...minorTok },
-        ...buildWebErp(minorUiMod.uiPalettes),
+        ui: minorUi,
+        tokens: minorTokMerged,
+        ...buildWebErp(minorUi),
     },
     vibe: {
-        ui: { ...vibeUiMod.uiPalettes },
-        tokens: { ...vibeTok },
-        ...buildWebErp(vibeUiMod.uiPalettes),
+        ui: vibeUi,
+        tokens: vibeTokMerged,
+        ...buildWebErp(vibeUi),
     },
     country: {
         ui: countryUi,
@@ -419,6 +431,7 @@ writeFileSync(
     `# WorldMan theme elements
 
 Color values live in grouped \`.mjs\` palettes (like minor-themes).
+Project \`sop/themes/\` is a **fork** of this pack (seeded by SOP \`000\`).
 
 \`\`\`text
 themes/
@@ -426,6 +439,7 @@ themes/
   minor/            # soft / pride
   vibe/             # media / retro
   country/          # cultural country palettes (zfr L2 + extended)
+  scripts/generate-theme-css.mjs  # forkable CSS generator for web/
   lib/color-utils.mjs
   catalog.tsv       # includes locales column
 \`\`\`
@@ -439,7 +453,7 @@ Each of \`minor/\`, \`vibe/\`, \`country/\`:
 | \`web-palettes.mjs\` | WorldMan web styleclasses (SOP 011) |
 | \`erp-palettes.mjs\` | ERP semantic colors |
 
-## Web primaries
+## Web primaries (recommended)
 
 background, foreground, primary, primary-foreground, card, card-foreground,
 accent, accent-foreground, muted-foreground, border, ring, destructive, success, warning
@@ -451,6 +465,14 @@ button, button-foreground, danger, danger-foreground, success, success-foregroun
 warning, warning-foreground, table-header, table-border, row-alt, form-border,
 form-focus, status-neutral, status-active, status-done, status-error,
 amount-in, amount-out
+
+## Generate app CSS
+
+\`\`\`bash
+# after 000 seeds sop/themes/ into a project:
+node sop/themes/scripts/generate-theme-css.mjs
+# → web/src/styles/themes/themes.css
+\`\`\`
 
 ## Contrast / 色彩可分
 
@@ -488,22 +510,24 @@ themes/
   demo.js / demo-data.js
   catalog/            bilingual Meaning (en + 中文)
   minor|vibe|country/ ui|token|web|erp-palettes.mjs
+  scripts/generate-theme-css.mjs
   lib/color-utils.mjs
   catalog.tsv
 \`\`\`
 
-- \`000\` → \`$PROJECT/sop/themes/\`
-- \`011\` may use **all** class sets (ui / web / token / erp) by real semantics
+- \`000\` seeds \`$PROJECT/sop/themes/\` as a **fork** (palettes + generate script)
+- \`011\` generates app CSS from the fork; recommended web styleclass names
 - Country packs cover **zfr L2 + L3** (Tier I–III) locales
 
-Preview:
+Generate (in a project):
 
 \`\`\`bash
+node sop/themes/scripts/generate-theme-css.mjs
+# open http://127.0.0.1:8765/ for the suite demo:
 cd suite/worldman/themes && python3 -m http.server 8765
-# open http://127.0.0.1:8765/
 \`\`\`
 
-Rebuild:
+Rebuild suite pack:
 
 \`\`\`bash
 node tools/rebuild-worldman-themes.mjs [/path/to/minor-themes]

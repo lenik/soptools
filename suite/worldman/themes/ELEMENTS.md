@@ -1,6 +1,7 @@
 # WorldMan theme elements
 
 Color values live in grouped `.mjs` palettes (like minor-themes).
+Project `sop/themes/` is a **fork** of this pack (seeded by SOP `000`).
 
 ```text
 themes/
@@ -8,6 +9,7 @@ themes/
   minor/            # soft / pride
   vibe/             # media / retro
   country/          # cultural country palettes (zfr L2 + extended)
+  scripts/generate-theme-css.mjs  # forkable CSS generator for web/
   lib/color-utils.mjs
   catalog.tsv       # includes locales column
 ```
@@ -21,7 +23,7 @@ Each of `minor/`, `vibe/`, `country/`:
 | `web-palettes.mjs` | WorldMan web styleclasses (SOP 011) |
 | `erp-palettes.mjs` | ERP semantic colors |
 
-## Web primaries
+## Web primaries (recommended)
 
 background, foreground, primary, primary-foreground, card, card-foreground,
 accent, accent-foreground, muted-foreground, border, ring, destructive, success, warning
@@ -33,6 +35,14 @@ button, button-foreground, danger, danger-foreground, success, success-foregroun
 warning, warning-foreground, table-header, table-border, row-alt, form-border,
 form-focus, status-neutral, status-active, status-done, status-error,
 amount-in, amount-out
+
+## Generate app CSS
+
+```bash
+# after 000 seeds sop/themes/ into a project:
+node sop/themes/scripts/generate-theme-css.mjs
+# → web/src/styles/themes/themes.css
+```
 
 ## Contrast / 色彩可分
 

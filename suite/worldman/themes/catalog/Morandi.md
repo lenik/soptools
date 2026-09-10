@@ -1,12 +1,12 @@
 # Morandi
 
-group: minor
+group: vibe
 
 ## Meaning / 含义
 
-Named after Giorgio Morandi — dusty, muted, harmonious grays. Gallery-quiet; saturation stays deliberately low.
+Named after Giorgio Morandi — dusty, muted, harmonious grays. Gallery-quiet painterly vibe; saturation stays deliberately low.
 
-得名于乔治·莫兰迪——粉尘般、低饱和、和谐的灰调。画廊般安静；饱和度刻意压低。
+得名于乔治·莫兰迪——粉尘般、低饱和、和谐的灰调。画廊般安静的绘画气质；饱和度刻意压低。
 
 ## Light Morandi
 
@@ -30,5 +30,5 @@ Studio at closing: umber ochre shadow, chalk-dust cool gray text, dusty teal and
 
 ## Variants
 
-- `light-morandi` — Light Morandi (`light`), paletteKey `morandi` in `minor/`
-- `dark-morandi` — Dark Morandi (`dark`), paletteKey `darkMorandi` in `minor/`
+- `light-morandi` — Light Morandi (`light`), paletteKey `morandi` in `vibe/`
+- `dark-morandi` — Dark Morandi (`dark`), paletteKey `darkMorandi` in `vibe/`

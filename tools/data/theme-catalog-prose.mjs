@@ -57,56 +57,6 @@ export const CATALOG = {
             },
         ],
     },
-    Girl: {
-        group: 'minor',
-        meaning_en:
-            'Girl — youthful, bold, playful (vivid confidence, not childish “girly”). Higher saturation accents on a clean shell.',
-        meaning_zh:
-            'Girl（女孩）——年轻、大胆、活泼（鲜活自信，而非幼稚「娘气」）。干净底面上使用更高饱和的强调色。',
-        variants: [
-            {
-                id: 'light-girl',
-                label: 'Light Girl',
-                type: 'light',
-                paletteKey: 'girl',
-                en: 'High-sat coral-red panels on white, hot-pink quotes, sky-blue intervals. Accents are loud on purpose — full-strength action red, cyan selections, yellow “today” markers.',
-                zh: '浅色：白底上高饱和珊瑚红面板、热粉引用、天蓝间隔。强调色故意响亮——主操作大红、青选中、黄「今日」标记。',
-            },
-            {
-                id: 'dark-girl',
-                label: 'Dark Girl',
-                type: 'dark',
-                paletteKey: 'darkGirl',
-                en: 'Screen glow in a warm dark room: coral-black shell, loud coral cursor, cyan LED intervals, hot-pink stickers. Youth energy for dim light — not muted into pastel darkness.',
-                zh: '深色：暖暗房中的屏幕辉光——珊瑚黑壳、响亮珊瑚光标、青 LED 间隔、热粉贴纸。为暗光保留年轻能量，勿压成粉彩暗调。',
-            },
-        ],
-    },
-    Morandi: {
-        group: 'minor',
-        meaning_en:
-            'Named after Giorgio Morandi — dusty, muted, harmonious grays. Gallery-quiet; saturation stays deliberately low.',
-        meaning_zh:
-            '得名于乔治·莫兰迪——粉尘般、低饱和、和谐的灰调。画廊般安静；饱和度刻意压低。',
-        variants: [
-            {
-                id: 'light-morandi',
-                label: 'Light Morandi',
-                type: 'light',
-                paletteKey: 'morandi',
-                en: 'Warm greige window and blue-gray text. Accents are desaturated teal and dusty rose — nothing neon. Borders soft; contrast restrained but still readable.',
-                zh: '浅色：暖灰米色窗壳、蓝灰正文。强调为降饱和青绿与雾玫瑰——无霓虹。边框柔和；对比克制但须可读。',
-            },
-            {
-                id: 'dark-morandi',
-                label: 'Dark Morandi',
-                type: 'dark',
-                paletteKey: 'darkMorandi',
-                en: 'Studio at closing: umber ochre shadow, chalk-dust cool gray text, dusty teal and faded sage accents — pigments whispering in low north light.',
-                zh: '深色：打烊画室——赭棕影、粉笔灰冷色正文、雾青与褪鼠尾草绿强调——北窗低光里的颜料低语。',
-            },
-        ],
-    },
     LGBTQ: {
         group: 'minor',
         meaning_en:
@@ -238,6 +188,256 @@ export const CATALOG = {
                 paletteKey: 'darkOnlyYesterday',
                 en: 'Tatami at dusk: umber memory shadow, faded cream text, safflower lantern red, golden recall and evening meadow green — warm memory after sunset.',
                 zh: '深色：黄昏榻榻米——赭色记忆影、褪奶油正文、红花灯笼红、金色回想与暮草地绿；日落后的温记忆。',
+            },
+        ],
+    },
+    Morandi: {
+        group: 'vibe',
+        meaning_en:
+            'Named after Giorgio Morandi — dusty, muted, harmonious grays. Gallery-quiet painterly vibe; saturation stays deliberately low.',
+        meaning_zh:
+            '得名于乔治·莫兰迪——粉尘般、低饱和、和谐的灰调。画廊般安静的绘画气质；饱和度刻意压低。',
+        variants: [
+            {
+                id: 'light-morandi',
+                label: 'Light Morandi',
+                type: 'light',
+                paletteKey: 'morandi',
+                en: 'Warm greige window and blue-gray text. Accents are desaturated teal and dusty rose — nothing neon. Borders soft; contrast restrained but still readable.',
+                zh: '浅色：暖灰米色窗壳、蓝灰正文。强调为降饱和青绿与雾玫瑰——无霓虹。边框柔和；对比克制但须可读。',
+            },
+            {
+                id: 'dark-morandi',
+                label: 'Dark Morandi',
+                type: 'dark',
+                paletteKey: 'darkMorandi',
+                en: 'Studio at closing: umber ochre shadow, chalk-dust cool gray text, dusty teal and faded sage accents — pigments whispering in low north light.',
+                zh: '深色：打烊画室——赭棕影、粉笔灰冷色正文、雾青与褪鼠尾草绿强调——北窗低光里的颜料低语。',
+            },
+        ],
+    },
+    Aroma: {
+        group: 'vibe',
+        meaning_en:
+            'Aroma — warm clay-and-cream botanical practice (Ibvjahst Botanica): terracotta oil bottles, linen daylight, evening resin. Soft, grounded, scent-forward.',
+        meaning_zh:
+            'Aroma（香氛）——植物练习的暖陶土与奶油色语言（Ibvjahst Botanica）：陶土油瓶、亚麻日光、夜香树脂。柔和、落地、以香为先。',
+        variants: [
+            {
+                id: 'light-aroma',
+                label: 'Light Aroma',
+                type: 'light',
+                paletteKey: 'aroma',
+                en: 'Morning apothecary: warm cream shell, near-ink umber text, terracotta clay actions, caramel glow, botanical sage intervals — never purple neon.',
+                zh: '浅色：晨间药铺——暖奶油壳、近墨赭正文、陶土赤陶操作色、焦糖辉光、鼠尾草绿间隔；绝非紫霓虹。',
+            },
+            {
+                id: 'dark-aroma',
+                label: 'Dark Aroma',
+                type: 'dark',
+                paletteKey: 'darkAroma',
+                en: 'Evening diffuser: resin umber shadow, linen-cream text, caramel cursor and accents, sage hush for intervals — the same clay warmth in low light.',
+                zh: '深色：夜香扩香——树脂赭影、亚麻奶油字、焦糖光标与强调、鼠尾草低语间隔；同一种陶土暖意收进低光。',
+            },
+        ],
+    },
+    Lady: {
+        group: 'minor',
+        meaning_en:
+            'Lady — polished soft glam: champagne blush, lipstick coral, orchid mist. Intimate evening elegance — quieter than Gal’s sun-kissed shout.',
+        meaning_zh:
+            'Lady（淑女／时髦姐姐）——香槟腮红、口红珊瑚、兰花雾。亲密的晚间优雅——比 Gal 的沐阳甜辣更克制。',
+        variants: [
+            {
+                id: 'light-lady',
+                label: 'Light Lady',
+                type: 'light',
+                paletteKey: 'lady',
+                en: 'Champagne-blush shell, lipstick coral actions, orchid intervals, gold glow quotes — polished and intimate.',
+                zh: '浅色：香槟腮红壳、口红珊瑚主操作、兰花间隔、金辉引用——精致亲昵。',
+            },
+            {
+                id: 'dark-lady',
+                label: 'Dark Lady',
+                type: 'dark',
+                paletteKey: 'darkLady',
+                en: 'Night-out glam: wine-dusk shell, bright coral lipstick cursor, orchid neon mist, champagne glow — confident after-hours warmth.',
+                zh: '深色：夜出光泽——酒暮壳、亮珊瑚口红色光标、兰花霓雾、香槟辉——自信的下班后暖调。',
+            },
+        ],
+    },
+    Gal: {
+        group: 'minor',
+        meaning_en:
+            'Gal (Sweet Gyaru) — high-energy sweet & spicy vibe: vibrant strawberry pink, milky beige, honey glow. A high-contrast palette radiating a fashionable, sun-kissed sisterly spirit that is sugary yet fiercely confident.',
+        meaning_zh:
+            'Gal（甜辣多巴胺）——充满精神的甜辣姐姐：鲜活草莓粉、奶油米白、蜂蜜辉光。高对比度、气色饱满的时尚底蕴，既有甜妹的糖度，又有姐姐的自信张扬。',
+        variants: [
+            {
+                id: 'light-gal',
+                label: 'Light Gal',
+                type: 'light',
+                paletteKey: 'gal',
+                en: 'Milky-beige linen shell, popping strawberry-pink actions, honey-apricot intervals, sun-kissed gold quotes — fashionable, high-contrast sweetness filled with playful, head-turning energy.',
+                zh: '浅色：奶油米白壳、爆裂草莓粉主操作、蜜糖杏色间隔、沐阳金引用——时尚、高对比的甜美，充满让人回头的高能辣妹精神。',
+            },
+            {
+                id: 'dark-gal',
+                label: 'Dark Gal',
+                type: 'dark',
+                paletteKey: 'darkGal',
+                en: 'Sunset beach glam: deep chocolate-tan shell, blinding hot-cherry cursor, soft coral-blush mist, champagne glow — a confident, hyper-vibrant sisterly warmth that is effortlessly chic.',
+                zh: '深色：落日海滩的华丽——浓郁巧克力黑皮壳、晃眼的辣樱桃红光标、柔和珊瑚腮红迷雾、香槟辉光——极具元气、自信大方的时髦姐姐暖调。',
+            },
+        ],
+    },
+    Tomboy: {
+        group: 'minor',
+        meaning_en:
+            'Tomboy — sporty casual confidence: denim blue, khaki olive, construction-orange accents. Little pink; practical energy.',
+        meaning_zh:
+            'Tomboy（假小子）——运动休闲自信：丹宁蓝、卡其橄榄、工程橙强调。少粉；务实能量。',
+        variants: [
+            {
+                id: 'light-tomboy',
+                label: 'Light Tomboy',
+                type: 'light',
+                paletteKey: 'tomboy',
+                en: 'Denim-washed shell, indigo action blue, khaki meadow intervals, safety-orange quotes — locker-room practical, not pastel soft.',
+                zh: '浅色：丹宁洗壳、靛蓝主操作、卡其草地间隔、安全橙引用——更衣室务实，非粉彩柔。',
+            },
+            {
+                id: 'dark-tomboy',
+                label: 'Dark Tomboy',
+                type: 'dark',
+                paletteKey: 'darkTomboy',
+                en: 'Night practice field: slate denim shell, electric indigo cursor, olive turf intervals, flare orange — athletic after dark.',
+                zh: '深色：夜训场地——石板丹宁壳、电靛蓝光标、橄榄草坪间隔、信号橙——暗处的运动感。',
+            },
+        ],
+    },
+    'Gym-Bro': {
+        group: 'minor',
+        meaning_en:
+            'Gym Bro (Morning Lifter) — sunny disciplined athletic spirit: protein white, dawn mint, sunrise apricot-orange. Pure morning-workout vitality — clean, jacked, and alert.',
+        meaning_zh:
+            'Gym Bro（晨光型男／清晨健身）——阳光自律的运动精神：蛋白纯白、清晨薄荷、日出杏橙。纯粹的晨练活力，干净、健硕、精神抖擞。',
+        variants: [
+            {
+                id: 'light-gym-bro',
+                label: 'Light Gym Bro',
+                type: 'light',
+                paletteKey: 'gymBro',
+                en: 'Protein-white shell, vibrant mint-green actions, dawn-gold intervals — fresh morning air and the clean clarity of a just-finished lift.',
+                zh: '浅色：蛋白纯白壳、活力薄荷绿主操作、破晓金间隔——清新的清晨空气与刚健身完的清爽感。',
+            },
+            {
+                id: 'dark-gym-bro',
+                label: 'Dark Gym Bro',
+                type: 'dark',
+                paletteKey: 'darkGymBro',
+                en: 'Misty deep-blue shell, blinding sunrise vitality-orange cursor, heather-gray intervals — muscular energy waking with the first light of day.',
+                zh: '深色：薄雾深蓝壳、晃眼的日出活力橙光标、花灰间隔——伴随第一缕晨光苏醒的、充满能量的健硕力量。',
+            },
+        ],
+    },
+    Femboy: {
+        group: 'minor',
+        meaning_en:
+            'Femboy — soft daily “pure desire” look: absolute-territory white-stockings palette. Core: pure white, beige, light gray; soft black or blush-pink accents. Oversized white sweater energy — lazy, clean, quietly tempting.',
+        meaning_zh:
+            'Femboy——纯欲日常流：绝对领域白丝色系。核心：纯白、米色、浅灰；黑或浅粉点缀。宽松白大毛衣气质——慵懒、干净、带诱惑的干净氛围。',
+        variants: [
+            {
+                id: 'light-femboy',
+                label: 'Light Femboy',
+                type: 'light',
+                paletteKey: 'femboy',
+                en: 'Near-white / beige shell, soft charcoal text, blush-pink actions, mist-gray intervals — airy white-silk field with restrained pink and black accents.',
+                zh: '浅色：近白／米色壳、柔炭黑正文、腮红粉主操作、雾灰间隔——大面积白丝感，粉与黑点缀克制。',
+            },
+            {
+                id: 'dark-femboy',
+                label: 'Dark Femboy',
+                type: 'dark',
+                paletteKey: 'darkFemboy',
+                en: 'Nightroom soft black shell, ivory text, blush cursor, cool gray intervals — same white-silk language after lights dim; pink glow stays gentle.',
+                zh: '深色：夜房柔黑壳、象牙正文、腮红光标、冷灰间隔——同一白丝语汇的熄灯版；粉辉保持轻柔。',
+            },
+        ],
+    },
+    'Moe-Girl': {
+        group: 'minor',
+        meaning_en:
+            'Moe Girl — anime-moe soft cuteness: candy pastel pink, mint, and sky. Rounder and sweeter than Lady glam; softer than Gal’s sun-kissed shout.',
+        meaning_zh:
+            'Moe Girl（萌系少女）——二次元萌感软萌：糖果粉、薄荷、天空蓝。比 Lady 时髦更圆润甜；比 Gal 沐阳甜辣更软。',
+        variants: [
+            {
+                id: 'light-moe-girl',
+                label: 'Light Moe Girl',
+                type: 'light',
+                paletteKey: 'moeGirl',
+                en: 'Cotton-candy pink shell, soft rose text, bubblegum actions, mint-sky intervals, lemon glow quotes — kawaii pastel without neon.',
+                zh: '浅色：棉花糖粉壳、柔玫瑰正文、泡泡糖主操作、薄荷天空间隔、柠檬辉引用——卡哇伊粉彩，无霓虹。',
+            },
+            {
+                id: 'dark-moe-girl',
+                label: 'Dark Moe Girl',
+                type: 'dark',
+                paletteKey: 'darkMoeGirl',
+                en: 'Twilight moe: mauve-night shell, pastel pink cursor, mint glow intervals, soft lemon spark — cute energy kept for dim rooms.',
+                zh: '深色：暮光萌——藕紫夜壳、粉彩光标、薄荷辉间隔、柔柠檬星点——暗处仍保留可爱能量。',
+            },
+        ],
+    },
+    Liaozhai: {
+        group: 'vibe',
+        meaning_en:
+            '聊斋 / Liaozhai (Strange Tales from a Chinese Studio) — xuan paper, cinnabar seal, jade fox-fire, moonlit ink.',
+        meaning_zh:
+            '聊斋——宣纸、朱砂印、狐火翠玉、月下墨色；志怪与古典文言的夜色。',
+        variants: [
+            {
+                id: 'light-liaozhai',
+                label: 'Light Liaozhai',
+                type: 'light',
+                paletteKey: 'liaozhai',
+                en: 'Xuan-paper cream shell, ink-black text, cinnabar seal actions, jade intervals, lantern-gold glow — classical ghost-romance by day.',
+                zh: '浅色：宣纸奶油壳、墨黑正文、朱砂印主操作、翠玉间隔、灯笼金辉——白日里的古典志怪。',
+            },
+            {
+                id: 'dark-liaozhai',
+                label: 'Dark Liaozhai',
+                type: 'dark',
+                paletteKey: 'darkLiaozhai',
+                en: 'Moon ink wash: near-black indigo night, fox-fire jade cursor, cinnabar blood accents, pale paper text — studio tales after midnight.',
+                zh: '深色：月下墨洗——近黑靛蓝夜、狐火翠光标、朱砂血强调、淡纸正文——子夜书斋里的志怪。',
+            },
+        ],
+    },
+    Thrones: {
+        group: 'vibe',
+        meaning_en:
+            '权力的游戏 / Game of Thrones — Westeros parchment and iron by day; Night’s Watch ice, Lannister crimson and gold by night.',
+        meaning_zh:
+            '权力的游戏——日间维斯特洛羊皮纸与铁灰；夜间守夜人冰蓝、兰尼斯特绯红与金。',
+        variants: [
+            {
+                id: 'light-thrones',
+                label: 'Light Game of Thrones',
+                type: 'light',
+                paletteKey: 'thrones',
+                en: 'Council parchment shell, iron-gray text, Lannister crimson actions, Stark ice-blue intervals, heraldic gold glow.',
+                zh: '浅色：御前会议羊皮纸壳、铁灰正文、兰尼斯特绯红主操作、史塔克冰蓝间隔、纹章金辉。',
+            },
+            {
+                id: 'dark-thrones',
+                label: 'Dark Game of Thrones',
+                type: 'dark',
+                paletteKey: 'darkThrones',
+                en: 'Night’s Watch black shell, ice-blue CRT text, blood-crimson cursor, Lannister gold glow — winter is coming chrome.',
+                zh: '深色：守夜人黑壳、冰蓝 CRT 正文、血绯红光标、兰尼斯特金辉——凛冬将至的铬。',
             },
         ],
     },

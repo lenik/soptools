@@ -10,7 +10,8 @@ set -euo pipefail
 
 set_progress 5%
 
-# 将 WorldMan 套件主题附件（web .theme 文件）复制到项目 sop/themes/。
+# 将 WorldMan 套件主题附件复制到项目 sop/themes/（项目 fork：色板 +
+# scripts/generate-theme-css.mjs，可按产品演进；011 由此生成应用 CSS）。
 # 附件位于 suite/worldman/themes/（与语言分支同级）。
 seed_sop_themes() {
     local src=""
@@ -27,7 +28,7 @@ seed_sop_themes() {
     fi
     mkdir -p sop/themes
     cp -a "$src"/. sop/themes/
-    sop_log 1 "已将 WorldMan 主题附件播种到项目 sop/themes/。"
+    sop_log 1 "已播种项目 sop/themes/ fork（色板 + 生成脚本）。"
 }
 
 # 若先前已跑出 WorldMan 布局则跳过。重复执行会把 backend/prisma/sop/… 再移进 web/，破坏目录树。
@@ -60,7 +61,7 @@ set_progress 55%
 
 # 在已迁移的 UI 周围建立标准 WorldMan 布局。
 # sop/ 在后续构建/重构步骤中存放工作中的 PRD/TODO/TUC/NTC/ECS。
-# sop/themes/ 为套件主题附件副本（供 011 主题化使用）。
+# sop/themes/ 为套件主题附件的项目 fork（含 scripts/ 生成脚本，供 011 演进与二开）。
 mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
 seed_sop_themes
 set_progress 70%

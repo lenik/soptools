@@ -1,3 +1,19 @@
+soptools (1.2.0) UNRELEASED; urgency=medium
+
+  * Move Morandi to vibe; add Gal, Tomboy, Liaozhai, Game of Thrones
+    themes.
+  * SOP 011: keep current Figma/CSS colors as default when wiring
+    themes.
+  * SOP 011: recommend styleclasses; generate CSS from sop/themes fork.
+  * 000 seeds themes scripts/generate-theme-css.mjs with the project
+    fork.
+  * minor themes: add Femboy (white-silk pure-desire) and Moe Girl.
+  * minor: drop Girl; rename former Gal to Lady; add new Gal (Sweet
+    Gyaru).
+  * minor themes: add Gym Bro (morning lifter / 晨光型男).
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 17:47:04 +0800
+
 soptools (1.1.0) unstable; urgency=medium
 
   * Organize WorldMan SOPs under suite/worldman/{default,zh_CN,ja}/.
