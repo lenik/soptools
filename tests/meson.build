@@ -16,7 +16,7 @@ model_test = executable(
         '../src/model/model_parse.cpp',
     ],
     include_directories: include_directories('../src'),
-    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'worldman.sop')],
+    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'suite' / 'worldman' / 'default')],
     install: false,
 )
 
@@ -38,7 +38,7 @@ project_test = executable(
         '../src/engine/gpt_response.cpp',
     ],
     include_directories: include_directories('../src', '..'),
-    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'worldman.sop')],
+    cpp_args: ['-DTEST_SOP_DIR="@0@"'.format(meson.project_source_root() / 'suite' / 'worldman' / 'default')],
     install: false,
 )
 

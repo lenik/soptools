@@ -31,10 +31,16 @@ The GUI shows a workflow graph, branch selection, forward/back navigation, autom
 
 == OPTIONS
 
-*-s, --sop* _SOPDIR_
+*-s, --suite* _NAME_
 
 ____
-SOP directory to load. Defaults to the builtin *worldman.sop* shipped with *soptools*. Localized packs *worldman-zh_CN.sop* and *worldman-ja.sop* are also installed.
+SOP suite under *suite/* (default: *worldman*). Branch (*default* / *zh_CN* / *ja*) follows *LANG* / *LC_ALL* / *LC_MESSAGES* unless *--sop-dir* is set.
+____
+
+*-S, --sop-dir* _DIR_
+
+____
+Explicit SOP directory (overrides *--suite* and LANG). WorldMan branches live at *suite/worldman/{default,zh_CN,ja}/*.
 ____
 
 *-c, --console*

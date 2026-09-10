@@ -40,7 +40,7 @@ localedir = prefix / get_option('localedir')
 pkgdocdir = datadir / 'doc' / meson.project_name()
 
 source_root = meson.project_source_root()
-sop_builtin_dir = source_root / 'worldman.sop'
+sop_builtin_dir = source_root / 'suite' / 'worldman' / 'default'
 sop_pkgdatadir = datadir / meson.project_name()
 
 config_h = configuration_data()
@@ -111,17 +111,7 @@ executable(
 )
 
 install_subdir(
-    'worldman.sop',
-    install_dir: datadir / meson.project_name(),
-    strip_directory: false,
-)
-install_subdir(
-    'worldman-zh_CN.sop',
-    install_dir: datadir / meson.project_name(),
-    strip_directory: false,
-)
-install_subdir(
-    'worldman-ja.sop',
+    'suite',
     install_dir: datadir / meson.project_name(),
     strip_directory: false,
 )
@@ -291,7 +281,7 @@ run_target(
             symlink_force "$build/soptools.1" "$mandir/man1/soptools.1"
             symlink_force "$src/sopwin.bash" "$datadir/bash-completion/completions/sopwin"
 
-            for sop in worldman.sop worldman-zh_CN.sop worldman-ja.sop extension; do
+            for sop in suite extension; do
                 symlink_force "$src/$sop" "$pkgdata/$sop"
             done
 
@@ -346,9 +336,7 @@ run_target(
             remove_symlink "$mandir/man1/sopwin.1"
             remove_symlink "$mandir/man1/soptools.1"
             remove_symlink "$datadir/bash-completion/completions/sopwin"
-            remove_symlink "$pkgdata/worldman.sop"
-            remove_symlink "$pkgdata/worldman-zh_CN.sop"
-            remove_symlink "$pkgdata/worldman-ja.sop"
+            remove_symlink "$pkgdata/suite"
             remove_symlink "$pkgdata/extension"
 
             for loc in $locales; do

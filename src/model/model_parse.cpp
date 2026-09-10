@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <climits>
 #include <cstdio>
 #include <dirent.h>
 #include <fstream>
@@ -62,6 +63,13 @@ bool looks_like_path(const std::string &line) {
     return std::regex_match(line, re);
 }
 
+std::string ascii_lower(std::string s) {
+    for (char &c : s) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return s;
+}
+
 void parse_frontmatter_line(const std::string &line, SopStep &step) {
     const size_t colon = line.find(':');
     if (colon == std::string::npos) {
@@ -106,6 +114,13 @@ void parse_frontmatter_line(const std::string &line, SopStep &step) {
             step.branch_kind = SopBranchKind::Parallel;
         } else if (value == "select") {
             step.branch_kind = SopBranchKind::Select;
+        }
+    } else if (key == "extend") {
+        const std::string v = ascii_lower(value);
+        if (v == "previous" || v == "prev") {
+            step.extend = SopExtend::Previous;
+        } else if (v == "next") {
+            step.extend = SopExtend::Next;
         }
     }
 }
@@ -171,13 +186,6 @@ void extract_markdown_metadata(SopStep &step) {
     step.completion.files_exist.erase(
         std::unique(step.completion.files_exist.begin(), step.completion.files_exist.end()),
         step.completion.files_exist.end());
-}
-
-std::string ascii_lower(std::string s) {
-    for (char &c : s) {
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    }
-    return s;
 }
 
 std::string strip_role_padding(const std::string &raw) {
@@ -479,6 +487,169 @@ std::optional<SopStep> parse_sop_file(const std::string &path) {
     return step;
 }
 
+bool same_step_type(const SopStep &a, const SopStep &b) {
+    return a.role_slug == b.role_slug && a.extension == b.extension;
+}
+
+bool step_id_less(const SopDefinition &def, const std::string &a, const std::string &b) {
+    const SopStep &sa = def.steps.at(a);
+    const SopStep &sb = def.steps.at(b);
+    if (sa.seq != sb.seq) {
+        return sa.seq < sb.seq;
+    }
+    if (sa.variant != sb.variant) {
+        return sa.variant < sb.variant;
+    }
+    if (sa.is_alt_branch() != sb.is_alt_branch()) {
+        return !sa.is_alt_branch();
+    }
+    return sa.role_slug < sb.role_slug;
+}
+
+void rebuild_branch_groups(SopDefinition &def) {
+    def.seq_order.clear();
+    def.branch_groups.clear();
+    for (const auto &kv : def.steps) {
+        const SopStep &step = kv.second;
+        if (std::find(def.seq_order.begin(), def.seq_order.end(), step.seq) == def.seq_order.end()) {
+            def.seq_order.push_back(step.seq);
+        }
+        def.branch_groups[step.seq].seq = step.seq;
+        def.branch_groups[step.seq].step_ids.push_back(kv.first);
+    }
+    std::sort(def.seq_order.begin(), def.seq_order.end());
+    for (auto &kv : def.branch_groups) {
+        auto &ids = kv.second.step_ids;
+        std::sort(ids.begin(), ids.end(),
+                  [&](const std::string &a, const std::string &b) { return step_id_less(def, a, b); });
+        if (ids.size() <= 1) {
+            kv.second.kind = SopBranchKind::None;
+        } else {
+            kv.second.kind = SopBranchKind::Select;
+            for (const std::string &id : ids) {
+                if (def.steps.at(id).branch_kind == SopBranchKind::Parallel) {
+                    kv.second.kind = SopBranchKind::Parallel;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+std::string find_extend_neighbor(const SopDefinition &def, const std::string &extender_id) {
+    const SopStep &ext = def.steps.at(extender_id);
+    if (ext.extend == SopExtend::None) {
+        return {};
+    }
+
+    std::string best_id;
+    int best_seq = ext.extend == SopExtend::Previous ? -1 : INT_MAX;
+    for (const auto &kv : def.steps) {
+        if (kv.first == extender_id) {
+            continue;
+        }
+        const SopStep &cand = kv.second;
+        if (cand.variant != ext.variant || !same_step_type(ext, cand)) {
+            continue;
+        }
+        if (ext.extend == SopExtend::Previous) {
+            if (cand.seq < ext.seq && cand.seq > best_seq) {
+                best_seq = cand.seq;
+                best_id = kv.first;
+            }
+        } else if (ext.extend == SopExtend::Next) {
+            if (cand.seq > ext.seq && cand.seq < best_seq) {
+                best_seq = cand.seq;
+                best_id = kv.first;
+            }
+        }
+    }
+    return best_id;
+}
+
+std::string resolve_extend_anchor(const std::map<std::string, std::string> &parent,
+                                  const std::string &start) {
+    std::string cur = start;
+    std::vector<std::string> seen;
+    while (parent.count(cur)) {
+        if (std::find(seen.begin(), seen.end(), cur) != seen.end()) {
+            return {}; /* cycle */
+        }
+        seen.push_back(cur);
+        cur = parent.at(cur);
+    }
+    return cur;
+}
+
+void append_unique_paths(std::vector<std::string> &dst, const std::vector<std::string> &src) {
+    for (const std::string &p : src) {
+        if (std::find(dst.begin(), dst.end(), p) == dst.end()) {
+            dst.push_back(p);
+        }
+    }
+}
+
+/* Absorb extend: previous|next steps into the neighbor of the same type
+ * (role_slug + extension). Graph / path then show only the anchor node;
+ * markdown bodies are concatenated (YAML frontmatter already stripped). */
+void apply_step_extends(SopDefinition &def) {
+    std::map<std::string, std::string> parent;
+    for (const auto &kv : def.steps) {
+        if (kv.second.extend == SopExtend::None) {
+            continue;
+        }
+        const std::string neighbor = find_extend_neighbor(def, kv.first);
+        if (neighbor.empty()) {
+            continue;
+        }
+        parent[kv.first] = neighbor;
+    }
+    if (parent.empty()) {
+        return;
+    }
+
+    std::map<std::string, std::vector<std::string>> extras;
+    for (const auto &kv : parent) {
+        const std::string anchor = resolve_extend_anchor(parent, kv.first);
+        if (anchor.empty() || !def.steps.count(anchor) || !def.steps.count(kv.first)) {
+            continue;
+        }
+        if (anchor == kv.first) {
+            continue;
+        }
+        extras[anchor].push_back(kv.first);
+    }
+
+    for (auto &kv : extras) {
+        auto &ext_ids = kv.second;
+        std::sort(ext_ids.begin(), ext_ids.end(),
+                  [&](const std::string &a, const std::string &b) { return step_id_less(def, a, b); });
+        SopStep &anchor = def.steps.at(kv.first);
+        for (const std::string &eid : ext_ids) {
+            const SopStep &ext = def.steps.at(eid);
+            if (!ext.body.empty()) {
+                if (!anchor.body.empty() && anchor.body.back() != '\n') {
+                    anchor.body.push_back('\n');
+                }
+                if (!anchor.body.empty()) {
+                    anchor.body.append("\n");
+                }
+                anchor.body.append(ext.body);
+            }
+            append_unique_paths(anchor.output_paths, ext.output_paths);
+            append_unique_paths(anchor.completion.files_exist, ext.completion.files_exist);
+            if (ext.completion.wait_shell) {
+                anchor.completion.wait_shell = true;
+            }
+        }
+        for (const std::string &eid : ext_ids) {
+            def.steps.erase(eid);
+        }
+    }
+
+    rebuild_branch_groups(def);
+}
+
 SopDefinition load_sop_directory(const std::string &dir) {
     SopDefinition def;
     def.sop_dir = dir;
@@ -507,40 +678,11 @@ SopDefinition load_sop_directory(const std::string &dir) {
             continue;
         }
         def.steps.emplace(id, *step);
-        if (std::find(def.seq_order.begin(), def.seq_order.end(), step->seq) == def.seq_order.end()) {
-            def.seq_order.push_back(step->seq);
-        }
-        def.branch_groups[step->seq].seq = step->seq;
-        def.branch_groups[step->seq].step_ids.push_back(id);
     }
     closedir(d);
 
-    std::sort(def.seq_order.begin(), def.seq_order.end());
-    for (auto &kv : def.branch_groups) {
-        auto &ids = kv.second.step_ids;
-        std::sort(ids.begin(), ids.end(), [&](const std::string &a, const std::string &b) {
-            const SopStep &sa = def.steps.at(a);
-            const SopStep &sb = def.steps.at(b);
-            if (sa.variant != sb.variant) {
-                return sa.variant < sb.variant;
-            }
-            if (sa.is_alt_branch() != sb.is_alt_branch()) {
-                return !sa.is_alt_branch();
-            }
-            return sa.role_slug < sb.role_slug;
-        });
-        if (ids.size() <= 1) {
-            kv.second.kind = SopBranchKind::None;
-        } else {
-            kv.second.kind = SopBranchKind::Select;
-            for (const std::string &id : ids) {
-                if (def.steps.at(id).branch_kind == SopBranchKind::Parallel) {
-                    kv.second.kind = SopBranchKind::Parallel;
-                    break;
-                }
-            }
-        }
-    }
+    rebuild_branch_groups(def);
+    apply_step_extends(def);
     return def;
 }
 

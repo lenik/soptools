@@ -6,12 +6,13 @@
 
 #include "model/model.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <string>
 
 #ifndef TEST_SOP_DIR
-#define TEST_SOP_DIR "../worldman.sop"
+#define TEST_SOP_DIR "../suite/worldman/default"
 #endif
 
 namespace fs = std::filesystem;
@@ -42,7 +43,7 @@ static void expect_eq_str(const char *name, const std::string &got, const std::s
 int main(void) {
     const fs::path sop_dir = fs::path(TEST_SOP_DIR);
     if (!fs::is_directory(sop_dir)) {
-        fprintf(stderr, "FAIL missing worldman.sop at %s\n", TEST_SOP_DIR);
+        fprintf(stderr, "FAIL missing suite/worldman/default at %s\n", TEST_SOP_DIR);
         return 1;
     }
 
@@ -123,12 +124,22 @@ int main(void) {
         expect_true("050z alt", prep->is_alt_branch());
     }
 
-    auto codex = parse_sop_file((sop_dir / "010a._codex.refactor_web.md").string());    expect_true("parse codex step", codex.has_value());
+    auto theme = parse_sop_file((sop_dir / "011a._codex.theme_web.md").string());
+    expect_true("parse theme step", theme.has_value());
+    if (theme) {
+        expect_eq_str("theme id", sop_step_id(*theme), "011acodex");
+        expect_true("theme extend previous", theme->extend == SopExtend::Previous);
+        expect_true("theme body has heading", theme->body.find("#") != std::string::npos);
+    }
+
+    auto codex = parse_sop_file((sop_dir / "010a._codex.refactor_web.md").string());
+    expect_true("parse codex step", codex.has_value());
     if (codex) {
         expect_eq_str("codex id", sop_step_id(*codex), "010acodex");
         expect_true("codex user", codex->is_user());
         expect_true("codex not automatable", !codex->is_automatable());
         expect_true("codex prompt copy", codex->is_prompt_copy());
+        expect_true("codex no extend", codex->extend == SopExtend::None);
     }
 
     auto alt = parse_sop_file((sop_dir / "020z._codex.create_prd.md").string());
@@ -143,6 +154,19 @@ int main(void) {
 
     SopDefinition def = load_sop_directory(sop_dir.string());
     expect_true("load sop dir", !def.steps.empty());
+    expect_true("011 absorbed into 010", def.steps.count("011acodex") == 0);
+    expect_true("010 remains", def.steps.count("010acodex") == 1);
+    if (def.steps.count("010acodex")) {
+        const std::string &body = def.steps.at("010acodex").body;
+        expect_true("010 body has refactor", body.find("Refactor") != std::string::npos ||
+                                                 body.find("refactor") != std::string::npos);
+        expect_true("010 body has theme extend", body.find("Theme") != std::string::npos ||
+                                                     body.find("styleclass") != std::string::npos ||
+                                                     body.find("sop/themes") != std::string::npos);
+        expect_true("no yaml header in merged body", body.find("extend: previous") == std::string::npos);
+    }
+    expect_true("no seq 11 after merge",
+                std::find(def.seq_order.begin(), def.seq_order.end(), 11) == def.seq_order.end());
     expect_true("branch at 020", def.branch_groups[20].step_ids.size() >= 2);
     if (def.branch_groups[20].step_ids.size() >= 2) {
         expect_eq_str("020 default first", def.branch_groups[20].step_ids.front(), "020agpt");

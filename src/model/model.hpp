@@ -52,6 +52,13 @@ enum class SopInteraction {
     Select, /* show rendered response / part picker after save */
 };
 
+/* Merge this step into an adjacent step of the same type (role + extension). */
+enum class SopExtend {
+    None,
+    Previous,
+    Next,
+};
+
 struct SopStep {
     int seq = 0;
     /* 'a' = default / preferred; 'z' = optional / alternative branch. */
@@ -67,6 +74,7 @@ struct SopStep {
     std::string description;
     std::string body;
     SopStepKind kind = SopStepKind::Manual;
+    SopExtend extend = SopExtend::None;
 
     std::string shell_script;
     std::vector<std::string> output_paths;

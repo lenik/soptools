@@ -15,8 +15,14 @@
 namespace fs = std::filesystem;
 
 std::string sop_config_name(const std::string &sop_dir) {
-    const fs::path name = fs::path(sop_dir).filename();
-    return name.empty() ? "sop" : name.string();
+    const fs::path p = fs::path(sop_dir).lexically_normal();
+    const fs::path branch = p.filename();
+    const fs::path suite = p.parent_path().filename();
+    const fs::path suite_root = p.parent_path().parent_path().filename();
+    if (suite_root == "suite" && !suite.empty() && !branch.empty()) {
+        return suite.string() + "-" + branch.string();
+    }
+    return branch.empty() ? "sop" : branch.string();
 }
 
 std::string sop_config_dir(const std::string &project_dir) {

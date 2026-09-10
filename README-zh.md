@@ -4,20 +4,40 @@
 引导你完成 shell 脚本、AI 提示采集（`.get`）以及 Codex 实现提示，并在
 wxWidgets 图形界面（`sopwin`）或控制台中跟踪分支选择与进度。
 
-默认 SOP 包用于从 Figma 原型导出构建 **WorldMan** 模块（web + backend + 可选
-mobile）。另提供简体中文与日文语言包。
+默认 SOP 套件用于从 Figma 原型导出构建 **WorldMan** 模块（web + backend + 可选
+mobile）。语言分支：`default`（英文）、`zh_CN`、`ja`。
 
 ## 功能
 
-- **SOP 包** — 有序的 Markdown / shell / GPT 步骤，支持分支（`a` 首选 / `z` 备选）
-  与角色（`shell`、`gpt`、`codex`）
+- **SOP 套件** — 位于 `suite/<名称>/<分支>/`，步骤支持 `a`/`z` 与角色
+  `shell`/`gpt`/`codex`
 - **图形界面（`sopwin`）** — 流程图、步骤预览、Back / Next / Run / Pause、
   Execute·Get·Copy、可拆出的图与日志面板、状态栏反馈
 - **控制台模式** — 同一引擎，无需显示器
 - **GPT `.get` 流程** — 复制提示、粘贴响应对话框、附件下载、可选多段渲染/选择
 - **Shell 步骤** — 在项目目录执行，扩展 `PATH`，经进度 FIFO 驱动进度条
 - **持久化** — 位置与排除项写入项目 `sop/status`
-- **语言包** — **查看 → 语言** 切换 WorldMan SOP 语言
+- **语言 / 分支** — `LANG` 选择套件分支；**查看 → 语言** 在当前套件内切换
+
+## SOP 套件
+
+见 [`suite/README.md`](suite/README.md)。当前自带：
+
+### worldman
+
+```text
+suite/worldman/
+    default/    # 英文
+    zh_CN/      # 简体中文
+    ja/         # 日文
+    themes/     # catalog/ + minor|vibe|country → 000 复制到 sop/themes/
+```
+
+大致内容：Figma 布局重构并播种 `sop/themes/`（000）、web 重构与资源本地化
+（010）、按分组 web 色板主题化与切换（011）、PRD（020）、Prisma schema/seed
+（030–040）、后端设计/实现/测试（050–070）、前后端对接与 API 文档（080–090）、
+E2E workflows（100）、冒烟/Playwright（110–120；**120 合并**散落的
+TUC/NTC/ECS/TODO 并修订 workflows）、最终审计（150）。
 
 ## 依赖
 
@@ -55,8 +75,8 @@ ninja -C build install-symlinks
 ninja -C build uninstall-symlinks
 ```
 
-会将 `sopwin`、手册、bash 补全、WorldMan SOP 包与 `extension/` 链接到配置的
-前缀（默认 `/usr`），便于改 SOP 后立刻再跑。
+会将 `sopwin`、手册、bash 补全、`suite/` 与 `extension/` 链接到配置的前缀
+（默认 `/usr`），便于改 SOP 后立刻再跑。
 
 ## 用法
 
@@ -68,24 +88,27 @@ soptools [选项] [项目目录]
 
 | 选项 | 含义 |
 |------|------|
-| `-s, --sop SOPDIR` | SOP 目录（默认内置 `worldman.sop`） |
+| `-s, --suite NAME` | `suite/` 下的套件名（默认 `worldman`） |
+| `-S, --sop-dir DIR` | 显式 SOP 目录（覆盖套件 / LANG） |
 | `-g, --gui` | 强制 GUI |
 | `-c, --console` | 仅控制台 |
 | `-C, --chdir DIR` | 项目目录（向上查找 `.git`） |
 | `-v` / `-q` | 增加 / 减少日志 |
 | `-h` / `--version` | 帮助 / 版本 |
 
+分支（`default` / `zh_CN` / `ja`）由 `LANG` / `LC_ALL` / `LC_MESSAGES` 决定
+（除非使用 `-S`）。
+
 示例：
 
 ```bash
 ./build/sopwin -C ~/src/my-app
-./build/sopwin -s worldman-zh_CN.sop -C ~/src/my-app
-./build/sopwin -s worldman-ja.sop -c -C ~/src/my-app
+LANG=zh_CN.UTF-8 ./build/sopwin -s worldman -C ~/src/my-app
+./build/sopwin -S suite/worldman/ja -c -C ~/src/my-app
 ```
 
-GUI 中也可通过 **查看 → 语言** 在 `worldman.sop` /
-`worldman-zh_CN.sop` / `worldman-ja.sop` 之间切换（会重新加载步骤；项目
-`sop/status` 按包名区分）。
+GUI **查看 → 语言** 在当前套件内切换 `default` / `zh_CN` / `ja`（配置键为
+`<suite>-<branch>`）。
 
 ### 快捷键（GUI）
 
@@ -115,8 +138,8 @@ GUI 中也可通过 **查看 → 语言** 在 `worldman.sop` /
 - **variant** — `a` 默认，`z` 备选
 - **role** — 前导下划线仅为对齐；有效角色为 `shell` / `gpt` / `codex`
 
-各语言包内的 `README.md` 有 WorldMan 架构、GPT 头字段（`Save-As`、`Parse`、
-`Interaction` 等）与 shell 进度说明。
+各分支 `suite/worldman/{default,zh_CN,ja}/README.md` 有 WorldMan 架构、GPT
+头字段与 shell 进度说明。
 
 ## 目标项目中的布局
 
@@ -155,9 +178,7 @@ Figma 外链（Google Fonts、Facebook CDN 等）在中国大陆可能不可达�
 | 路径 | 作用 |
 |------|------|
 | `src/` | 引擎、模型、工具、GUI（`gui/`）、控制台（`ui/`） |
-| `worldman.sop/` | 默认英文 WorldMan SOP |
-| `worldman-zh_CN.sop/` | 简体中文包 |
-| `worldman-ja.sop/` | 日文包 |
+| `suite/` | SOP 套件（`worldman/{default,zh_CN,ja}/` 等） |
 | `extension/bash/` | SOP 脚本 PATH 辅助（`sop-script`） |
 | `docs/` | AsciiDoc 手册（含各语言脚手架） |
 | `po/` | gettext 目录 |

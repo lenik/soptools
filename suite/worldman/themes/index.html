@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WorldMan themes demo</title>
+  <link rel="stylesheet" href="demo.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <strong>WorldMan themes</strong>
+      <span class="muted">ui · web · token · erp</span>
+    </div>
+    <label class="field">
+      <span>Theme</span>
+      <select id="theme-select"></select>
+    </label>
+    <label class="field">
+      <span>Group filter</span>
+      <select id="group-filter">
+        <option value="all">all</option>
+        <option value="minor">minor</option>
+        <option value="vibe">vibe</option>
+        <option value="country">country</option>
+      </select>
+    </label>
+    <p id="meta" class="meta"></p>
+    <button type="button" id="mode-toggle" class="mode-toggle" aria-pressed="false" title="Index chrome: Light / Dark / Auto">
+      Auto
+    </button>
+  </header>
+
+  <main class="scenes">
+    <section class="scene" data-scene="ui">
+      <h2>UI <small>ui-palettes</small></h2>
+      <div class="ui-shell">
+        <aside class="ui-sidebar">
+          <div class="ui-title">Explorer</div>
+          <ul>
+            <li class="active">workspace</li>
+            <li>src/</li>
+            <li>tests/</li>
+          </ul>
+        </aside>
+        <div class="ui-main">
+          <div class="ui-tabs">
+            <span class="tab active">editor.ts</span>
+            <span class="tab">README.md</span>
+          </div>
+          <div class="ui-editor">
+            <p>Surface / panel / action roles from <code>ui-palettes</code>.</p>
+            <button type="button" class="ui-action">Run</button>
+            <span class="ui-muted">muted chrome</span>
+          </div>
+          <footer class="ui-status">ready · line 1</footer>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" data-scene="web">
+      <h2>Web <small>web-palettes</small></h2>
+      <div class="web-app">
+        <header class="web-header">
+          <strong>Product</strong>
+          <nav>
+            <a href="#">Home</a>
+            <a href="#">Docs</a>
+          </nav>
+          <button type="button" class="web-btn">Primary</button>
+        </header>
+        <div class="web-body">
+          <article class="web-card">
+            <h3>Card title</h3>
+            <p class="web-muted">Muted supporting copy on semantic surfaces.</p>
+            <div class="web-row">
+              <span class="pill ok">success</span>
+              <span class="pill warn">warning</span>
+              <span class="pill bad">destructive</span>
+            </div>
+          </article>
+          <article class="web-card accent">
+            <h3>Accent panel</h3>
+            <p>Selection / soft highlight.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" data-scene="token">
+      <h2>Token <small>token-palettes</small></h2>
+      <pre class="code" id="token-sample" aria-label="syntax sample"></pre>
+    </section>
+
+    <section class="scene" data-scene="erp">
+      <h2>ERP <small>erp-palettes</small></h2>
+      <div class="erp">
+        <header class="erp-header">
+          <span>Orders</span>
+          <div class="erp-toolbar">
+            <button type="button" class="erp-btn">New</button>
+            <a class="erp-link" href="#">Export</a>
+          </div>
+        </header>
+        <div class="erp-panel">
+          <table class="erp-table">
+            <thead>
+              <tr><th>No.</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>SO-1001</td><td>Acme</td>
+                <td class="amt-in">+1,200.00</td>
+                <td><span class="st done">done</span></td>
+              </tr>
+              <tr class="alt">
+                <td>SO-1002</td><td>Northwind</td>
+                <td class="amt-out">−320.50</td>
+                <td><span class="st active">active</span></td>
+              </tr>
+              <tr>
+                <td>SO-1003</td><td>Contoso</td>
+                <td class="amt-in">+88.00</td>
+                <td><span class="st err">error</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <form class="erp-form">
+            <label>Customer <input value="Acme Corp" /></label>
+            <label>Note <input placeholder="optional" /></label>
+            <button type="button" class="erp-btn danger">Void</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="demo.js"></script>
+</body>
+</html>

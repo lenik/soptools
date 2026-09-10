@@ -29,7 +29,10 @@ SOP files use the naming convention:
 ----
 
 Variant *a* is the default branch choice; *z* is optional/alternative.
-The builtin SOP is *worldman.sop* for WorldMan module construction.
+Markdown steps may declare YAML frontmatter `extend: previous` or
+`extend: next` to merge into an adjacent step of the same type (role +
+extension); the graph shows one concatenated node.
+The builtin SOP suite is *worldman* under *suite/worldman/* (*default* / *zh_CN* / *ja*).
 
 The GUI shows a workflow graph, branch selection, forward/back navigation,
 automated run controls, and optional logging. Console mode provides a text
@@ -37,10 +40,14 @@ interface with the same workflow engine.
 
 == Options
 
-*-s, --sop* _SOPDIR_::
-  SOP directory to load. Defaults to the builtin *worldman.sop* shipped with
-  *soptools*. Localized packs *worldman-zh_CN.sop* and *worldman-ja.sop* are
-  also installed.
+*-s, --suite* _NAME_::
+  SOP suite under *suite/* (default: *worldman*). Branch (*default* /
+  *zh_CN* / *ja*) comes from *LANG* / *LC_ALL* / *LC_MESSAGES* unless
+  *--sop-dir* is set.
+
+*-S, --sop-dir* _DIR_::
+  Explicit SOP directory (overrides *--suite* and LANG branch). WorldMan
+  branches: *suite/worldman/{default,zh_CN,ja}/*.
 
 *-c, --console*::
   Use console-only mode without a GUI.

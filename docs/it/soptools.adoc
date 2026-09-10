@@ -9,7 +9,7 @@ v{project-version}, {project-year}
 
 == Name
 
-soptools - assistente guidato ai workflow SOP per la costruzione di progetti
+soptools - guided SOP workflow assistant for project construction
 
 == Synopsis
 
@@ -29,7 +29,8 @@ SOP files use the naming convention:
 ----
 
 Variant *a* is the default branch choice; *z* is optional/alternative.
-The builtin SOP is *worldman.sop* for WorldMan module construction.
+The builtin SOP suite is *worldman* under *suite/worldman/* (branches
+*default*, *zh_CN*, *ja*) for WorldMan module construction.
 
 The GUI shows a workflow graph, branch selection, forward/back navigation,
 automated run controls, and optional logging. Console mode provides a text
@@ -37,9 +38,14 @@ interface with the same workflow engine.
 
 == Options
 
-*-s, --sop* _SOPDIR_::
-  SOP directory to load. Defaults to the builtin *worldman.sop* shipped with
-  *soptools*.
+*-s, --suite* _NAME_::
+  SOP suite name under *suite/* (default: *worldman*). The suite branch
+  (*default* / *zh_CN* / *ja*) is selected from *LANG* / *LC_ALL* /
+  *LC_MESSAGES* unless *--sop-dir* is set.
+
+*-S, --sop-dir* _DIR_::
+  SOP directory to load (overrides *--suite* and LANG branch selection).
+  WorldMan branches live at *suite/worldman/{default,zh_CN,ja}/*.
 
 *-c, --console*::
   Use console-only mode without a GUI.

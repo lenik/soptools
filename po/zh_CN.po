@@ -18,7 +18,10 @@ msgid ""
 msgstr ""
 
 #: src/soptools.cpp:34
-msgid "  -s, --sop SOPDIR     SOP directory (default: builtin worldman.sop)\n"
+msgid "  -s, --suite NAME     SOP suite under suite/ (default: worldman)\n"
+msgstr ""
+
+msgid "  -S, --sop-dir DIR    SOP directory (overrides --suite / LANG branch)\n"
 msgstr ""
 
 #: src/soptools.cpp:35

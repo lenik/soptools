@@ -6,14 +6,15 @@ scripts, AI prompt capture (`.get`), and Codex implementation prompts, and
 tracks branch choices and progress in a wxWidgets GUI (`sopwin`) or a console
 session.
 
-The default SOP packs build a **WorldMan** module (web + backend + optional
-mobile) from a Figma prototype export. Localized packs ship for English,
-Simplified Chinese, and Japanese.
+The default SOP suite builds a **WorldMan** module (web + backend + optional
+mobile) from a Figma prototype export. Localized branches ship for English
+(`default`), Simplified Chinese (`zh_CN`), and Japanese (`ja`).
 
 ## Features
 
-- **SOP packs** — ordered Markdown / shell / GPT steps with branching
-  (`a` preferred / `z` alternative) and roles (`shell`, `gpt`, `codex`)
+- **SOP suites** — ordered Markdown / shell / GPT steps under
+  `suite/<name>/<branch>/` with branching (`a` / `z`) and roles
+  (`shell`, `gpt`, `codex`)
 - **GUI (`sopwin`)** — workflow graph, step preview, Back / Next / Run / Pause,
   Execute·Get·Copy, detachable graph & log panes, status bar feedback
 - **Console mode** — same engine without a display
@@ -22,7 +23,31 @@ Simplified Chinese, and Japanese.
 - **Shell steps** — run with project cwd, enriched `PATH`, progress FIFO for the
   gauge
 - **Persistence** — workflow location and exclusions under project `sop/status`
-- **Language packs** — switch WorldMan SOP language from **View → Language**
+- **Language / branch** — `LANG` selects suite branch; **View → Language**
+  switches within the current suite
+
+## SOP suites
+
+Packs live under `suite/`. See [`suite/README.md`](suite/README.md).
+
+### worldman
+
+Guided WorldMan module construction from a Figma export.
+
+```text
+suite/worldman/
+    default/    # English
+    zh_CN/      # Simplified Chinese
+    ja/         # Japanese
+    themes/     # catalog/ + minor|vibe|country palettes → sop/themes/ in 000
+```
+
+Approximate content (same step ids in every branch): Figma layout refactor +
+seed `sop/themes/` (000), web refactor + asset localization (010), semantic
+theming from grouped web palettes + switcher (011), PRD (020), Prisma schema/seed
+(030–040), backend design/implement/tests (050–070), web integration + API docs
+(080–090), E2E workflows (100), smoke/Playwright (110–120; **120 merges**
+scattered `TUC`/`NTC`/`ECS`/`TODO` and revises workflows), final audit (150).
 
 ## Requirements
 
@@ -61,9 +86,9 @@ ninja -C build install-symlinks
 ninja -C build uninstall-symlinks
 ```
 
-Links `sopwin`, man pages, bash completion, WorldMan SOP packs, and
-`extension/` under the configured prefix (default `/usr`) back to the source /
-build tree. Useful when editing SOP packs and re-running `sopwin` immediately.
+Links `sopwin`, man pages, bash completion, `suite/`, and `extension/` under
+the configured prefix (default `/usr`) back to the source / build tree. Useful
+when editing SOP packs and re-running `sopwin` immediately.
 
 ## Usage
 
@@ -75,29 +100,33 @@ soptools [OPTIONS] [PROJECTDIR]
 
 | Option | Meaning |
 |--------|---------|
-| `-s, --sop SOPDIR` | SOP directory (default: builtin `worldman.sop`) |
+| `-s, --suite NAME` | Suite under `suite/` (default: `worldman`) |
+| `-S, --sop-dir DIR` | Explicit SOP directory (overrides suite / LANG) |
 | `-g, --gui` | Force GUI |
 | `-c, --console` | Console only |
 | `-C, --chdir DIR` | Project directory (walks up for `.git`) |
 | `-v` / `-q` | More / less logging |
 | `-h` / `--version` | Help / version |
 
+Branch (`default` / `zh_CN` / `ja`) comes from `LANG` / `LC_ALL` /
+`LC_MESSAGES` unless `-S` is set.
+
 Examples:
 
 ```bash
-# English WorldMan pack on the nearest git project
+# Suite worldman; branch from LANG (e.g. en_US → default)
 ./build/sopwin -C ~/src/my-app
 
-# Simplified Chinese pack
-./build/sopwin -s worldman-zh_CN.sop -C ~/src/my-app
+# Force Simplified Chinese branch
+LANG=zh_CN.UTF-8 ./build/sopwin -s worldman -C ~/src/my-app
 
-# Japanese pack, console
-./build/sopwin -s worldman-ja.sop -c -C ~/src/my-app
+# Explicit directory
+./build/sopwin -S suite/worldman/ja -c -C ~/src/my-app
 ```
 
-In the GUI you can also **View → Language** to switch among the shipped
-`worldman.sop` / `worldman-zh_CN.sop` / `worldman-ja.sop` packs (reloads steps;
-project `sop/status` is tied to the pack name).
+In the GUI, **View → Language** switches `default` / `zh_CN` / `ja` within the
+current suite (reloads steps; project config is keyed as
+`<suite>-<branch>`).
 
 ### Keyboard (GUI)
 
@@ -128,9 +157,9 @@ Examples: `000a._shell.refactor_figma.sh`, `020a.___gpt.create_prd.get`,
 - **role** — leading underscores are padding; effective role is `shell` / `gpt` /
   `codex`
 
-See each pack’s `README.md` (`worldman.sop/`, `worldman-zh_CN.sop/`,
-`worldman-ja.sop/`) for WorldMan architecture, GPT headers (`Save-As`,
-`Parse`, `Interaction`, …), and shell progress helpers.
+See each branch’s `README.md` under `suite/worldman/{default,zh_CN,ja}/` for
+WorldMan architecture, GPT headers (`Save-As`, `Parse`, `Interaction`, …), and
+shell progress helpers.
 
 ## Project layout under the target app
 
@@ -172,9 +201,7 @@ keep real assets under `web/assets/` — not placeholders.
 | Path | Role |
 |------|------|
 | `src/` | Engine, model, util, GUI (`gui/`), console (`ui/`) |
-| `worldman.sop/` | Default English WorldMan SOP |
-| `worldman-zh_CN.sop/` | Simplified Chinese pack |
-| `worldman-ja.sop/` | Japanese pack |
+| `suite/` | SOP suites (`worldman/{default,zh_CN,ja}/`, …) |
 | `extension/bash/` | PATH helpers for SOP scripts (`sop-script`) |
 | `docs/` | AsciiDoc man pages (+ locale scaffolds) |
 | `po/` | gettext catalogs |

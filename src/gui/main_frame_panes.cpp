@@ -346,9 +346,9 @@ void MainFrame::SyncLanguageMenu() {
     }
     const std::string name = std::filesystem::path(engine_->options().sop_dir).filename().string();
     int id = ID_LANG_EN;
-    if (name.find("zh_CN") != std::string::npos) {
+    if (name == "zh_CN") {
         id = ID_LANG_ZH_CN;
-    } else if (name.find("-ja") != std::string::npos || name == "worldman-ja.sop") {
+    } else if (name == "ja") {
         id = ID_LANG_JA;
     }
     lang_menu_->Check(id, true);
@@ -360,11 +360,11 @@ void MainFrame::SwitchLanguagePack(const std::string &lang) {
 #else
     const std::string source_root = ".";
 #endif
-    const std::string pack =
-        resolve_worldman_sop_pack(lang, engine_->options().sop_dir, source_root);
-    if (pack.empty()) {
-        wxMessageBox(wxString::Format(wxString::FromUTF8("WorldMan SOP pack for language \"%s\" was not found."),
-                                      wxString::FromUTF8(lang)),
+    const std::string branch = (lang == "en") ? "default" : lang;
+    const std::string pack = resolve_suite_branch(branch, engine_->options().sop_dir, source_root);
+    if (pack.empty() || !std::filesystem::is_directory(pack)) {
+        wxMessageBox(wxString::Format(wxString::FromUTF8("Suite branch \"%s\" was not found."),
+                                      wxString::FromUTF8(branch)),
                      wxString::FromUTF8("Language"), wxOK | wxICON_ERROR);
         SyncLanguageMenu();
         return;
@@ -386,7 +386,7 @@ void MainFrame::SwitchLanguagePack(const std::string &lang) {
     sticky_status_.clear();
     RefreshAll();
     SyncLanguageMenu();
-    SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Switched SOP language pack to %s."),
+    SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Switched suite branch to %s."),
                                          wxString::FromUTF8(std::filesystem::path(pack).filename().string())),
                         true);
 }

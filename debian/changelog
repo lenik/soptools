@@ -1,4 +1,20 @@
-soptools (1.0.0) UNRELEASED; urgency=medium
+soptools (1.1.0) UNRELEASED; urgency=medium
+
+  * Organize WorldMan SOPs under suite/worldman/{default,zh_CN,ja}/.
+  * CLI: -s/--suite NAME (default worldman), -S/--sop-dir DIR; LANG
+    selects suite branch.
+  * SOP 100: drop merge prep; SOP 120 merges TUC/NTC/ECS/TODO and
+    revises workflows from case sets.
+  * Document shipped SOP suites in README.
+  * Theme demo index.html (ui/web/token/erp scenes); 011 may use all
+    palette class sets by semantics; country packs cover zfr L2+L3
+    (Tier I–III); fg/bg contrast ≥4.5:1.
+  * SOP step frontmatter extend: previous|next merges adjacent same-type
+    steps into one graph node (011→010 codex.md).
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 15:36:17 +0800
+
+soptools (1.0.0) unstable; urgency=medium
 
   * WorldMan SOP 010: download Figma demo hotlinks (images, fonts,
     audio, …) into web/assets/.

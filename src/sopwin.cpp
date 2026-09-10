@@ -28,10 +28,11 @@ extern "C" {
 
 enum {
     OPT_VERSION = 256,
-    OPT_SOP = 257,
+    OPT_SOP_DIR = 257,
     OPT_CONSOLE = 258,
     OPT_GUI = 259,
     OPT_CHDIR = 260,
+    OPT_SUITE = 261,
 };
 
 
@@ -42,14 +43,17 @@ static int verbose;
 static void usage(FILE *out) {
     fputs("Usage: sopwin [OPTIONS] [PROJECTDIR]\n"
           "Guide project construction through SOP workflow steps.\n\n"
-          "  -s, --sop SOPDIR     SOP directory (default: builtin worldman.sop)\n"
+          "  -s, --suite NAME     SOP suite under suite/ (default: worldman)\n"
+          "  -S, --sop-dir DIR    SOP directory (overrides --suite / LANG branch)\n"
           "  -c, --console        console-only mode (no GUI)\n"
           "  -g, --gui            force GUI mode\n"
           "  -C, --chdir DIR      project directory (default: cwd or nearest .git)\n"
           "  -v, --verbose        repeat for more verbose loggings\n"
           "  -q, --quiet          show less logging messages\n"
           "  -h, --help           display this help and exit\n"
-          "      --version        output version information and exit\n\n",
+          "      --version        output version information and exit\n\n"
+          "Suite branch (default / zh_CN / ja) is chosen from LANG / LC_ALL /\n"
+          "LC_MESSAGES unless --sop-dir is set.\n\n",
           out);
     fprintf(out, "Report bugs to: <%s>\n", PROJECT_EMAIL);
 }
@@ -64,13 +68,16 @@ int main(int argc, char **argv) {
     (void)exe;
     init_i18n(LOCALEDIR);
     std::string sop_dir;
+    std::string suite = "worldman";
     std::string chdir_dir;
     std::string project_arg;
     bool force_console = false;
     bool force_gui = false;
 
     static const struct option long_opts[] = {
-        {"sop", required_argument, NULL, 's'},
+        {"suite", required_argument, NULL, 's'},
+        {"sop-dir", required_argument, NULL, 'S'},
+        {"sop", required_argument, NULL, 'S'}, /* deprecated alias */
         {"console", no_argument, NULL, 'c'},
         {"gui", no_argument, NULL, 'g'},
         {"chdir", required_argument, NULL, 'C'},
@@ -82,12 +89,15 @@ int main(int argc, char **argv) {
     };
 
     for (;;) {
-        int c = getopt_long(argc, argv, "s:c:g:C:vqh", long_opts, NULL);
+        int c = getopt_long(argc, argv, "s:S:cgC:vqh", long_opts, NULL);
         if (c == -1) {
             break;
         }
         switch (c) {
         case 's':
+            suite = optarg;
+            break;
+        case 'S':
             sop_dir = optarg;
             break;
         case 'c':
@@ -139,7 +149,8 @@ int main(int argc, char **argv) {
 
     SopRuntimeOptions opts;
     opts.verbose = verbose;
-    opts.sop_dir = resolve_sop_dir(sop_dir, source_root);
+    const std::string branch = suite_branch_from_env();
+    opts.sop_dir = resolve_sop_dir(sop_dir, suite, branch, source_root);
 
     if (!chdir_dir.empty()) {
         opts.project_dir = find_project_dir(chdir_dir);

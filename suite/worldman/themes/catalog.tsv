@@ -1,0 +1,97 @@
+id	label	type	group	family	paletteKey	catalog	locales
+innocent	Innocent	light	minor	Innocent	innocent	catalog/Innocent.md	
+dark-innocent	Dark Innocent	dark	minor	Innocent	darkInnocent	catalog/Innocent.md	
+light-maiden	Light Maiden	light	minor	Maiden	maiden	catalog/Maiden.md	
+dark-maiden	Dark Maiden	dark	minor	Maiden	darkMaiden	catalog/Maiden.md	
+light-girl	Light Girl	light	minor	Girl	girl	catalog/Girl.md	
+dark-girl	Dark Girl	dark	minor	Girl	darkGirl	catalog/Girl.md	
+light-morandi	Light Morandi	light	minor	Morandi	morandi	catalog/Morandi.md	
+dark-morandi	Dark Morandi	dark	minor	Morandi	darkMorandi	catalog/Morandi.md	
+light-lgbtq	Light LGBTQ	light	minor	LGBTQ	lgbtq	catalog/LGBTQ.md	
+dark-lgbtq	Dark LGBTQ	dark	minor	LGBTQ	darkLgbtq	catalog/LGBTQ.md	
+light-lesbian	Light Lesbian	light	minor	Lesbian	lesbian	catalog/Lesbian.md	
+dark-lesbian	Dark Lesbian	dark	minor	Lesbian	darkLesbian	catalog/Lesbian.md	
+ms-dos	MS-DOS	dark	vibe	MS-DOS	msdos	catalog/MS-DOS.md	
+matrix-ii	Matrix II	dark	vibe	Matrix-II	matrix2	catalog/Matrix-II.md	
+light-x-files	Light X-Files	light	vibe	X-Files	xfiles	catalog/X-Files.md	
+dark-x-files	Dark X-Files	dark	vibe	X-Files	darkXfiles	catalog/X-Files.md	
+light-only-yesterday	Light Only Yesterday	light	vibe	Yesterday	onlyYesterday	catalog/Yesterday.md	
+dark-only-yesterday	Dark Only Yesterday	dark	vibe	Yesterday	darkOnlyYesterday	catalog/Yesterday.md	
+country-brasil	Country: Brasil	light	country	Brasil	countryBrasil	catalog/Brasil.md	pt_BR
+dark-country-brasil	Country: Brasil (Dark)	dark	country	Brasil	darkCountryBrasil	catalog/Brasil.md	pt_BR
+country-canada	Country: Canada	light	country	Canada	countryCanada	catalog/Canada.md	
+dark-country-canada	Country: Canada (Dark)	dark	country	Canada	darkCountryCanada	catalog/Canada.md	
+country-china	Country: China	light	country	China	countryChina	catalog/China.md	zh_CN
+dark-country-china	Country: China (Dark)	dark	country	China	darkCountryChina	catalog/China.md	zh_CN
+country-german	Country: German	light	country	German	countryGerman	catalog/German.md	de
+dark-country-german	Country: German (Dark)	dark	country	German	darkCountryGerman	catalog/German.md	de
+country-india	Country: India	light	country	India	countryIndia	catalog/India.md	hi
+dark-country-india	Country: India (Dark)	dark	country	India	darkCountryIndia	catalog/India.md	hi
+country-italy	Country: Italy	light	country	Italy	countryItaly	catalog/Italy.md	it
+dark-country-italy	Country: Italy (Dark)	dark	country	Italy	darkCountryItaly	catalog/Italy.md	it
+country-japan	Country: Japan	light	country	Japan	countryJapan	catalog/Japan.md	ja
+dark-country-japan	Country: Japan (Dark)	dark	country	Japan	darkCountryJapan	catalog/Japan.md	ja
+country-norway	Country: Norway	light	country	Norway	countryNorway	catalog/Norway.md	no
+dark-country-norway	Country: Norway (Dark)	dark	country	Norway	darkCountryNorway	catalog/Norway.md	no
+country-russia	Country: Russia	light	country	Russia	countryRussia	catalog/Russia.md	ru
+dark-country-russia	Country: Russia (Dark)	dark	country	Russia	darkCountryRussia	catalog/Russia.md	ru
+country-taiwan	Country: Taiwan	light	country	Taiwan	countryTaiwan	catalog/Taiwan.md	
+dark-country-taiwan	Country: Taiwan (Dark)	dark	country	Taiwan	darkCountryTaiwan	catalog/Taiwan.md	
+country-thai	Country: Thai	light	country	Thai	countryThai	catalog/Thai.md	th
+dark-country-thai	Country: Thai (Dark)	dark	country	Thai	darkCountryThai	catalog/Thai.md	th
+country-uk	Country: UK	light	country	UK	countryUk	catalog/UK.md	
+dark-country-uk	Country: UK (Dark)	dark	country	UK	darkCountryUk	catalog/UK.md	
+country-ukraine	Country: Ukraine	light	country	Ukraine	countryUkraine	catalog/Ukraine.md	uk
+dark-country-ukraine	Country: Ukraine (Dark)	dark	country	Ukraine	darkCountryUkraine	catalog/Ukraine.md	uk
+country-usa	Country: USA	light	country	USA	countryUsa	catalog/USA.md	
+dark-country-usa	Country: USA (Dark)	dark	country	USA	darkCountryUsa	catalog/USA.md	
+country-viet	Country: Viet	light	country	Viet	countryViet	catalog/Viet.md	vi
+dark-country-viet	Country: Viet (Dark)	dark	country	Viet	darkCountryViet	catalog/Viet.md	vi
+country-france	Country: France	light	country	France	countryFrance	catalog/France.md	fr
+dark-country-france	Country: France (Dark)	dark	country	France	darkCountryFrance	catalog/France.md	fr
+country-mexico	Country: Mexico	light	country	Mexico	countryMexico	catalog/Mexico.md	es_MX
+dark-country-mexico	Country: Mexico (Dark)	dark	country	Mexico	darkCountryMexico	catalog/Mexico.md	es_MX
+country-korea	Country: Korea	light	country	Korea	countryKorea	catalog/Korea.md	ko
+dark-country-korea	Country: Korea (Dark)	dark	country	Korea	darkCountryKorea	catalog/Korea.md	ko
+country-arab	Country: Arab	light	country	Arab	countryArab	catalog/Arab.md	ar
+dark-country-arab	Country: Arab (Dark)	dark	country	Arab	darkCountryArab	catalog/Arab.md	ar
+country-indonesia	Country: Indonesia	light	country	Indonesia	countryIndonesia	catalog/Indonesia.md	id
+dark-country-indonesia	Country: Indonesia (Dark)	dark	country	Indonesia	darkCountryIndonesia	catalog/Indonesia.md	id
+country-netherlands	Country: Netherlands	light	country	Netherlands	countryNetherlands	catalog/Netherlands.md	nl
+dark-country-netherlands	Country: Netherlands (Dark)	dark	country	Netherlands	darkCountryNetherlands	catalog/Netherlands.md	nl
+country-poland	Country: Poland	light	country	Poland	countryPoland	catalog/Poland.md	pl
+dark-country-poland	Country: Poland (Dark)	dark	country	Poland	darkCountryPoland	catalog/Poland.md	pl
+country-turkey	Country: Turkey	light	country	Turkey	countryTurkey	catalog/Turkey.md	tr
+dark-country-turkey	Country: Turkey (Dark)	dark	country	Turkey	darkCountryTurkey	catalog/Turkey.md	tr
+country-sweden	Country: Sweden	light	country	Sweden	countrySweden	catalog/Sweden.md	sv
+dark-country-sweden	Country: Sweden (Dark)	dark	country	Sweden	darkCountrySweden	catalog/Sweden.md	sv
+country-denmark	Country: Denmark	light	country	Denmark	countryDenmark	catalog/Denmark.md	da
+dark-country-denmark	Country: Denmark (Dark)	dark	country	Denmark	darkCountryDenmark	catalog/Denmark.md	da
+country-finland	Country: Finland	light	country	Finland	countryFinland	catalog/Finland.md	fi
+dark-country-finland	Country: Finland (Dark)	dark	country	Finland	darkCountryFinland	catalog/Finland.md	fi
+country-czech	Country: Czech	light	country	Czech	countryCzech	catalog/Czech.md	cs
+dark-country-czech	Country: Czech (Dark)	dark	country	Czech	darkCountryCzech	catalog/Czech.md	cs
+country-romania	Country: Romania	light	country	Romania	countryRomania	catalog/Romania.md	ro
+dark-country-romania	Country: Romania (Dark)	dark	country	Romania	darkCountryRomania	catalog/Romania.md	ro
+country-greece	Country: Greece	light	country	Greece	countryGreece	catalog/Greece.md	el
+dark-country-greece	Country: Greece (Dark)	dark	country	Greece	darkCountryGreece	catalog/Greece.md	el
+country-hungary	Country: Hungary	light	country	Hungary	countryHungary	catalog/Hungary.md	hu
+dark-country-hungary	Country: Hungary (Dark)	dark	country	Hungary	darkCountryHungary	catalog/Hungary.md	hu
+country-bulgaria	Country: Bulgaria	light	country	Bulgaria	countryBulgaria	catalog/Bulgaria.md	bg
+dark-country-bulgaria	Country: Bulgaria (Dark)	dark	country	Bulgaria	darkCountryBulgaria	catalog/Bulgaria.md	bg
+country-kazakhstan	Country: Kazakhstan	light	country	Kazakhstan	countryKazakhstan	catalog/Kazakhstan.md	kk
+dark-country-kazakhstan	Country: Kazakhstan (Dark)	dark	country	Kazakhstan	darkCountryKazakhstan	catalog/Kazakhstan.md	kk
+country-philippines	Country: Philippines	light	country	Philippines	countryPhilippines	catalog/Philippines.md	fil_PH
+dark-country-philippines	Country: Philippines (Dark)	dark	country	Philippines	darkCountryPhilippines	catalog/Philippines.md	fil_PH
+country-bengal	Country: Bengal	light	country	Bengal	countryBengal	catalog/Bengal.md	bn
+dark-country-bengal	Country: Bengal (Dark)	dark	country	Bengal	darkCountryBengal	catalog/Bengal.md	bn
+country-marathi	Country: Marathi	light	country	Marathi	countryMarathi	catalog/Marathi.md	mr
+dark-country-marathi	Country: Marathi (Dark)	dark	country	Marathi	darkCountryMarathi	catalog/Marathi.md	mr
+country-tamil	Country: Tamil	light	country	Tamil	countryTamil	catalog/Tamil.md	ta
+dark-country-tamil	Country: Tamil (Dark)	dark	country	Tamil	darkCountryTamil	catalog/Tamil.md	ta
+country-telugu	Country: Telugu	light	country	Telugu	countryTelugu	catalog/Telugu.md	te
+dark-country-telugu	Country: Telugu (Dark)	dark	country	Telugu	darkCountryTelugu	catalog/Telugu.md	te
+country-hebrew	Country: Hebrew	light	country	Hebrew	countryHebrew	catalog/Hebrew.md	he
+dark-country-hebrew	Country: Hebrew (Dark)	dark	country	Hebrew	darkCountryHebrew	catalog/Hebrew.md	he
+country-swahili	Country: Swahili	light	country	Swahili	countrySwahili	catalog/Swahili.md	sw
+dark-country-swahili	Country: Swahili (Dark)	dark	country	Swahili	darkCountrySwahili	catalog/Swahili.md	sw
