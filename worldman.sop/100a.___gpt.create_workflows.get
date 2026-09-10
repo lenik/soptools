@@ -4,12 +4,19 @@ Discard: vim: set ft=markdown :
 
 # Create complete testing workflows
 
+## Preparation
+
+First recursively scan all subdirectories under `sop/` for scattered
+`TUC.md`, `NTC.md`, `ECS.md`, and `TODO.md`. Merge each kind into the canonical
+root files `sop/TUC.md`, `sop/NTC.md`, `sop/ECS.md`, and `sop/TODO.md`
+(dedupe; fold into any existing root file), then delete the scattered copies.
+
 Based on the complete discussion and the previously produced:
 
 - `sop/PRD.md`
-- `sop/TUC.md` (if present)
-- `sop/NTC.md` (if present)
-- `sop/ECS.md` (if present)
+- `sop/TUC.md` (after merge, if present)
+- `sop/NTC.md` (after merge, if present)
+- `sop/ECS.md` (after merge, if present)
 - `prisma/schema.prisma`
 - `prisma/seed.ts`
 - backend design

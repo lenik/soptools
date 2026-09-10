@@ -4,12 +4,19 @@ Discard: vim: set ft=markdown :
 
 # 完全なテストワークフローを作成する
 
+## 準備
+
+まず `sop/` 配下の全サブディレクトリを再帰走査し、散在する `TUC.md`、
+`NTC.md`、`ECS.md`、`TODO.md` を探す。種類ごとにルートの正規ファイル
+`sop/TUC.md`、`sop/NTC.md`、`sop/ECS.md`、`sop/TODO.md` へ統合（重複除去、
+既存ルートへ取り込み）し、散在コピーを削除する。
+
 完全な議論と、以前作成した次に基づき：
 
 - `sop/PRD.md`
-- `sop/TUC.md`（あれば）
-- `sop/NTC.md`（あれば）
-- `sop/ECS.md`（あれば）
+- `sop/TUC.md`（統合後、あれば）
+- `sop/NTC.md`（統合後、あれば）
+- `sop/ECS.md`（統合後、あれば）
 - `prisma/schema.prisma`
 - `prisma/seed.ts`
 - バックエンド設計

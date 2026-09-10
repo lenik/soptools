@@ -12,6 +12,18 @@ set -euo pipefail
 
 set_progress 5%
 
+# Skip if a prior run already produced the WorldMan layout. Re-running would
+# move backend/prisma/sop/… into web/ and destroy the tree.
+if [ -d web ] && [ -d backend ] && [ -d prisma ] && [ -d sop ] && [ -d docs ] && {
+       [ -f web/package.json ] || [ -d web/src ] ||
+           [ -f web/vite.config.ts ] || [ -f web/vite.config.js ] ||
+           [ -f web/vite.config.mts ] || [ -f web/index.html ]
+   }; then
+    set_progress 100%
+    sop_log 1 "WorldMan layout already present under web/; skipping Figma refactor."
+    exit 0
+fi
+
 # Remove Figma / agent scaffolding that should not stay in the product tree.
 rm -rf AGENT.md CLAUDE.md src/imports .figma .git
 set_progress 15%

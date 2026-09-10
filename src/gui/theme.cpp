@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/theme.hpp"
+#include "gui/theme.hpp"
 
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
@@ -122,7 +122,8 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
             case SopStepStatus::Waiting:
                 return wxString::FromUTF8("Paste the GPT response in the dialog, then Save.");
             default:
-                return wxString::FromUTF8("Click Copy to copy the prompt, then paste the GPT response.");
+                return wxString::FromUTF8(
+                    "Next/Get copies the prompt and opens Paste Response for the GPT reply.");
             }
         }
         switch (step->status) {
@@ -216,14 +217,15 @@ wxStaticText *MakeSectionTitle(wxWindow *parent, const wxString &title) {
     return label;
 }
 
-void AddShortcutRows(wxFlexGridSizer *grid, std::initializer_list<std::pair<const char *, const char *>> rows) {
+void AddShortcutRows(wxWindow *parent, wxFlexGridSizer *grid,
+                     std::initializer_list<std::pair<const char *, const char *>> rows) {
     for (const auto &row : rows) {
-        auto *key = new wxStaticText(grid->GetContainingWindow(), wxID_ANY, wxString::FromUTF8(row.first));
+        auto *key = new wxStaticText(parent, wxID_ANY, wxString::FromUTF8(row.first));
         wxFont key_font = key->GetFont();
         key_font.MakeBold();
         key->SetFont(key_font);
         grid->Add(key, 0, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL);
-        grid->Add(new wxStaticText(grid->GetContainingWindow(), wxID_ANY, wxString::FromUTF8(row.second)), 0,
+        grid->Add(new wxStaticText(parent, wxID_ANY, wxString::FromUTF8(row.second)), 0,
                 wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
     }
 }
@@ -236,9 +238,23 @@ wxPanel *MakeShortcutSection(wxWindow *parent, const wxString &title,
     section->Add(MakeSectionTitle(panel, title), 0, wxBOTTOM, 6);
     auto *grid = new wxFlexGridSizer(2, 12, 4);
     grid->AddGrowableCol(1);
-    AddShortcutRows(grid, rows);
+    AddShortcutRows(panel, grid, rows);
     section->Add(grid, 0, wxEXPAND);
     panel->SetSizer(section);
     return panel;
+}
+
+wxMenuItem *AppendIconMenuItem(wxMenu *menu, int id, const wxString &label, const wxArtID &art) {
+    auto *item = new wxMenuItem(menu, id, label);
+    item->SetBitmap(wxArtProvider::GetBitmap(art, wxART_MENU, wxSize(16, 16)));
+    menu->Append(item);
+    return item;
+}
+
+wxMenuItem *AppendIconCheckItem(wxMenu *menu, int id, const wxString &label, const wxArtID &art) {
+    /* GTK cannot put an image on a check menu item (gtk_image_menu_item_set_image
+     * asserts GTK_IS_IMAGE_MENU_ITEM). Keep the check kind; art is unused. */
+    (void)art;
+    return menu->AppendCheckItem(id, label);
 }
 

@@ -90,6 +90,7 @@ worldman.json      # name, portBase, masterData, references, …
 
 During complex build/refactor work, keep living working documents under `<projectdir>/sop/`:
 
+- `status` — current workflow state; `location=` is the active step id (auto-updated; resumed on open)
 - `TODO.md` — task list; sync item status as build/refactor progresses
 - `PRD.md` — product requirements (authoritative during construction)
 - `TUC.md` — test use-case reference set

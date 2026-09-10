@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/graph_canvas.hpp"
-#include "ui/gui/graph_style.hpp"
+#include "gui/graph_canvas.hpp"
+#include "gui/graph_style.hpp"
 
 #include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
@@ -14,10 +14,27 @@
 #include <wx/menu.h>
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <map>
+#include <vector>
 
-#include "ui/gui/graph_canvas_layout.hpp"
+#include "gui/graph_canvas_layout.hpp"
 
+namespace {
+
+wxMenuItem *AppendMenuItem(wxMenu *menu, int id, const wxString &label, const wxArtID &art) {
+    auto *item = new wxMenuItem(menu, id, label);
+    item->SetBitmap(wxArtProvider::GetBitmap(art, wxART_MENU, wxSize(16, 16)));
+    menu->Append(item);
+    return item;
+}
+
+wxMenuItem *AppendCheckMenuItem(wxMenu *menu, int id, const wxString &label, const wxArtID & /*art*/) {
+    /* GTK rejects SetBitmap on wxITEM_CHECK (not an image menu item). */
+    return menu->AppendCheckItem(id, label);
+}
+
+} /* namespace */
 
 wxBEGIN_EVENT_TABLE(SopGraphCanvas, wxPanel)
     EVT_PAINT(SopGraphCanvas::OnPaint)
@@ -59,36 +76,155 @@ void SopGraphCanvas::SetCurrentIndex(size_t index) {
 }
 
 wxPoint SopGraphCanvas::PanToShowNode(const SopGraphNode &node, bool center_in_view) const {
-    const wxSize client = GetClientSize();
-    if (client.x <= 0 || client.y <= 0) {
-        return pan_;
-    }
+    std::vector<const SopGraphNode *> nodes{&node};
     if (center_in_view) {
-        const int target_x =
-            (client.x - static_cast<int>(node.size.x * zoom_)) / 2 - static_cast<int>(node.pos.x * zoom_);
-        const int target_y =
-            (client.y - static_cast<int>(node.size.y * zoom_)) / 2 - static_cast<int>(node.pos.y * zoom_);
-        return wxPoint(target_x, target_y);
+        return PanToCenterNodes(nodes);
+    }
+    return PanToShowNodes(nodes, pan_);
+}
+
+wxPoint SopGraphCanvas::PanToShowNodes(const std::vector<const SopGraphNode *> &nodes, wxPoint pan) const {
+    const wxSize client = GetClientSize();
+    if (client.x <= 0 || client.y <= 0 || nodes.empty()) {
+        return pan;
     }
     const int margin = 32;
-    const int left = pan_.x + static_cast<int>(node.pos.x * zoom_);
-    const int top = pan_.y + static_cast<int>(node.pos.y * zoom_);
-    const int right = left + static_cast<int>(node.size.x * zoom_);
-    const int bottom = top + static_cast<int>(node.size.y * zoom_);
+    for (const SopGraphNode *node : nodes) {
+        if (!node) {
+            continue;
+        }
+        const int left = pan.x + static_cast<int>(node->pos.x * zoom_);
+        const int top = pan.y + static_cast<int>(node->pos.y * zoom_);
+        const int right = left + static_cast<int>(node->size.x * zoom_);
+        const int bottom = top + static_cast<int>(node->size.y * zoom_);
+        if (left < margin) {
+            pan.x += margin - left;
+        } else if (right > client.x - margin) {
+            pan.x -= right - (client.x - margin);
+        }
+        if (top < margin) {
+            pan.y += margin - top;
+        } else if (bottom > client.y - margin) {
+            pan.y -= bottom - (client.y - margin);
+        }
+    }
+    return pan;
+}
 
-    int target_x = pan_.x;
-    int target_y = pan_.y;
-    if (left < margin) {
-        target_x += margin - left;
-    } else if (right > client.x - margin) {
-        target_x -= right - (client.x - margin);
+wxPoint SopGraphCanvas::PanToCenterNodes(const std::vector<const SopGraphNode *> &nodes) const {
+    const wxSize client = GetClientSize();
+    if (client.x <= 0 || client.y <= 0 || nodes.empty()) {
+        return pan_;
     }
-    if (top < margin) {
-        target_y += margin - top;
-    } else if (bottom > client.y - margin) {
-        target_y -= bottom - (client.y - margin);
+    int min_x = std::numeric_limits<int>::max();
+    int min_y = std::numeric_limits<int>::max();
+    int max_x = std::numeric_limits<int>::min();
+    int max_y = std::numeric_limits<int>::min();
+    for (const SopGraphNode *node : nodes) {
+        if (!node) {
+            continue;
+        }
+        min_x = std::min(min_x, node->pos.x);
+        min_y = std::min(min_y, node->pos.y);
+        max_x = std::max(max_x, node->pos.x + node->size.x);
+        max_y = std::max(max_y, node->pos.y + node->size.y);
     }
-    return wxPoint(target_x, target_y);
+    if (min_x > max_x || min_y > max_y) {
+        return pan_;
+    }
+    const double cx = (static_cast<double>(min_x) + static_cast<double>(max_x)) / 2.0;
+    const double cy = (static_cast<double>(min_y) + static_cast<double>(max_y)) / 2.0;
+    return wxPoint(client.x / 2 - static_cast<int>(cx * zoom_),
+                   client.y / 2 - static_cast<int>(cy * zoom_));
+}
+
+wxPoint SopGraphCanvas::ClampPanPoint(wxPoint pan) const {
+    const wxSize client = GetClientSize();
+    if (client.x < 1 || client.y < 1) {
+        return pan;
+    }
+    const int margin = 8;
+    const int gw = static_cast<int>(graph_size_.x * zoom_);
+    const int gh = static_cast<int>(graph_size_.y * zoom_);
+    if (gw + 2 * margin <= client.x) {
+        pan.x = std::clamp(pan.x, margin, client.x - gw - margin);
+    } else {
+        pan.x = std::clamp(pan.x, client.x - gw - margin, margin);
+    }
+    if (gh + 2 * margin <= client.y) {
+        pan.y = std::clamp(pan.y, margin, client.y - gh - margin);
+    } else {
+        pan.y = std::clamp(pan.y, client.y - gh - margin, margin);
+    }
+    return pan;
+}
+
+wxPoint SopGraphCanvas::FillHorizontalPan(wxPoint pan) const {
+    const wxSize client = GetClientSize();
+    if (client.x < 1) {
+        return pan;
+    }
+    const int margin = 8;
+    const int gw = static_cast<int>(graph_size_.x * zoom_);
+    /* Prefer a filled viewport: no empty gutters when the graph is wider;
+     * when narrower, pin left so empty space is only on the right. */
+    if (gw + 2 * margin <= client.x) {
+        pan.x = margin;
+    } else {
+        pan.x = std::clamp(pan.x, client.x - gw - margin, margin);
+    }
+    return pan;
+}
+
+std::vector<const SopGraphNode *> SopGraphCanvas::CollectFocusNodes(const std::string &step_id) const {
+    std::vector<const SopGraphNode *> focus;
+    for (const auto &node : nodes_) {
+        if (node.selected) {
+            focus.push_back(&node);
+        }
+    }
+    if (!focus.empty()) {
+        return focus;
+    }
+    for (const auto &node : nodes_) {
+        if (node.step_id == step_id) {
+            focus.push_back(&node);
+            break;
+        }
+    }
+    return focus;
+}
+
+std::vector<const SopGraphNode *> SopGraphCanvas::CollectVisibleNodes(wxPoint pan) const {
+    std::vector<const SopGraphNode *> visible;
+    for (const auto &node : nodes_) {
+        if (IsNodeInViewport(node, pan)) {
+            visible.push_back(&node);
+        }
+    }
+    return visible;
+}
+
+bool SopGraphCanvas::AreNodesInViewport(const std::vector<const SopGraphNode *> &nodes) const {
+    return AreNodesInViewport(nodes, pan_);
+}
+
+bool SopGraphCanvas::AreNodesInViewport(const std::vector<const SopGraphNode *> &nodes, wxPoint pan) const {
+    if (nodes.empty()) {
+        return true;
+    }
+    for (const SopGraphNode *node : nodes) {
+        if (!node || !IsNodeInViewport(*node, pan)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void SopGraphCanvas::ReportStatus(const wxString &message) {
+    if (status_fn_) {
+        status_fn_(message);
+    }
 }
 
 void SopGraphCanvas::StartPanAnimation(const wxPoint &target) {
@@ -110,14 +246,8 @@ void SopGraphCanvas::FinishPanAnimation() {
 }
 
 void SopGraphCanvas::ScrollToStepId(const std::string &step_id, bool animated) {
-    const SopGraphNode *target = nullptr;
-    for (const auto &node : nodes_) {
-        if (node.step_id == step_id) {
-            target = &node;
-            break;
-        }
-    }
-    if (!target) {
+    const auto focus = CollectFocusNodes(step_id);
+    if (focus.empty()) {
         return;
     }
     const wxSize client = GetClientSize();
@@ -127,14 +257,31 @@ void SopGraphCanvas::ScrollToStepId(const std::string &step_id, bool animated) {
         });
         return;
     }
-    /* Already on screen: do not pan (click / in-view current step). */
-    if (IsNodeInViewport(*target)) {
+    /* Already fully on screen: keep current pan. */
+    if (AreNodesInViewport(focus)) {
         return;
     }
     if (pan_anim_timer_.IsRunning()) {
         pan_anim_timer_.Stop();
     }
-    const wxPoint pan_target = PanToShowNode(*target, false);
+    /* Keep zoom fixed. visible(selection) → bbox(visible nodes) → center Y only;
+     * X only nudges as needed, then fill so left/right are not left empty. */
+    const wxPoint show_pan = PanToShowNodes(focus, pan_);
+    auto visible = CollectVisibleNodes(show_pan);
+    if (visible.empty()) {
+        visible = focus;
+    }
+    wxPoint pan_target(show_pan.x, PanToCenterNodes(visible).y);
+    if (!AreNodesInViewport(focus, pan_target)) {
+        pan_target = PanToShowNodes(focus, pan_target);
+    }
+    pan_target = FillHorizontalPan(pan_target);
+    pan_target = ClampPanPoint(pan_target);
+    if (!AreNodesInViewport(focus, pan_target)) {
+        pan_target = ClampPanPoint(PanToShowNodes(focus, pan_target));
+        pan_target = FillHorizontalPan(pan_target);
+        pan_target = ClampPanPoint(pan_target);
+    }
     if (pan_target == pan_) {
         return;
     }
@@ -147,13 +294,17 @@ void SopGraphCanvas::ScrollToStepId(const std::string &step_id, bool animated) {
 }
 
 bool SopGraphCanvas::IsNodeInViewport(const SopGraphNode &node) const {
+    return IsNodeInViewport(node, pan_);
+}
+
+bool SopGraphCanvas::IsNodeInViewport(const SopGraphNode &node, wxPoint pan) const {
     const wxSize client = GetClientSize();
     if (client.x <= 0 || client.y <= 0) {
         return false;
     }
     const int margin = 8;
-    const int left = pan_.x + static_cast<int>(node.pos.x * zoom_);
-    const int top = pan_.y + static_cast<int>(node.pos.y * zoom_);
+    const int left = pan.x + static_cast<int>(node.pos.x * zoom_);
+    const int top = pan.y + static_cast<int>(node.pos.y * zoom_);
     const int right = left + static_cast<int>(node.size.x * zoom_);
     const int bottom = top + static_cast<int>(node.size.y * zoom_);
     return left >= margin && top >= margin && right <= client.x - margin && bottom <= client.y - margin;
@@ -238,17 +389,26 @@ void SopGraphCanvas::OnSize(wxSizeEvent &evt) {
 }
 
 void SopGraphCanvas::OnMouseWheel(wxMouseEvent &evt) {
-    const double old_zoom = zoom_;
-    if (evt.GetWheelRotation() > 0) {
-        zoom_ = std::min(2.5, zoom_ * 1.1);
-    } else {
-        zoom_ = std::max(0.35, zoom_ / 1.1);
+    if (pan_anim_timer_.IsRunning()) {
+        pan_anim_timer_.Stop();
     }
-    const wxPoint mouse = evt.GetPosition();
-    pan_.x = mouse.x - static_cast<int>((mouse.x - pan_.x) * (zoom_ / old_zoom));
-    pan_.y = mouse.y - static_cast<int>((mouse.y - pan_.y) * (zoom_ / old_zoom));
+    if (evt.ControlDown()) {
+        const double old_zoom = zoom_;
+        if (evt.GetWheelRotation() > 0) {
+            zoom_ = std::min(2.5, zoom_ * 1.1);
+        } else {
+            zoom_ = std::max(0.35, zoom_ / 1.1);
+        }
+        const wxPoint mouse = evt.GetPosition();
+        pan_.x = mouse.x - static_cast<int>((mouse.x - pan_.x) * (zoom_ / old_zoom));
+        pan_.y = mouse.y - static_cast<int>((mouse.y - pan_.y) * (zoom_ / old_zoom));
+        RelayoutIfNeeded();
+    } else {
+        /* Wheel pans vertically; delta scales with the OS wheel line size. */
+        const int delta = evt.GetWheelRotation() * 40 / std::max(1, evt.GetWheelDelta());
+        pan_.y += delta;
+    }
     user_panned_ = true;
-    RelayoutIfNeeded();
     ClampPan();
     Refresh(false);
 }
@@ -257,8 +417,8 @@ void SopGraphCanvas::ShowNodeContextMenu(const wxPoint &screen_pos, const std::s
     context_step_id_ = step_id;
     const SopStep &step = engine_->definition().steps.at(step_id);
     wxMenu menu;
-    menu.AppendCheckItem(ID_CTX_EXCLUDED, wxString::FromUTF8("Excluded"));
-    menu.Check(ID_CTX_EXCLUDED, engine_->is_excluded(step_id));
+    auto *excluded = AppendCheckMenuItem(&menu, ID_CTX_EXCLUDED, wxString::FromUTF8("Excluded"), wxART_DELETE);
+    excluded->Check(engine_->is_excluded(step_id));
     const SopGraphNode *node = nullptr;
     for (const auto &n : nodes_) {
         if (n.step_id == step_id) {
@@ -267,19 +427,25 @@ void SopGraphCanvas::ShowNodeContextMenu(const wxPoint &screen_pos, const std::s
         }
     }
     wxMenuItem *move_item =
-        menu.Append(ID_CTX_MOVE_HERE, wxString::FromUTF8("Command: Move to here"));
+        AppendMenuItem(&menu, ID_CTX_MOVE_HERE, wxString::FromUTF8("Move to here"), wxART_GOTO_FIRST);
     if (!node || !node->on_active_path) {
         move_item->Enable(false);
     }
-    wxString cmd_label = wxString::FromUTF8("Command: Execute");
-    if (step.is_prompt_copy()) {
-        cmd_label = wxString::FromUTF8("Command: Copy");
+    wxString cmd_label = wxString::FromUTF8("Execute");
+    wxArtID cmd_art = wxART_EXECUTABLE_FILE;
+    if (step.is_gpt_get()) {
+        cmd_label = wxString::FromUTF8("Get");
+        cmd_art = wxART_GO_DOWN;
+    } else if (step.is_prompt_copy()) {
+        cmd_label = wxString::FromUTF8("Copy");
+        cmd_art = wxART_COPY;
     } else if (!step.is_automatable()) {
-        cmd_label = wxString::FromUTF8("Command: Run");
+        cmd_label = wxString::FromUTF8("Run");
+        cmd_art = wxART_GO_FORWARD;
     }
-    menu.Append(ID_CTX_EXECUTE, cmd_label);
+    AppendMenuItem(&menu, ID_CTX_EXECUTE, cmd_label, cmd_art);
     menu.AppendSeparator();
-    menu.Append(ID_REDRAW, wxString::FromUTF8("Command: Redraw"));
+    AppendMenuItem(&menu, ID_REDRAW, wxString::FromUTF8("Redraw"), wxART_REFRESH);
     PopupMenu(&menu, screen_pos);
 }
 
@@ -378,6 +544,37 @@ void SopGraphCanvas::OnKeyDown(wxKeyEvent &evt) {
         evt.Skip();
         return;
     }
+    if (evt.GetKeyCode() == WXK_RETURN || evt.GetKeyCode() == WXK_NUMPAD_ENTER) {
+        int idx = tab_focus_node_;
+        if (idx < 0 && !selected_step_id_.empty()) {
+            for (size_t i = 0; i < nodes_.size(); i++) {
+                if (nodes_[i].step_id == selected_step_id_) {
+                    idx = static_cast<int>(i);
+                    break;
+                }
+            }
+        }
+        if (idx < 0) {
+            idx = HitTestNode(ScreenToGraph(ScreenToClient(wxGetMousePosition())));
+        }
+        if (idx >= 0 && move_to_fn_) {
+            const SopGraphNode &node = nodes_[static_cast<size_t>(idx)];
+            selected_step_id_ = node.step_id;
+            tab_focus_node_ = idx;
+            for (auto &n : nodes_) {
+                n.selected = n.step_id == selected_step_id_;
+            }
+            if (node.on_active_path) {
+                move_to_fn_(node.step_id, node.path_index);
+                ReportStatus(wxString::Format(wxString::FromUTF8("Location set to %s."),
+                                              wxString::FromUTF8(node.step_id)));
+            } else {
+                ReportStatus(wxString::FromUTF8("Cannot set location: step is not on the active path."));
+            }
+            Refresh(false);
+        }
+        return;
+    }
     if (evt.GetKeyCode() == ' ') {
         int idx = tab_focus_node_ >= 0 ? tab_focus_node_ : HitTestNode(ScreenToGraph(ScreenToClient(wxGetMousePosition())));
         if (idx < 0 && !engine_->active_steps().empty()) {
@@ -420,13 +617,14 @@ void SopGraphCanvas::OnContextMenu(wxContextMenuEvent &evt) {
         ShowNodeContextMenu(client, nodes_[static_cast<size_t>(hit)].step_id);
     } else {
         wxMenu menu;
-        menu.Append(ID_REDRAW, wxString::FromUTF8("Redraw"));
+        AppendMenuItem(&menu, ID_REDRAW, wxString::FromUTF8("Redraw"), wxART_REFRESH);
         PopupMenu(&menu, client);
     }
 }
 
 void SopGraphCanvas::OnRedraw(wxCommandEvent &) {
     RedrawGraph();
+    ReportStatus(wxString::FromUTF8("Graph redrawn."));
 }
 
 void SopGraphCanvas::OnCtxExcluded(wxCommandEvent &evt) {
@@ -434,6 +632,10 @@ void SopGraphCanvas::OnCtxExcluded(wxCommandEvent &evt) {
         return;
     }
     exclude_fn_(context_step_id_, evt.IsChecked());
+    ReportStatus(wxString::Format(wxString::FromUTF8("%s %s."),
+                                  evt.IsChecked() ? wxString::FromUTF8("Excluded")
+                                                  : wxString::FromUTF8("Included"),
+                                  wxString::FromUTF8(context_step_id_)));
 }
 
 void SopGraphCanvas::OnCtxMoveHere(wxCommandEvent &) {
@@ -443,14 +645,19 @@ void SopGraphCanvas::OnCtxMoveHere(wxCommandEvent &) {
     for (const auto &node : nodes_) {
         if (node.step_id == context_step_id_ && node.on_active_path) {
             move_to_fn_(node.step_id, node.path_index);
+            ReportStatus(wxString::Format(wxString::FromUTF8("Location set to %s."),
+                                          wxString::FromUTF8(node.step_id)));
             return;
         }
     }
+    ReportStatus(wxString::FromUTF8("Cannot set location: step is not on the active path."));
 }
 
 void SopGraphCanvas::OnCtxExecute(wxCommandEvent &) {
     if (context_step_id_.empty() || !execute_fn_) {
         return;
     }
+    ReportStatus(wxString::Format(wxString::FromUTF8("Running %s…"),
+                                  wxString::FromUTF8(context_step_id_)));
     execute_fn_(context_step_id_);
 }

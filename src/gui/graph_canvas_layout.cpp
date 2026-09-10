@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/graph_canvas_layout.hpp"
-#include "ui/gui/graph_style.hpp"
+#include "gui/graph_canvas_layout.hpp"
+#include "gui/graph_style.hpp"
 
 #include <wx/artprov.h>
 #include <wx/dcbuffer.h>

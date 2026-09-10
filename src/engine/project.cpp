@@ -27,6 +27,10 @@ std::string sop_config_path(const std::string &project_dir, const std::string &s
     return (fs::path(sop_config_dir(project_dir)) / (sop_config_name(sop_dir) + ".conf")).string();
 }
 
+std::string sop_status_path(const std::string &project_dir) {
+    return (fs::path(project_dir) / "sop" / "status").string();
+}
+
 std::string sop_log_dir(const std::string &project_dir, const std::string &sop_dir) {
     return (fs::path(sop_config_dir(project_dir)) / sop_config_name(sop_dir)).string();
 }
@@ -39,6 +43,14 @@ std::string sop_step_log_path(const std::string &project_dir, const std::string 
 bool ensure_sop_config_dirs(const std::string &project_dir, const std::string &sop_dir) {
     std::error_code ec;
     if (!fs::create_directories(sop_log_dir(project_dir, sop_dir), ec)) {
+        return !ec;
+    }
+    return true;
+}
+
+bool ensure_sop_status_dir(const std::string &project_dir) {
+    std::error_code ec;
+    if (!fs::create_directories(fs::path(project_dir) / "sop", ec)) {
         return !ec;
     }
     return true;
@@ -100,12 +112,22 @@ bool apply_config_to_engine(SopEngine &engine, const std::map<std::string, std::
         }
     }
 
-    const auto pos_it = values.find("position");
-    if (pos_it != values.end() && !pos_it->second.empty()) {
-        if (!def.steps.count(pos_it->second)) {
-            return set_error("unknown position id: " + pos_it->second);
+    // Prefer location=; accept legacy position= from .config/sopwin/*.conf.
+    std::string location;
+    const auto loc_it = values.find("location");
+    if (loc_it != values.end() && !loc_it->second.empty()) {
+        location = loc_it->second;
+    } else {
+        const auto pos_it = values.find("position");
+        if (pos_it != values.end() && !pos_it->second.empty()) {
+            location = pos_it->second;
         }
-        engine.set_current_step_id(pos_it->second);
+    }
+    if (!location.empty()) {
+        if (!def.steps.count(location)) {
+            return set_error("unknown location id: " + location);
+        }
+        engine.set_current_step_id(location);
     }
     return true;
 }
@@ -143,15 +165,14 @@ bool read_config_file(const std::string &path, std::map<std::string, std::string
 
 bool save_project_config(const SopEngine &engine, std::string *error) {
     const std::string &project_dir = engine.options().project_dir;
-    const std::string &sop_dir = engine.options().sop_dir;
-    if (!ensure_sop_config_dirs(project_dir, sop_dir)) {
+    if (!ensure_sop_status_dir(project_dir)) {
         if (error) {
-            *error = "cannot create config directory";
+            *error = "cannot create sop/ directory";
         }
         return false;
     }
 
-    const std::string path = sop_config_path(project_dir, sop_dir);
+    const std::string path = sop_status_path(project_dir);
     std::ofstream out(path, std::ios::trunc);
     if (!out) {
         if (error) {
@@ -160,9 +181,17 @@ bool save_project_config(const SopEngine &engine, std::string *error) {
         return false;
     }
 
+    out << "# sopwin project status — location is the current step id\n";
     const std::string current = engine.current_step_id();
     if (!current.empty()) {
-        out << "position=" << current << '\n';
+        out << "location=" << current << '\n';
+        const SopStep *step = nullptr;
+        if (engine.definition().steps.count(current)) {
+            step = &engine.definition().steps.at(current);
+        }
+        if (step) {
+            out << "title=" << step->display_title() << '\n';
+        }
     }
 
     for (const auto &kv : engine.definition().steps) {
@@ -178,9 +207,17 @@ bool save_project_config(const SopEngine &engine, std::string *error) {
 }
 
 bool load_project_config(SopEngine &engine, std::string *error) {
-    const std::string path = sop_config_path(engine.options().project_dir, engine.options().sop_dir);
+    const std::string status_path = sop_status_path(engine.options().project_dir);
+    const std::string legacy_path =
+        sop_config_path(engine.options().project_dir, engine.options().sop_dir);
+
     std::error_code ec;
-    if (!fs::exists(path, ec)) {
+    std::string path;
+    if (fs::exists(status_path, ec)) {
+        path = status_path;
+    } else if (fs::exists(legacy_path, ec)) {
+        path = legacy_path;
+    } else {
         return true;
     }
 
@@ -192,6 +229,9 @@ bool load_project_config(SopEngine &engine, std::string *error) {
 }
 
 bool revert_project_config(SopEngine &engine, std::string *error) {
+    engine.begin_status_load();
     engine.reset_session_defaults();
-    return load_project_config(engine, error);
+    const bool ok = load_project_config(engine, error);
+    engine.end_status_load();
+    return ok;
 }

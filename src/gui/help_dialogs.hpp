@@ -1,5 +1,5 @@
-#ifndef UI_GUI_HELP_DIALOGS_HPP
-#define UI_GUI_HELP_DIALOGS_HPP
+#ifndef GUI_HELP_DIALOGS_HPP
+#define GUI_HELP_DIALOGS_HPP
 
 class wxWindow;
 

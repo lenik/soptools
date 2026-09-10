@@ -1,12 +1,11 @@
-#ifndef UI_GUI_PASTE_RESPONSE_DIALOG_HPP
-#define UI_GUI_PASTE_RESPONSE_DIALOG_HPP
+#ifndef GUI_PASTE_RESPONSE_DIALOG_HPP
+#define GUI_PASTE_RESPONSE_DIALOG_HPP
 
 #include "engine/gpt_response.hpp"
 #include "model/model.hpp"
 
 #include <wx/dialog.h>
 
-#include <functional>
 #include <string>
 #include <vector>
 
@@ -21,6 +20,7 @@ public:
     bool saved() const { return saved_; }
 
 private:
+    void SetDialogStatus(const wxString &text);
     void RebuildLinkList();
     void OnTextChanged(wxCommandEvent &);
     void OnPasteClipboard(wxCommandEvent &);
@@ -45,6 +45,8 @@ private:
     class wxListBox *links_ = nullptr;
     class wxButton *download_btn_ = nullptr;
     class wxButton *save_btn_ = nullptr;
+    class wxStaticText *hint_label_ = nullptr;
+    class wxStaticText *status_label_ = nullptr;
 };
 
-#endif /* UI_GUI_PASTE_RESPONSE_DIALOG_HPP */
+#endif /* GUI_PASTE_RESPONSE_DIALOG_HPP */

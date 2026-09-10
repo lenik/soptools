@@ -93,6 +93,7 @@ worldman.json      # name、portBase、masterData、references、…
 
 在复杂的构建/重构工作中，于 `<projectdir>/sop/` 下维护活的工作文档：
 
+- `status` — 当前流程状态；`location=` 为活动步骤 id（自动更新；打开项目时从此恢复）
 - `TODO.md` — 任务清单；随构建/重构推进同步条目状态
 - `PRD.md` — 产品需求（施工期权威）
 - `TUC.md` — 测试用例参考集（Test Use-Case）

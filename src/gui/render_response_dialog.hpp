@@ -1,5 +1,5 @@
-#ifndef UI_GUI_RENDER_RESPONSE_DIALOG_HPP
-#define UI_GUI_RENDER_RESPONSE_DIALOG_HPP
+#ifndef GUI_RENDER_RESPONSE_DIALOG_HPP
+#define GUI_RENDER_RESPONSE_DIALOG_HPP
 
 #include "engine/gpt_response.hpp"
 
@@ -36,6 +36,7 @@ private:
     class wxHtmlWindow *html_ = nullptr;
     class wxListBox *attachments_ = nullptr;
     class wxCheckBox *auto_copy_box_ = nullptr;
+    class wxStaticText *status_label_ = nullptr;
 };
 
-#endif /* UI_GUI_RENDER_RESPONSE_DIALOG_HPP */
+#endif /* GUI_RENDER_RESPONSE_DIALOG_HPP */

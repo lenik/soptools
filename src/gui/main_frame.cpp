@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/main_frame.hpp"
-#include "ui/gui/theme.hpp"
-#include "ui/gui/help_dialogs.hpp"
-#include "ui/gui/paste_response_dialog.hpp"
-#include "ui/gui/render_response_dialog.hpp"
+#include "gui/main_frame.hpp"
+#include "gui/theme.hpp"
+#include "gui/help_dialogs.hpp"
+#include "gui/paste_response_dialog.hpp"
+#include "gui/render_response_dialog.hpp"
 #include "engine/project.hpp"
 
 #include <wx/wx.h>
@@ -26,7 +26,7 @@
 #include <sstream>
 #include <functional>
 
-#include "ui/gui/command_ids.hpp"
+#include "gui/command_ids.hpp"
 
 
 MainFrame::MainFrame(SopEngine *engine)
@@ -55,23 +55,39 @@ MainFrame::MainFrame(SopEngine *engine)
         graph_->SetSelectedStep(step_id);
         PreviewStep(step_id);
     });
-    graph_->SetMoveToHandler([this](const std::string &, size_t path_index) {
+    graph_->SetMoveToHandler([this](const std::string &step_id, size_t path_index) {
         engine_->set_current_index(path_index);
         RefreshAll();
+        SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Location set to %s."),
+                                             wxString::FromUTF8(step_id)),
+                            true);
     });
     graph_->SetExcludeHandler([this](const std::string &step_id, bool excluded) {
         engine_->set_step_excluded(step_id, excluded);
         graph_layout_dirty_ = true;
         RefreshAll();
+        SetStatusBarMessage(wxString::Format(wxString::FromUTF8("%s %s."),
+                                             excluded ? wxString::FromUTF8("Excluded")
+                                                      : wxString::FromUTF8("Included"),
+                                             wxString::FromUTF8(step_id)),
+                            true);
     });
     graph_->SetBranchActivateHandler([this](int seq, const std::string &step_id) {
         if (engine_->activate_branch(seq, step_id)) {
             graph_layout_dirty_ = true;
             RefreshAll();
+            SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Activated branch %s (seq %d)."),
+                                                 wxString::FromUTF8(step_id), seq),
+                                true);
         }
     });
     graph_->SetExecuteHandler([this](const std::string &step_id) {
+        SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Running %s…"),
+                                             wxString::FromUTF8(step_id)));
         RunStepAction(step_id, true);
+    });
+    graph_->SetStatusHandler([this](const wxString &message) {
+        SetStatusBarMessage(message, true);
     });
     RefreshAll();
     UpdateWindowTitle();
@@ -88,38 +104,47 @@ void MainFrame::CreateMenu() {
     auto *menu_bar = new wxMenuBar();
 
     auto *file_menu = new wxMenu();
-    file_menu->Append(ID_OPEN_PROJECT, wxString::FromUTF8("Open Project\tCtrl-O"));
-    file_menu->Append(ID_SAVE_PROJECT, wxString::FromUTF8("Save\tCtrl-S"));
-    file_menu->Append(ID_REVERT_PROJECT, wxString::FromUTF8("Revert"));
+    AppendIconMenuItem(file_menu, ID_OPEN_PROJECT, wxString::FromUTF8("&Open Project\tCtrl-O"), wxART_FOLDER_OPEN);
+    AppendIconMenuItem(file_menu, ID_SAVE_PROJECT, wxString::FromUTF8("&Save\tCtrl-S"), wxART_FILE_SAVE);
+    AppendIconMenuItem(file_menu, ID_REVERT_PROJECT, wxString::FromUTF8("&Revert"), wxART_UNDO);
     file_menu->AppendSeparator();
-    file_menu->Append(wxID_EXIT, wxString::FromUTF8("Quit\tCtrl-Q"));
+    AppendIconMenuItem(file_menu, wxID_EXIT, wxString::FromUTF8("&Quit\tCtrl-Q"), wxART_QUIT);
 
     auto *procedure_menu = new wxMenu();
-    procedure_menu->Append(ID_LOAD_SOP, wxString::FromUTF8("Load SOP...\tCtrl-U"));
+    AppendIconMenuItem(procedure_menu, ID_LOAD_SOP, wxString::FromUTF8("&Load SOP...\tCtrl-U"), wxART_FILE_OPEN);
     procedure_menu->AppendSeparator();
-    procedure_menu->Append(ID_BACK, wxString::FromUTF8("Back\tPgUp"));
-    procedure_menu->Append(ID_NEXT, wxString::FromUTF8("Next\tPgDn"));
+    AppendIconMenuItem(procedure_menu, ID_BACK, wxString::FromUTF8("&Back\tPgUp"), wxART_GO_BACK);
+    AppendIconMenuItem(procedure_menu, ID_NEXT, wxString::FromUTF8("&Next\tPgDn"), wxART_GO_FORWARD);
     procedure_menu->AppendSeparator();
-    procedure_menu->Append(ID_START_RESUME, wxString::FromUTF8("Start / Resume\tF5"));
-    procedure_menu->Append(ID_PAUSE, wxString::FromUTF8("Pause\tF8"));
-    procedure_menu->Append(ID_EXECUTE, wxString::FromUTF8("Execute / Copy\tCtrl-Enter"));
+    AppendIconMenuItem(procedure_menu, ID_START_RESUME, wxString::FromUTF8("&Run / Resume\tF5"),
+                       wxART_EXECUTABLE_FILE);
+    AppendIconMenuItem(procedure_menu, ID_PAUSE, wxString::FromUTF8("&Pause\tF8"), wxART_STOP);
+    AppendIconMenuItem(procedure_menu, ID_EXECUTE, wxString::FromUTF8("&Execute / Get\tCtrl-Enter"),
+                       wxART_EXECUTABLE_FILE);
 
     view_menu_ = new wxMenu();
-    view_menu_->AppendCheckItem(ID_SHOW_GRAPH, wxString::FromUTF8("Toggle Graph\tF2"));
-    view_menu_->AppendCheckItem(ID_SHOW_LOG, wxString::FromUTF8("Toggle Loggings\tCtrl-L"));
+    AppendIconCheckItem(view_menu_, ID_SHOW_GRAPH, wxString::FromUTF8("Toggle &Graph\tF2"), wxART_REPORT_VIEW);
+    AppendIconCheckItem(view_menu_, ID_SHOW_LOG, wxString::FromUTF8("Toggle &Loggings\tCtrl-L"), wxART_NORMAL_FILE);
     view_menu_->Check(ID_SHOW_GRAPH, true);
+    view_menu_->AppendSeparator();
+    lang_menu_ = new wxMenu();
+    lang_menu_->AppendRadioItem(ID_LANG_EN, wxString::FromUTF8("&English"));
+    lang_menu_->AppendRadioItem(ID_LANG_ZH_CN, wxString::FromUTF8("简体中文 (&Chinese)"));
+    lang_menu_->AppendRadioItem(ID_LANG_JA, wxString::FromUTF8("&Japanese (日本語)"));
+    view_menu_->AppendSubMenu(lang_menu_, wxString::FromUTF8("&Language"));
 
     auto *help_menu = new wxMenu();
-    help_menu->Append(ID_HELP_SHORTCUTS, wxString::FromUTF8("Keyboard Shortcuts\tF1"));
+    AppendIconMenuItem(help_menu, ID_HELP_SHORTCUTS, wxString::FromUTF8("&Keyboard Shortcuts\tF1"), wxART_HELP);
     help_menu->AppendSeparator();
-    help_menu->Append(ID_HELP_LICENSE, wxString::FromUTF8("License"));
-    help_menu->Append(ID_HELP_ABOUT, wxString::FromUTF8("About"));
+    AppendIconMenuItem(help_menu, ID_HELP_LICENSE, wxString::FromUTF8("&License"), wxART_INFORMATION);
+    AppendIconMenuItem(help_menu, ID_HELP_ABOUT, wxString::FromUTF8("&About"), wxART_INFORMATION);
 
-    menu_bar->Append(file_menu, wxString::FromUTF8("File"));
-    menu_bar->Append(procedure_menu, wxString::FromUTF8("Procedure"));
-    menu_bar->Append(view_menu_, wxString::FromUTF8("View"));
-    menu_bar->Append(help_menu, wxString::FromUTF8("Help"));
+    menu_bar->Append(file_menu, wxString::FromUTF8("&File"));
+    menu_bar->Append(procedure_menu, wxString::FromUTF8("&Procedure"));
+    menu_bar->Append(view_menu_, wxString::FromUTF8("&View"));
+    menu_bar->Append(help_menu, wxString::FromUTF8("&Help"));
     SetMenuBar(menu_bar);
+    SyncLanguageMenu();
 
     Bind(wxEVT_MENU, &MainFrame::OnOpenProject, this, ID_OPEN_PROJECT);
     Bind(wxEVT_MENU, &MainFrame::OnSaveProject, this, ID_SAVE_PROJECT);
@@ -137,6 +162,7 @@ void MainFrame::CreateMenu() {
     Bind(wxEVT_MENU, &MainFrame::OnHelpShortcuts, this, ID_HELP_SHORTCUTS);
     Bind(wxEVT_MENU, &MainFrame::OnHelpLicense, this, ID_HELP_LICENSE);
     Bind(wxEVT_MENU, &MainFrame::OnHelpAbout, this, ID_HELP_ABOUT);
+    Bind(wxEVT_MENU, &MainFrame::OnLanguagePack, this, ID_LANG_EN, ID_LANG_JA);
 }
 
 void MainFrame::CreateAppToolBar() {
@@ -147,8 +173,9 @@ void MainFrame::CreateAppToolBar() {
     toolbar_->AddTool(ID_NEXT, wxString::FromUTF8("Next"), wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR),
                       wxString::FromUTF8("Run and go to next step"));
     toolbar_->AddSeparator();
-    toolbar_->AddTool(ID_AUTO_RUN, wxString::FromUTF8("Start"), wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR),
-                      wxString::FromUTF8("Start/Resume automated run (F5)"));
+    toolbar_->AddTool(ID_AUTO_RUN, wxString::FromUTF8("Run"),
+                      wxArtProvider::GetBitmap(wxART_EXECUTABLE_FILE, wxART_TOOLBAR),
+                      wxString::FromUTF8("Run / Resume automated workflow (F5)"));
     toolbar_->AddTool(ID_EXECUTE, wxString::FromUTF8("Execute"),
                       wxArtProvider::GetBitmap(wxART_EXECUTABLE_FILE, wxART_TOOLBAR),
                       wxString::FromUTF8("Execute current step (Ctrl+Enter)"));

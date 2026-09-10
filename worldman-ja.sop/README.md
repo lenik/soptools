@@ -94,6 +94,7 @@ worldman.json      # name、portBase、masterData、references、…
 
 複雑な構築／再構成作業では、`<projectdir>/sop/` 配下に生きた作業文書を置く：
 
+- `status` — 現在のワークフロー状態。`location=` が活性ステップ id（自動更新；開くときに再開）
 - `TODO.md` — タスク一覧。構築／再構成の進行に合わせて項目状態を同期する
 - `PRD.md` — 製品要件（施工中の権威）
 - `TUC.md` — テストユースケース参照集（Test Use-Case）

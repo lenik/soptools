@@ -1,5 +1,5 @@
-#ifndef UI_GUI_GRAPH_STYLE_HPP
-#define UI_GUI_GRAPH_STYLE_HPP
+#ifndef GUI_GRAPH_STYLE_HPP
+#define GUI_GRAPH_STYLE_HPP
 
 #include "model/model.hpp"
 
@@ -27,4 +27,4 @@ wxColour SopGraphMutedColour();
 
 SopGraphNodeStyle StyleForGraphNode(const SopGraphNode &node, const SopStep &step);
 
-#endif /* UI_GUI_GRAPH_STYLE_HPP */
+#endif /* GUI_GRAPH_STYLE_HPP */

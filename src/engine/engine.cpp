@@ -91,13 +91,19 @@ bool SopEngine::load_sop() {
         log(0, "no SOP steps found in " + opts_.sop_dir);
         return false;
     }
+    begin_status_load();
     reset_session_defaults();
     std::string config_error;
     if (!load_project_config(*this, &config_error)) {
-        log(0, "project config: " + config_error);
+        log(0, "project status: " + config_error);
     }
+    end_status_load();
     log(1, "loaded " + std::to_string(def_.steps.size()) + " SOP steps from " + opts_.sop_dir);
     log(1, "project directory: " + opts_.project_dir);
+    const std::string loc = current_step_id();
+    if (!loc.empty()) {
+        log(1, "resumed at location " + loc);
+    }
     return true;
 }
 
@@ -139,8 +145,12 @@ void SopEngine::set_current_index(size_t index) {
     if (index >= active_steps_.size()) {
         index = active_steps_.size() - 1;
     }
+    const bool changed = current_index_ != index;
     current_index_ = index;
     log(2, "current step: " + active_steps_[current_index_]);
+    if (changed) {
+        persist_project_status();
+    }
 }
 
 std::string SopEngine::current_step_id() const {
@@ -200,6 +210,7 @@ void SopEngine::set_step_excluded(const std::string &step_id, bool excluded) {
     }
     refresh_step_order();
     log(1, std::string(excluded ? "excluded " : "included ") + step_id);
+    persist_project_status();
     notify_changed();
 }
 
@@ -543,5 +554,25 @@ void SopEngine::mark_complete(const std::string &step_id, bool complete) {
     def_.steps[step_id].user_marked_complete = complete;
     update_step_status(def_.steps[step_id]);
     log(1, complete ? "marked complete: " + step_id : "marked incomplete: " + step_id);
+    persist_project_status();
+}
+
+void SopEngine::begin_status_load() {
+    suppress_persist_ = true;
+}
+
+void SopEngine::end_status_load() {
+    suppress_persist_ = false;
+    persist_project_status();
+}
+
+void SopEngine::persist_project_status() {
+    if (suppress_persist_) {
+        return;
+    }
+    std::string err;
+    if (!save_project_config(*this, &err)) {
+        log(0, "persist sop/status: " + (err.empty() ? "failed" : err));
+    }
 }
 

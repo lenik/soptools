@@ -10,6 +10,17 @@ set -euo pipefail
 
 set_progress 5%
 
+# 若先前已跑出 WorldMan 布局则跳过。重复执行会把 backend/prisma/sop/… 再移进 web/，破坏目录树。
+if [ -d web ] && [ -d backend ] && [ -d prisma ] && [ -d sop ] && [ -d docs ] && {
+       [ -f web/package.json ] || [ -d web/src ] ||
+           [ -f web/vite.config.ts ] || [ -f web/vite.config.js ] ||
+           [ -f web/vite.config.mts ] || [ -f web/index.html ]
+   }; then
+    set_progress 100%
+    sop_log 1 "已存在 WorldMan 布局（web/ 及标准包目录）；跳过 Figma 重构。"
+    exit 0
+fi
+
 # 删除不应留在产品树中的 Figma / agent 脚手架。
 rm -rf AGENT.md CLAUDE.md src/imports .figma .git
 set_progress 15%

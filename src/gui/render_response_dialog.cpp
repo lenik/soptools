@@ -4,17 +4,22 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/render_response_dialog.hpp"
+#include "gui/render_response_dialog.hpp"
+#include "gui/theme.hpp"
 
+#include <wx/artprov.h>
 #include <wx/button.h>
 #include <wx/checkbox.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
 #include <wx/html/htmlwin.h>
 #include <wx/listbox.h>
+#include <wx/panel.h>
 #include <wx/sizer.h>
+#include <wx/statbmp.h>
 #include <wx/statline.h>
 #include <wx/stattext.h>
+#include <wx/statusbr.h>
 
 #include <fstream>
 #include <sstream>
@@ -50,14 +55,45 @@ std::string html_escape(const std::string &s) {
 
 SopRenderResponseDialog::SopRenderResponseDialog(wxWindow *parent, const SopGptSaveResult &result)
     : wxDialog(parent, wxID_ANY, wxString::FromUTF8("(Re-)Rendered response"), wxDefaultPosition,
-               wxSize(1000, 720), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+               wxSize(1000, 740), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
       result_(result) {
+    SetBackgroundColour(ios_bg());
+
     auto *root = new wxBoxSizer(wxVERTICAL);
+
+    auto *header = new wxBoxSizer(wxHORIZONTAL);
+    header->Add(new wxStaticBitmap(this, wxID_ANY,
+                                   wxArtProvider::GetBitmap(wxART_INFORMATION, wxART_OTHER, wxSize(32, 32))),
+                0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+    auto *header_col = new wxBoxSizer(wxVERTICAL);
+    auto *title = new wxStaticText(this, wxID_ANY, wxString::FromUTF8("Review saved GPT output"));
+    wxFont title_font = title->GetFont();
+    title_font.MakeBold();
+    title->SetFont(title_font);
+    title->SetForegroundColour(ios_accent());
+    header_col->Add(title, 0, wxBOTTOM, 2);
+    auto *hint = new wxStaticText(
+        this, wxID_ANY,
+        wxString::FromUTF8("Select a part or attachment. Use Copy to put the selection on the clipboard."));
+    hint->SetForegroundColour(ios_muted());
+    header_col->Add(hint, 0);
+    header->Add(header_col, 1, wxEXPAND);
+    root->Add(header, 0, wxEXPAND | wxALL, 12);
+    root->Add(new wxStaticLine(this), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
 
     auto *split = new wxBoxSizer(wxHORIZONTAL);
 
     auto *left = new wxBoxSizer(wxVERTICAL);
-    left->Add(new wxStaticText(this, wxID_ANY, wxString::FromUTF8("Contents")), 0, wxBOTTOM, 4);
+    auto *contents_hdr = new wxBoxSizer(wxHORIZONTAL);
+    contents_hdr->Add(new wxStaticBitmap(this, wxID_ANY,
+                                         wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_BUTTON, wxSize(16, 16))),
+                      0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+    auto *contents_label = new wxStaticText(this, wxID_ANY, wxString::FromUTF8("Contents"));
+    wxFont cl_font = contents_label->GetFont();
+    cl_font.MakeBold();
+    contents_label->SetFont(cl_font);
+    contents_hdr->Add(contents_label, 0, wxALIGN_CENTER_VERTICAL);
+    left->Add(contents_hdr, 0, wxBOTTOM, 4);
     contents_ = new wxListBox(this, wxID_ANY, wxDefaultPosition, wxSize(180, -1));
     for (size_t i = 0; i < result_.parts.size(); i++) {
         contents_->Append(wxString::FromUTF8(result_.parts[i].label));
@@ -70,7 +106,16 @@ SopRenderResponseDialog::SopRenderResponseDialog(wxWindow *parent, const SopGptS
     split->Add(left, 0, wxEXPAND | wxALL, 8);
 
     auto *right = new wxBoxSizer(wxVERTICAL);
-    right->Add(new wxStaticText(this, wxID_ANY, wxString::FromUTF8("View")), 0, wxBOTTOM, 4);
+    auto *view_hdr = new wxBoxSizer(wxHORIZONTAL);
+    view_hdr->Add(new wxStaticBitmap(this, wxID_ANY,
+                                     wxArtProvider::GetBitmap(wxART_REPORT_VIEW, wxART_BUTTON, wxSize(16, 16))),
+                  0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+    auto *view_label = new wxStaticText(this, wxID_ANY, wxString::FromUTF8("View"));
+    wxFont vl_font = view_label->GetFont();
+    vl_font.MakeBold();
+    view_label->SetFont(vl_font);
+    view_hdr->Add(view_label, 0, wxALIGN_CENTER_VERTICAL);
+    right->Add(view_hdr, 0, wxBOTTOM, 4);
     html_ = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
                              wxHW_SCROLLBAR_AUTO);
     right->Add(html_, 1, wxEXPAND);
@@ -79,8 +124,16 @@ SopRenderResponseDialog::SopRenderResponseDialog(wxWindow *parent, const SopGptS
     root->Add(split, 1, wxEXPAND);
 
     root->Add(new wxStaticLine(this), 0, wxEXPAND | wxLEFT | wxRIGHT, 8);
-    root->Add(new wxStaticText(this, wxID_ANY, wxString::FromUTF8("Attachments")), 0,
-              wxLEFT | wxTOP, 8);
+    auto *att_hdr = new wxBoxSizer(wxHORIZONTAL);
+    att_hdr->Add(new wxStaticBitmap(this, wxID_ANY,
+                                    wxArtProvider::GetBitmap(wxART_FOLDER, wxART_BUTTON, wxSize(16, 16))),
+                 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+    auto *att_label = new wxStaticText(this, wxID_ANY, wxString::FromUTF8("Attachments"));
+    wxFont al_font = att_label->GetFont();
+    al_font.MakeBold();
+    att_label->SetFont(al_font);
+    att_hdr->Add(att_label, 0, wxALIGN_CENTER_VERTICAL);
+    root->Add(att_hdr, 0, wxLEFT | wxTOP, 8);
     attachments_ = new wxListBox(this, wxID_ANY, wxDefaultPosition, wxSize(-1, 90), {},
                                  wxLB_SINGLE | wxLB_NEEDED_SB);
     for (const auto &att : result_.attachments) {
@@ -100,12 +153,27 @@ SopRenderResponseDialog::SopRenderResponseDialog(wxWindow *parent, const SopGptS
     btn_row->Add(auto_copy_box_, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 12);
     btn_row->AddStretchSpacer(1);
     auto *copy_btn = new wxButton(this, wxID_ANY, wxString::FromUTF8("Copy"));
+    copy_btn->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY, wxART_BUTTON, wxSize(16, 16)));
     auto *close_btn = new wxButton(this, wxID_ANY, wxString::FromUTF8("Close"));
+    close_btn->SetBitmap(wxArtProvider::GetBitmap(wxART_CLOSE, wxART_BUTTON, wxSize(16, 16)));
     copy_btn->Bind(wxEVT_BUTTON, &SopRenderResponseDialog::OnCopy, this);
     close_btn->Bind(wxEVT_BUTTON, &SopRenderResponseDialog::OnClose, this);
     btn_row->Add(copy_btn, 0, wxRIGHT, 8);
     btn_row->Add(close_btn, 0);
     root->Add(btn_row, 0, wxEXPAND | wxALL, 10);
+
+    auto *status_panel = new wxPanel(this);
+    status_panel->SetBackgroundColour(ios_card());
+    auto *status_row = new wxBoxSizer(wxHORIZONTAL);
+    status_row->Add(new wxStaticBitmap(status_panel, wxID_ANY,
+                                       wxArtProvider::GetBitmap(wxART_INFORMATION, wxART_BUTTON, wxSize(14, 14))),
+                    0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT, 8);
+    status_label_ = new wxStaticText(status_panel, wxID_ANY,
+                                     wxString::FromUTF8("Select a content part or attachment to review."));
+    status_label_->SetForegroundColour(ios_muted());
+    status_row->Add(status_label_, 1, wxALIGN_CENTER_VERTICAL | wxTOP | wxBOTTOM | wxRIGHT, 6);
+    status_panel->SetSizer(status_row);
+    root->Add(status_panel, 0, wxEXPAND);
 
     SetSizer(root);
     RefreshView();

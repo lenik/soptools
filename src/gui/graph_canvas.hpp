@@ -1,5 +1,5 @@
-#ifndef UI_GUI_GRAPH_CANVAS_HPP
-#define UI_GUI_GRAPH_CANVAS_HPP
+#ifndef GUI_GRAPH_CANVAS_HPP
+#define GUI_GRAPH_CANVAS_HPP
 
 #include "engine/engine.hpp"
 
@@ -44,6 +44,7 @@ public:
     using StepMoveFn = std::function<void(const std::string &step_id, size_t path_index)>;
     using StepActionFn = std::function<void(const std::string &step_id)>;
     using BranchActivateFn = std::function<void(int seq, const std::string &step_id)>;
+    using StatusFn = std::function<void(const wxString &message)>;
 
     SopGraphCanvas(wxWindow *parent, SopEngine *engine);
 
@@ -60,6 +61,7 @@ public:
     void SetExecuteHandler(StepActionFn fn) { execute_fn_ = std::move(fn); }
     void SetExcludeHandler(std::function<void(const std::string &, bool)> fn) { exclude_fn_ = std::move(fn); }
     void SetBranchActivateHandler(BranchActivateFn fn) { branch_activate_fn_ = std::move(fn); }
+    void SetStatusHandler(StatusFn fn) { status_fn_ = std::move(fn); }
 
 private:
     wxDECLARE_EVENT_TABLE();
@@ -90,6 +92,7 @@ private:
     StepActionFn execute_fn_;
     std::function<void(const std::string &, bool)> exclude_fn_;
     BranchActivateFn branch_activate_fn_;
+    StatusFn status_fn_;
     wxTimer pan_anim_timer_;
     wxPoint pan_anim_start_{0, 0};
     wxPoint pan_anim_target_{0, 0};
@@ -100,8 +103,18 @@ private:
     void LayoutGraph();
     void CenterPan();
     wxPoint PanToShowNode(const SopGraphNode &node, bool center_in_view = false) const;
+    wxPoint PanToShowNodes(const std::vector<const SopGraphNode *> &nodes, wxPoint pan) const;
+    wxPoint PanToCenterNodes(const std::vector<const SopGraphNode *> &nodes) const;
+    wxPoint ClampPanPoint(wxPoint pan) const;
+    wxPoint FillHorizontalPan(wxPoint pan) const;
+    bool IsNodeInViewport(const SopGraphNode &node, wxPoint pan) const;
+    bool AreNodesInViewport(const std::vector<const SopGraphNode *> &nodes) const;
+    bool AreNodesInViewport(const std::vector<const SopGraphNode *> &nodes, wxPoint pan) const;
+    std::vector<const SopGraphNode *> CollectFocusNodes(const std::string &step_id) const;
+    std::vector<const SopGraphNode *> CollectVisibleNodes(wxPoint pan) const;
     void StartPanAnimation(const wxPoint &target);
     void FinishPanAnimation();
+    void ReportStatus(const wxString &message);
     int LayoutColumnsPerRow() const;
     std::vector<wxPoint> RouteEdge(const wxPoint &from, const wxPoint &to, int from_row, int to_row,
                                    bool is_fork) const;
@@ -133,4 +146,4 @@ private:
     void ClampPan();
 };
 
-#endif /* UI_GUI_GRAPH_CANVAS_HPP */
+#endif /* GUI_GRAPH_CANVAS_HPP */

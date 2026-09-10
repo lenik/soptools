@@ -101,6 +101,11 @@ public:
     void pause_auto_run();
     void tick_auto_run();
 
+    /* Write <project>/sop/status (no-op while a status load is in progress). */
+    void persist_project_status();
+    void begin_status_load();
+    void end_status_load();
+
     void log(int level, const std::string &message) const;
 
 private:
@@ -112,6 +117,7 @@ private:
     size_t current_index_ = 0;
     SopAutoRunState auto_run_state_ = SopAutoRunState::Idle;
     bool pending_advance_ = false;
+    bool suppress_persist_ = false;
     SopLogFn log_fn_;
     SopNotifyFn notify_fn_;
     mutable std::mutex shell_mu_;

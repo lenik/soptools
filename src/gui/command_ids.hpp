@@ -1,5 +1,5 @@
-#ifndef UI_GUI_COMMAND_IDS_HPP
-#define UI_GUI_COMMAND_IDS_HPP
+#ifndef GUI_COMMAND_IDS_HPP
+#define GUI_COMMAND_IDS_HPP
 
 #include <wx/defs.h>
 
@@ -20,5 +20,8 @@ constexpr int ID_LOAD_SOP = wxID_HIGHEST + 17;
 constexpr int ID_HELP_SHORTCUTS = wxID_HIGHEST + 18;
 constexpr int ID_HELP_LICENSE = wxID_HIGHEST + 19;
 constexpr int ID_HELP_ABOUT = wxID_HIGHEST + 20;
+constexpr int ID_LANG_EN = wxID_HIGHEST + 21;
+constexpr int ID_LANG_ZH_CN = wxID_HIGHEST + 22;
+constexpr int ID_LANG_JA = wxID_HIGHEST + 23;
 
-#endif /* UI_GUI_COMMAND_IDS_HPP */
+#endif /* GUI_COMMAND_IDS_HPP */

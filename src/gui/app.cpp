@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui.hpp"
-#include "ui/gui/main_frame.hpp"
+#include "gui/gui.hpp"
+#include "gui/main_frame.hpp"
 
 #include <wx/wx.h>
 

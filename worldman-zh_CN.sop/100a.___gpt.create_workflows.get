@@ -4,12 +4,18 @@ Discard: vim: set ft=markdown :
 
 # 创建完整测试工作流
 
+## 准备工作
+
+先递归扫描 `sop/` 下所有子目录中散落的 `TUC.md`、`NTC.md`、`ECS.md`、
+`TODO.md`。将各类合并为根目录规范文件 `sop/TUC.md`、`sop/NTC.md`、
+`sop/ECS.md`、`sop/TODO.md`（去重；并入已有根文件），然后删除散落副本。
+
 基于完整讨论以及此前产出的：
 
 - `sop/PRD.md`
-- `sop/TUC.md`（若存在）
-- `sop/NTC.md`（若存在）
-- `sop/ECS.md`（若存在）
+- `sop/TUC.md`（合并后，若存在）
+- `sop/NTC.md`（合并后，若存在）
+- `sop/ECS.md`（合并后，若存在）
 - `prisma/schema.prisma`
 - `prisma/seed.ts`
 - 后端设计

@@ -1,9 +1,9 @@
-#ifndef UI_GUI_MAIN_FRAME_HPP
-#define UI_GUI_MAIN_FRAME_HPP
+#ifndef GUI_MAIN_FRAME_HPP
+#define GUI_MAIN_FRAME_HPP
 
 #include "engine/engine.hpp"
-#include "ui/gui/graph_canvas.hpp"
-#include "ui/gui/log_view.hpp"
+#include "gui/graph_canvas.hpp"
+#include "gui/log_view.hpp"
 
 #include <wx/bmpbuttn.h>
 #include <wx/frame.h>
@@ -50,6 +50,7 @@ private:
     wxPanel *content_panel_ = nullptr;
     wxToolBar *toolbar_ = nullptr;
     wxMenu *view_menu_ = nullptr;
+    wxMenu *lang_menu_ = nullptr;
     bool show_log_ = false;
     bool show_graph_ = true;
     bool graph_layout_dirty_ = true;
@@ -71,6 +72,8 @@ private:
     void SetStatusBarMessage(const wxString &text, bool sticky = false);
     bool OpenGptPasteFlow(const SopStep &step);
     bool CopyStepPrompt(const SopStep &step, wxString *err = nullptr);
+    /* If current step is an incomplete GPT .get, copy prompt + paste dialog. */
+    bool MaybeOpenGptPasteForCurrent();
     void RunStepAction(const std::string &step_id, bool force);
     void DoExecute(bool force);
     void DoCopy();
@@ -81,6 +84,8 @@ private:
     void RefreshActionTool();
     void RefreshAutoRunTool();
     void RefreshNav();
+    void SyncLanguageMenu();
+    void SwitchLanguagePack(const std::string &lang);
     void SetGraphVisible(bool visible);
     void SetLoggingVisible(bool visible);
     void ToggleGraphDetach();
@@ -110,8 +115,9 @@ private:
     void OnHelpShortcuts(wxCommandEvent &);
     void OnHelpLicense(wxCommandEvent &);
     void OnHelpAbout(wxCommandEvent &);
+    void OnLanguagePack(wxCommandEvent &);
 };
 
 wxFrame *create_main_frame(SopEngine *engine);
 
-#endif /* UI_GUI_MAIN_FRAME_HPP */
+#endif /* GUI_MAIN_FRAME_HPP */

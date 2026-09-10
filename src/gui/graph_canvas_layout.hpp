@@ -1,8 +1,8 @@
-#ifndef UI_GUI_GRAPH_CANVAS_LAYOUT_HPP
-#define UI_GUI_GRAPH_CANVAS_LAYOUT_HPP
+#ifndef GUI_GRAPH_CANVAS_LAYOUT_HPP
+#define GUI_GRAPH_CANVAS_LAYOUT_HPP
 
 #include "model/model.hpp"
-#include "ui/gui/graph_canvas.hpp"
+#include "gui/graph_canvas.hpp"
 
 #include <wx/bitmap.h>
 #include <wx/dc.h>
@@ -66,4 +66,4 @@ void StrokeRoundedPath(wxGraphicsContext *gc, const std::vector<wxPoint> &pts, d
 void AppendEdge(std::vector<SopGraphEdge> &edges, const std::vector<wxPoint> &pts, bool on_active, bool is_fork, bool show_arrow = false);
 std::vector<wxPoint> RouteHubToPort(const wxPoint &hub, const wxPoint &port, bool hub_is_start);
 
-#endif /* UI_GUI_GRAPH_CANVAS_LAYOUT_HPP */
+#endif /* GUI_GRAPH_CANVAS_LAYOUT_HPP */

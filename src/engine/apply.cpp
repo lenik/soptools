@@ -101,6 +101,7 @@ SopApplyResult SopEngine::apply_gpt_save_result(const std::string &step_id,
     maybe_add_dynamic_steps(written);
     step.user_marked_complete = true;
     update_step_status(step);
+    persist_project_status();
     notify_changed();
     return result;
 }

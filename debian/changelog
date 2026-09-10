@@ -1,3 +1,43 @@
+soptools (1.0.0) UNRELEASED; urgency=medium
+
+  * WorldMan SOP 010: download Figma demo hotlinks (images, fonts,
+    audio, …) into web/assets/.
+  * Add ninja install-symlinks / uninstall-symlinks for live SOP and
+    extension development without packaging.
+  * Next on GPT .get steps auto-copies the prompt and opens Paste
+    Response.
+  * WorldMan SOP 000: skip Figma refactor when WorldMan layout already
+    exists.
+  * Persist workflow status under project sop/status (location=); resume
+    on open.
+  * WorldMan SOP 060: inspect prisma/ and merge request-for-refactor
+    into schema before backend impl.
+  * Graph Enter sets location; GPT toolbar Get; richer Paste/Render
+    dialogs; fix F1 shortcuts parent crash.
+  * Node menus drop Command: prefix and gain icons; status feedback;
+    center selection bbox when scrolling.
+  * Skip menu icons on check items (GTK image-menu-item assert).
+  * Graph: wheel pans vertically; Ctrl+wheel zooms.
+  * SOP 010: keep real Figma hotlink assets; do not over-read permissive
+    licenses.
+  * SOP 010: note app is not a stock gallery (no competition).
+  * Scroll-to-visible centers bbox of viewport-visible nodes, not
+    selection alone.
+  * Scroll-to-visible keeps zoom; fill horizontal (no empty L/R
+    gutters).
+  * Fix help dialogs: scroll shortcuts; soft-wrap license label; About
+    sizer assert.
+  * SOP 010: use HTTP proxy when downloading blocked (CN) asset hosts.
+  * License dialog: soft-wrap paragraphs in readonly textctrl for fast
+    scroll.
+  * Menu mnemonics; View/Language SOP packs; Run/Get icons; license no
+    H-scroll; expand READMEs.
+  * Split src/gui beside src/ui; SOP 100 merges scattered
+    TUC/NTC/ECS/TODO.
+  * Major release: WorldMan SOP polish, GUI UX, sibling src/gui, docs.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 15:22:36 +0800
+
 soptools (0.1.0) unstable; urgency=medium
 
   [ Lenik (谢继雷) ]

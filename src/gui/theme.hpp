@@ -1,11 +1,13 @@
-#ifndef UI_GUI_THEME_HPP
-#define UI_GUI_THEME_HPP
+#ifndef GUI_THEME_HPP
+#define GUI_THEME_HPP
 
 #include "engine/engine.hpp"
 #include "model/model.hpp"
 
 #include <wx/wx.h>
+#include <wx/artprov.h>
 #include <wx/bmpbuttn.h>
+#include <wx/menu.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 
@@ -34,9 +36,11 @@ void UpdateDetachButton(wxBitmapButton *btn, wxWindow *parent, bool detached);
 wxPanel *MakePaneHeader(wxWindow *parent, wxBitmapButton **button_out,
                         const std::function<void()> &on_click);
 wxStaticText *MakeSectionTitle(wxWindow *parent, const wxString &title);
-void AddShortcutRows(wxFlexGridSizer *grid,
+void AddShortcutRows(wxWindow *parent, wxFlexGridSizer *grid,
                      std::initializer_list<std::pair<const char *, const char *>> rows);
 wxPanel *MakeShortcutSection(wxWindow *parent, const wxString &title,
                              std::initializer_list<std::pair<const char *, const char *>> rows);
+wxMenuItem *AppendIconMenuItem(wxMenu *menu, int id, const wxString &label, const wxArtID &art);
+wxMenuItem *AppendIconCheckItem(wxMenu *menu, int id, const wxString &label, const wxArtID &art);
 
-#endif /* UI_GUI_THEME_HPP */
+#endif /* GUI_THEME_HPP */

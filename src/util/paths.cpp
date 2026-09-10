@@ -11,6 +11,7 @@
 #include "config.h"
 
 #include <filesystem>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -71,6 +72,32 @@ std::string resolve_extension_bash_dir(const std::string &source_root) {
         }
     }
     return fs::absolute(fs::path(source_root) / "extension" / "bash").string();
+}
+
+std::string resolve_worldman_sop_pack(const std::string &lang, const std::string &beside_sop_dir,
+                                      const std::string &source_root) {
+    std::string pack = "worldman.sop";
+    if (lang == "zh_CN") {
+        pack = "worldman-zh_CN.sop";
+    } else if (lang == "ja") {
+        pack = "worldman-ja.sop";
+    }
+    std::error_code ec;
+    std::vector<fs::path> candidates;
+    if (!beside_sop_dir.empty()) {
+        candidates.push_back(fs::path(beside_sop_dir).parent_path() / pack);
+    }
+#ifdef SOP_PKGDATADIR
+    candidates.push_back(fs::path(SOP_PKGDATADIR) / pack);
+#endif
+    candidates.push_back(fs::path(source_root) / pack);
+    candidates.push_back(fs::current_path() / pack);
+    for (const auto &c : candidates) {
+        if (fs::is_directory(c, ec)) {
+            return fs::absolute(c).string();
+        }
+    }
+    return {};
 }
 
 std::string shell_single_quote(const std::string &value) {

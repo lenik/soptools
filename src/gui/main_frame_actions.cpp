@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/main_frame.hpp"
-#include "ui/gui/theme.hpp"
-#include "ui/gui/help_dialogs.hpp"
-#include "ui/gui/paste_response_dialog.hpp"
-#include "ui/gui/render_response_dialog.hpp"
+#include "gui/main_frame.hpp"
+#include "gui/theme.hpp"
+#include "gui/help_dialogs.hpp"
+#include "gui/paste_response_dialog.hpp"
+#include "gui/render_response_dialog.hpp"
 #include "engine/project.hpp"
 
 #include <wx/wx.h>
@@ -26,7 +26,7 @@
 #include <sstream>
 #include <functional>
 
-#include "ui/gui/command_ids.hpp"
+#include "gui/command_ids.hpp"
 
 wxRect MainFrame::ContentAreaRect() const {
     int cw = 0;
@@ -162,6 +162,20 @@ bool MainFrame::OpenGptPasteFlow(const SopStep &step) {
         render.ShowModal();
     }
     return true;
+}
+
+bool MainFrame::MaybeOpenGptPasteForCurrent() {
+    const SopStep *step = engine_->step_at(engine_->current_index());
+    if (!step || !step->is_gpt_get()) {
+        return false;
+    }
+    const std::string sid = engine_->current_step_id();
+    if (engine_->is_complete(sid)) {
+        return false;
+    }
+    const bool ok = OpenGptPasteFlow(*step);
+    RefreshAll();
+    return ok;
 }
 
 bool MainFrame::CopyStepPrompt(const SopStep &step, wxString *err) {
@@ -363,6 +377,7 @@ void MainFrame::RefreshActionTool() {
         return;
     }
     const SopStep *step = engine_->step_at(engine_->current_index());
+    const bool gpt_get = step && step->is_gpt_get();
     const bool copy_mode = step && step->is_prompt_copy();
     const bool exec_mode = step && step->is_automatable();
 
@@ -381,7 +396,12 @@ void MainFrame::RefreshActionTool() {
         toolbar_->DeleteTool(ID_COPY);
     }
 
-    if (copy_mode) {
+    if (gpt_get) {
+        toolbar_->InsertTool(pos, ID_COPY, wxString::FromUTF8("Get"),
+                             wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_TOOLBAR), wxNullBitmap,
+                             wxITEM_NORMAL,
+                             wxString::FromUTF8("Get prompt + open Paste Response (Ctrl+Enter)"));
+    } else if (copy_mode) {
         toolbar_->InsertTool(pos, ID_COPY, wxString::FromUTF8("Copy"),
                              wxArtProvider::GetBitmap(wxART_COPY, wxART_TOOLBAR), wxNullBitmap,
                              wxITEM_NORMAL, wxString::FromUTF8("Copy prompt to clipboard (Ctrl+Enter)"));
@@ -397,23 +417,25 @@ void MainFrame::RefreshAutoRunTool() {
     if (!toolbar_) {
         return;
     }
-    wxString label = wxString::FromUTF8("Start");
+    wxString label = wxString::FromUTF8("Run");
+    wxArtID art = wxART_EXECUTABLE_FILE;
     switch (engine_->auto_run_state()) {
     case SopAutoRunState::Running:
         label = wxString::FromUTF8("Pause");
+        art = wxART_STOP;
         break;
     case SopAutoRunState::Paused:
         label = wxString::FromUTF8("Resume");
+        art = wxART_EXECUTABLE_FILE;
         break;
     default:
         break;
     }
-    const wxString help = label + wxString::FromUTF8(" (F5)");
+    const wxString help = label + wxString::FromUTF8(" automated workflow (F5)");
     const int pos = toolbar_->GetToolPos(ID_AUTO_RUN);
     if (pos != wxNOT_FOUND) {
         toolbar_->DeleteTool(ID_AUTO_RUN);
-        toolbar_->InsertTool(pos, ID_AUTO_RUN, label,
-                             wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR), wxNullBitmap,
+        toolbar_->InsertTool(pos, ID_AUTO_RUN, label, wxArtProvider::GetBitmap(art, wxART_TOOLBAR), wxNullBitmap,
                              wxITEM_NORMAL, help);
         toolbar_->Realize();
     }

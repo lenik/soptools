@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/main_frame.hpp"
-#include "ui/gui/theme.hpp"
-#include "ui/gui/help_dialogs.hpp"
-#include "ui/gui/paste_response_dialog.hpp"
-#include "ui/gui/render_response_dialog.hpp"
+#include "gui/main_frame.hpp"
+#include "gui/theme.hpp"
+#include "gui/help_dialogs.hpp"
+#include "gui/paste_response_dialog.hpp"
+#include "gui/render_response_dialog.hpp"
 #include "engine/project.hpp"
+#include "util/paths.hpp"
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
@@ -22,11 +23,13 @@
 
 #include "config.h"
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <string>
 
-#include "ui/gui/command_ids.hpp"
+#include "gui/command_ids.hpp"
 
 void MainFrame::SetGraphVisible(bool visible) {
     show_graph_ = visible;
@@ -174,9 +177,29 @@ void MainFrame::OnBack(wxCommandEvent &) {
 }
 
 void MainFrame::OnNext(wxCommandEvent &) {
+    sticky_status_.clear();
+
+    const SopStep *step = engine_->step_at(engine_->current_index());
+    if (step && step->is_gpt_get()) {
+        const std::string sid = engine_->current_step_id();
+        if (!engine_->is_complete(sid)) {
+            if (!OpenGptPasteFlow(*step)) {
+                RefreshAll();
+                return;
+            }
+        }
+        if (engine_->advance()) {
+            RefreshAll();
+            MaybeOpenGptPasteForCurrent();
+        } else {
+            RefreshAll();
+        }
+        return;
+    }
+
     if (engine_->try_advance_with_run()) {
-        sticky_status_.clear();
         RefreshAll();
+        MaybeOpenGptPasteForCurrent();
     }
 }
 
@@ -274,7 +297,7 @@ void MainFrame::OnSaveProject(wxCommandEvent &) {
                      wxOK | wxICON_ERROR);
         return;
     }
-    SetStatusText(wxString::FromUTF8("Project saved."));
+    SetStatusText(wxString::FromUTF8("Project status saved to sop/status."));
 }
 
 void MainFrame::OnRevertProject(wxCommandEvent &) {
@@ -307,6 +330,7 @@ void MainFrame::OnLoadSop(wxCommandEvent &) {
     graph_layout_dirty_ = true;
     sticky_status_.clear();
     RefreshAll();
+    SyncLanguageMenu();
     SetStatusText(wxString::FromUTF8("SOP loaded."));
 }
 
@@ -315,4 +339,65 @@ void MainFrame::OnHelpShortcuts(wxCommandEvent &) { show_shortcuts_dialog(this);
 void MainFrame::OnHelpLicense(wxCommandEvent &) { show_license_dialog(this); }
 
 void MainFrame::OnHelpAbout(wxCommandEvent &) { show_about_dialog(this); }
+
+void MainFrame::SyncLanguageMenu() {
+    if (!lang_menu_) {
+        return;
+    }
+    const std::string name = std::filesystem::path(engine_->options().sop_dir).filename().string();
+    int id = ID_LANG_EN;
+    if (name.find("zh_CN") != std::string::npos) {
+        id = ID_LANG_ZH_CN;
+    } else if (name.find("-ja") != std::string::npos || name == "worldman-ja.sop") {
+        id = ID_LANG_JA;
+    }
+    lang_menu_->Check(id, true);
+}
+
+void MainFrame::SwitchLanguagePack(const std::string &lang) {
+#ifdef SOURCE_ROOT
+    const std::string source_root = SOURCE_ROOT;
+#else
+    const std::string source_root = ".";
+#endif
+    const std::string pack =
+        resolve_worldman_sop_pack(lang, engine_->options().sop_dir, source_root);
+    if (pack.empty()) {
+        wxMessageBox(wxString::Format(wxString::FromUTF8("WorldMan SOP pack for language \"%s\" was not found."),
+                                      wxString::FromUTF8(lang)),
+                     wxString::FromUTF8("Language"), wxOK | wxICON_ERROR);
+        SyncLanguageMenu();
+        return;
+    }
+    {
+        std::error_code ec;
+        if (std::filesystem::equivalent(pack, engine_->options().sop_dir, ec) && !ec) {
+            SyncLanguageMenu();
+            return;
+        }
+    }
+    if (!engine_->reload_sop(pack)) {
+        wxMessageBox(wxString::FromUTF8("Failed to load SOP pack:\n") + wxString::FromUTF8(pack),
+                     wxString::FromUTF8("Language"), wxOK | wxICON_ERROR);
+        SyncLanguageMenu();
+        return;
+    }
+    graph_layout_dirty_ = true;
+    sticky_status_.clear();
+    RefreshAll();
+    SyncLanguageMenu();
+    SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Switched SOP language pack to %s."),
+                                         wxString::FromUTF8(std::filesystem::path(pack).filename().string())),
+                        true);
+}
+
+void MainFrame::OnLanguagePack(wxCommandEvent &evt) {
+    std::string lang = "en";
+    if (evt.GetId() == ID_LANG_ZH_CN) {
+        lang = "zh_CN";
+    } else if (evt.GetId() == ID_LANG_JA) {
+        lang = "ja";
+    }
+    SwitchLanguagePack(lang);
+}
 

@@ -11,6 +11,18 @@ set -euo pipefail
 
 set_progress 5%
 
+# 既に WorldMan レイアウトがある場合はスキップ。再実行すると backend/prisma/sop/… が
+# web/ 配下へ移り、ツリーが壊れる。
+if [ -d web ] && [ -d backend ] && [ -d prisma ] && [ -d sop ] && [ -d docs ] && {
+       [ -f web/package.json ] || [ -d web/src ] ||
+           [ -f web/vite.config.ts ] || [ -f web/vite.config.js ] ||
+           [ -f web/vite.config.mts ] || [ -f web/index.html ]
+   }; then
+    set_progress 100%
+    sop_log 1 "WorldMan レイアウトは既にあります（web/ と標準パッケージ）；Figma 再構成をスキップします。"
+    exit 0
+fi
+
 # 製品ツリーに残すべきでない Figma / agent 足場を削除する。
 rm -rf AGENT.md CLAUDE.md src/imports .figma .git
 set_progress 15%

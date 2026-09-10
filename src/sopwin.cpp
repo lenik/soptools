@@ -8,7 +8,7 @@
 
 #include "config.h"
 #include "ui/console.hpp"
-#include "ui/gui.hpp"
+#include "gui/gui.hpp"
 #include "util/paths.hpp"
 #include "engine/engine.hpp"
 

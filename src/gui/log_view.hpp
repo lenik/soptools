@@ -1,5 +1,5 @@
-#ifndef UI_GUI_LOG_VIEW_HPP
-#define UI_GUI_LOG_VIEW_HPP
+#ifndef GUI_LOG_VIEW_HPP
+#define GUI_LOG_VIEW_HPP
 
 #include <wx/panel.h>
 #include <wx/sizer.h>
@@ -51,4 +51,4 @@ private:
     void OnDetachClose(wxCloseEvent &);
 };
 
-#endif /* UI_GUI_LOG_VIEW_HPP */
+#endif /* GUI_LOG_VIEW_HPP */

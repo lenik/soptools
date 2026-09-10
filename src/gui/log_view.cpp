@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/log_view.hpp"
+#include "gui/log_view.hpp"
 
 #include <wx/sizer.h>
 #include <wx/listctrl.h>

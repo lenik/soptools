@@ -59,23 +59,46 @@ int main(void) {
     }
 
     expect_eq_str("config name", sop_config_name(opts.sop_dir), "worldman.sop");
-    expect_eq_str("config path suffix",
+    expect_eq_str("legacy config path suffix",
                   fs::path(sop_config_path(opts.project_dir, opts.sop_dir)).filename().string(),
                   "worldman.sop.conf");
+    expect_eq_str("status path", sop_status_path(opts.project_dir),
+                  (tmp / "sop" / "status").string());
 
     if (engine.active_steps().size() > 1) {
         const std::string saved = engine.active_steps()[1];
         engine.set_current_step_id(saved);
-        expect_true("save config", save_project_config(engine));
+        expect_true("status auto-saved", fs::exists(sop_status_path(opts.project_dir)));
+        {
+            std::ifstream in(sop_status_path(opts.project_dir));
+            std::string line;
+            bool found_location = false;
+            while (std::getline(in, line)) {
+                if (line.rfind("location=", 0) == 0) {
+                    expect_eq_str("status location line", line, "location=" + saved);
+                    found_location = true;
+                }
+            }
+            expect_true("status has location", found_location);
+        }
+        /* Move away without writing so Revert can restore from sop/status. */
+        engine.begin_status_load();
         engine.set_current_step_id(engine.active_steps().front());
         expect_true("revert config", revert_project_config(engine));
-        expect_eq_str("position restored", engine.current_step_id(), saved);
+        expect_eq_str("location restored", engine.current_step_id(), saved);
     } else {
         expect_true("save config", save_project_config(engine));
         expect_true("revert config", revert_project_config(engine));
     }
 
-    expect_true("config exists", fs::exists(sop_config_path(opts.project_dir, opts.sop_dir)));
+    expect_true("status exists", fs::exists(sop_status_path(opts.project_dir)));
+    {
+        /* Re-open project: load_sop resumes location from sop/status. */
+        const std::string want = engine.current_step_id();
+        SopEngine engine2(opts);
+        expect_true("reload sop", engine2.load_sop());
+        expect_eq_str("resumed location", engine2.current_step_id(), want);
+    }
 
     fs::remove_all(tmp, ec);
     return failures == 0 ? 0 : 1;

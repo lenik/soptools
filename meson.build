@@ -25,7 +25,7 @@ project(
     ],
 )
 
-project_author = 'Lenik'
+project_author = 'Lenik (谢继雷)'
 project_email = 'soptools@bodz.net'
 project_year = 2026
 
@@ -85,19 +85,19 @@ app_sources = [
     'src/engine/gpt_response.cpp',
     'src/engine/project.cpp',
     'src/ui/console.cpp',
-    'src/ui/gui/app.cpp',
-    'src/ui/gui/theme.cpp',
-    'src/ui/gui/main_frame.cpp',
-    'src/ui/gui/main_frame_actions.cpp',
-    'src/ui/gui/main_frame_panes.cpp',
-    'src/ui/gui/help_dialogs.cpp',
-    'src/ui/gui/graph_canvas.cpp',
-    'src/ui/gui/graph_canvas_layout.cpp',
-    'src/ui/gui/graph_canvas_paint.cpp',
-    'src/ui/gui/graph_style.cpp',
-    'src/ui/gui/log_view.cpp',
-    'src/ui/gui/paste_response_dialog.cpp',
-    'src/ui/gui/render_response_dialog.cpp',
+    'src/gui/app.cpp',
+    'src/gui/theme.cpp',
+    'src/gui/main_frame.cpp',
+    'src/gui/main_frame_actions.cpp',
+    'src/gui/main_frame_panes.cpp',
+    'src/gui/help_dialogs.cpp',
+    'src/gui/graph_canvas.cpp',
+    'src/gui/graph_canvas_layout.cpp',
+    'src/gui/graph_canvas_paint.cpp',
+    'src/gui/graph_style.cpp',
+    'src/gui/log_view.cpp',
+    'src/gui/paste_response_dialog.cpp',
+    'src/gui/render_response_dialog.cpp',
 ]
 
 executable(
@@ -155,60 +155,6 @@ install_data(
 
 subdir('po')
 subdir('tests')
-
-run_target(
-    'look',
-    command: [
-        'bash',
-        '-euc', '''
-            tmpdir=$(mktemp -d)
-            DESTDIR=$tmpdir meson install -C "@BUILD_ROOT@"
-            tree "$tmpdir"
-            rm -fr "$tmpdir"
-        ''',
-    ],
-)
-
-run_target(
-    'install-symlinks',
-    command: [
-        'bash',
-        '-euc', '''
-            prefix="@0@"
-            bindir="@1@"
-            datadir="@2@"
-            mandir="@3@"
-            mkdir -p "$bindir" "$datadir/bash-completion/completions" "$mandir/man1"
-            sudo ln -sfn "@BUILD_ROOT@/sopwin" "$bindir/sopwin"
-            sudo ln -sfn "@BUILD_ROOT@/sopwin.1" "$mandir/man1/sopwin.1"
-            sudo ln -sfn "@SOURCE_ROOT@/sopwin.bash" "$datadir/bash-completion/completions/sopwin"
-            printf "Symlinks installed under %s\n" "$prefix"
-        '''.format(get_option('prefix'), bindir, datadir, mandir),
-    ],
-)
-
-run_target(
-    'uninstall-symlinks',
-    command: [
-        'bash',
-        '-euc', '''
-            for p in \
-                "@1@/sopwin" \
-                "@3@/man1/sopwin.1" \
-                "@2@/bash-completion/completions/sopwin"
-            do
-                if [ -L "$p" ]; then
-                    sudo rm -f "$p"
-                    printf "Removed %s\n" "$p"
-                else
-                    printf "Skipped (not a symlink): %s\n" "$p"
-                fi
-            done
-        '''.format(get_option('prefix'), bindir, datadir, mandir),
-    ],
-)
-
-
 
 man_puffs = [
     'soptools',
@@ -276,4 +222,143 @@ meson.add_install_script(
       done
     done
   '''.format(meson.current_build_dir(), ' '.join(man_locales)),
+)
+
+run_target(
+    'look',
+    command: [
+        'bash',
+        '-euc', '''
+            tmpdir=$(mktemp -d)
+            DESTDIR=$tmpdir meson install -C "@BUILD_ROOT@"
+            tree "$tmpdir"
+            rm -fr "$tmpdir"
+        ''',
+    ],
+)
+
+# Fast local debugging against the active installation prefix:
+# symlink installed paths to project / build outputs (no packaging required).
+# Note: Meson rewrites '\' to '/' in run_target commands — avoid backslashes.
+run_target(
+    'install-symlinks',
+    command: [
+        'bash',
+        '-euc', '''
+            prefix="@0@"
+            bindir="@1@"
+            datadir="@2@"
+            mandir="@3@"
+            pkgdata="$datadir/@4@"
+            src="@5@"
+            build="@6@"
+            locales="@7@"
+
+            # $1 = path to create/replace; remaining args = command.
+            # Decide sudo from the path, not from argv0 (e.g. "rm").
+            as_root() {
+                local path="$1"
+                shift
+                local parent
+                parent=$(dirname "$path")
+                if [ -w "$parent" ] && { [ ! -e "$path" ] || [ -w "$path" ] || [ -L "$path" ]; }; then
+                    "$@"
+                else
+                    sudo "$@"
+                fi
+            }
+
+            symlink_force() {
+                local target="$1" linkpath="$2"
+                if [ -L "$linkpath" ]; then
+                    as_root "$linkpath" rm -f "$linkpath"
+                elif [ -e "$linkpath" ]; then
+                    echo "Replacing non-symlink path with symlink: $linkpath"
+                    as_root "$linkpath" rm -rf "$linkpath"
+                fi
+                as_root "$linkpath" mkdir -p "$(dirname "$linkpath")"
+                as_root "$linkpath" ln -sfn "$target" "$linkpath"
+                echo "Linked $linkpath -> $target"
+            }
+
+            as_root "$pkgdata" mkdir -p "$bindir" "$datadir/bash-completion/completions" "$mandir/man1" "$pkgdata"
+
+            symlink_force "$build/sopwin" "$bindir/sopwin"
+            symlink_force "$build/sopwin.1" "$mandir/man1/sopwin.1"
+            symlink_force "$build/soptools.1" "$mandir/man1/soptools.1"
+            symlink_force "$src/sopwin.bash" "$datadir/bash-completion/completions/sopwin"
+
+            for sop in worldman.sop worldman-zh_CN.sop worldman-ja.sop extension; do
+                symlink_force "$src/$sop" "$pkgdata/$sop"
+            done
+
+            for loc in $locales; do
+                for name in soptools sopwin; do
+                    built="$build/${loc}-${name}.1"
+                    [ -f "$built" ] || continue
+                    symlink_force "$built" "$mandir/$loc/man1/${name}.1"
+                done
+            done
+
+            echo "Symlinks installed under $prefix"
+        '''.format(
+            get_option('prefix'),
+            bindir,
+            datadir,
+            mandir,
+            meson.project_name(),
+            meson.project_source_root(),
+            meson.project_build_root(),
+            ' '.join(man_locales),
+        ),
+    ],
+)
+
+run_target(
+    'uninstall-symlinks',
+    command: [
+        'bash',
+        '-euc', '''
+            bindir="@0@"
+            datadir="@1@"
+            mandir="@2@"
+            pkgdata="$datadir/@3@"
+            locales="@4@"
+
+            remove_symlink() {
+                local p="$1"
+                if [ -L "$p" ]; then
+                    if [ -w "$(dirname "$p")" ]; then
+                        rm -f "$p"
+                    else
+                        sudo rm -f "$p"
+                    fi
+                    echo "Removed $p"
+                elif [ -e "$p" ]; then
+                    echo "Skipped (not a symlink): $p"
+                fi
+            }
+
+            remove_symlink "$bindir/sopwin"
+            remove_symlink "$mandir/man1/sopwin.1"
+            remove_symlink "$mandir/man1/soptools.1"
+            remove_symlink "$datadir/bash-completion/completions/sopwin"
+            remove_symlink "$pkgdata/worldman.sop"
+            remove_symlink "$pkgdata/worldman-zh_CN.sop"
+            remove_symlink "$pkgdata/worldman-ja.sop"
+            remove_symlink "$pkgdata/extension"
+
+            for loc in $locales; do
+                for name in soptools sopwin; do
+                    remove_symlink "$mandir/$loc/man1/${name}.1"
+                done
+            done
+        '''.format(
+            bindir,
+            datadir,
+            mandir,
+            meson.project_name(),
+            ' '.join(man_locales),
+        ),
+    ],
 )

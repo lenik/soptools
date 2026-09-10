@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-#include "ui/gui/graph_canvas.hpp"
-#include "ui/gui/graph_canvas_layout.hpp"
-#include "ui/gui/graph_style.hpp"
+#include "gui/graph_canvas.hpp"
+#include "gui/graph_canvas_layout.hpp"
+#include "gui/graph_style.hpp"
 
 #include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
@@ -56,26 +56,7 @@ void SopGraphCanvas::CenterPan() {
 }
 
 void SopGraphCanvas::ClampPan() {
-    const wxSize client = GetClientSize();
-    if (client.x < 1 || client.y < 1) {
-        return;
-    }
-
-    const int margin = 8;
-    const int gw = static_cast<int>(graph_size_.x * zoom_);
-    const int gh = static_cast<int>(graph_size_.y * zoom_);
-
-    if (gw + 2 * margin <= client.x) {
-        pan_.x = std::clamp(pan_.x, margin, client.x - gw - margin);
-    } else {
-        pan_.x = std::clamp(pan_.x, client.x - gw - margin, margin);
-    }
-
-    if (gh + 2 * margin <= client.y) {
-        pan_.y = std::clamp(pan_.y, margin, client.y - gh - margin);
-    } else {
-        pan_.y = std::clamp(pan_.y, client.y - gh - margin, margin);
-    }
+    pan_ = ClampPanPoint(pan_);
 }
 
 std::vector<wxPoint> SopGraphCanvas::RouteEdge(const wxPoint &from, const wxPoint &to, int from_row,
