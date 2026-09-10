@@ -1,4 +1,4 @@
-soptools (1.1.0) UNRELEASED; urgency=medium
+soptools (1.1.0) unstable; urgency=medium
 
   * Organize WorldMan SOPs under suite/worldman/{default,zh_CN,ja}/.
   * CLI: -s/--suite NAME (default worldman), -S/--sop-dir DIR; LANG
@@ -12,7 +12,7 @@ soptools (1.1.0) UNRELEASED; urgency=medium
   * SOP step frontmatter extend: previous|next merges adjacent same-type
     steps into one graph node (011→010 codex.md).
 
- -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 15:36:17 +0800
+ -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 10 Sep 2026 17:39:02 +0800
 
 soptools (1.0.0) unstable; urgency=medium
 
