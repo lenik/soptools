@@ -204,7 +204,7 @@ keep real assets under `web/assets/` — not placeholders.
 | `src/` | Engine, model, util, GUI (`gui/`), console (`ui/`) |
 | `suite/` | SOP suites (`worldman/{default,zh_CN,ja}/`, …) |
 | `extension/bash/` | PATH helpers for SOP scripts (`sop-script`) |
-| `docs/` | AsciiDoc man pages (+ locale scaffolds) |
+| `man/` | AsciiDoc man pages (+ locale scaffolds) |
 | `po/` | gettext catalogs |
 | `tests/` | Engine / project tests |
 | `debian/`, `packaging/` | Distro metadata |

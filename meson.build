@@ -141,7 +141,7 @@ install_data(
     [
         'LICENSE',
         'README.md',
-        'README-zh.md',
+        'README-zh_CN.md',
     ],
     install_dir: pkgdocdir,
 )
@@ -156,7 +156,7 @@ man_puffs = [
 foreach puff : man_puffs
   custom_target(
     puff + '-man',
-    input: 'docs' / (puff + '.adoc'),
+    input: 'man' / (puff + '.adoc'),
     output: puff + '.1',
     command: [
       asciidoctor,
@@ -178,7 +178,7 @@ man_locales = ['ar', 'de', 'es_MX', 'fr', 'it', 'ja', 'ko', 'zh_CN']
 man_names = ['soptools', 'sopwin']
 foreach locale : man_locales
   foreach man_name : man_names
-    man_src = 'docs' / locale / (man_name + '.adoc')
+    man_src = 'man' / locale / (man_name + '.adoc')
     if fs.exists(man_src)
       custom_target(
         man_name + '-man-' + locale,

@@ -180,7 +180,7 @@ Figma 外链（Google Fonts、Facebook CDN 等）在中国大陆可能不可达�
 | `src/` | 引擎、模型、工具、GUI（`gui/`）、控制台（`ui/`） |
 | `suite/` | SOP 套件（`worldman/{default,zh_CN,ja}/` 等） |
 | `extension/bash/` | SOP 脚本 PATH 辅助（`sop-script`） |
-| `docs/` | AsciiDoc 手册（含各语言脚手架） |
+| `man/` | AsciiDoc 手册（含各语言脚手架） |
 | `po/` | gettext 目录 |
 | `tests/` | 引擎 / 项目测试 |
 | `debian/`、`packaging/` | 发行元数据 |
