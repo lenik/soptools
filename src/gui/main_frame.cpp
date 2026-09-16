@@ -313,19 +313,6 @@ void MainFrame::CreateUi() {
     body_view_->SetFont(mono);
     content_sizer->Add(body_view_, 1, wxEXPAND | wxALL, 12);
 
-    ai_panel_ = new wxPanel(content);
-    ai_panel_->SetBackgroundColour(ios_card());
-    ai_input_ = new wxTextCtrl(ai_panel_, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(-1, 160),
-                               wxTE_MULTILINE | wxBORDER_NONE);
-    ai_input_->SetHint(wxString::FromUTF8("Paste AI output here..."));
-    auto *apply_btn = new wxButton(ai_panel_, ID_APPLY, wxString::FromUTF8("Apply"));
-    apply_btn->Bind(wxEVT_BUTTON, &MainFrame::OnApply, this);
-    auto *ai_sizer = new wxBoxSizer(wxVERTICAL);
-    ai_sizer->Add(ai_input_, 1, wxEXPAND | wxALL, 12);
-    ai_sizer->Add(apply_btn, 0, wxALL, 12);
-    ai_panel_->SetSizer(ai_sizer);
-    content_sizer->Add(ai_panel_, 0, wxEXPAND);
-
     content->SetSizer(content_sizer);
     main_sizer->Add(content, 1, wxEXPAND | wxALL, 12);
 

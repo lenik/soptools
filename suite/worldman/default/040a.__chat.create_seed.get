@@ -10,30 +10,11 @@ Before writing the seed, review the schema and product model against realistic d
 
 Do not modify or silently redesign `schema.prisma` during this step.
 
-If seed design reveals that the existing schema cannot adequately represent an important product requirement, relationship, lifecycle state, constraint, historical case, or realistic test scenario, also create `prisma/request-for-refactor.md`.
-
-The refactor request should describe:
-
-- affected model(s)
-- the concrete seed scenario that exposed the problem
-- why the current schema is insufficient
-- severity: `blocking` or `recommended`
-- the smallest recommended schema change
-- expected impact on existing data
-- expected impact on seed logic
-- expected impact on backend APIs
-- expected impact on tests
-
-Do not apply the proposed schema change automatically.
-
-If no schema change is needed, do not create `request-for-refactor.md`.
-
-Output the seed deliverables as a ZIP archive containing:
+Output:
 
 ```text
 prisma/
     seed.ts
-    request-for-refactor.md   # only if needed
 ```
 
 Seed data should not merely populate rows. It should exercise the domain.
@@ -61,3 +42,22 @@ Include, where applicable:
 Seed data should be deterministic enough to support automated tests.
 
 Prefer stable readable demo names rather than random data.
+
+<optional title="Also request schema / backend amends?">
+If this seed work reveals gaps against an existing backend design prompt or an
+existing `backend/` tree, write the needed amend files (omit any unnecessary):
+
+1. **Schema** — `prisma/request-for-refactor.md` when `schema.prisma` cannot
+   express product requirements, relations, lifecycle states, constraints,
+   historical cases, or realistic test scenarios. For each issue include:
+   affected model(s), the seed scenario that exposed it, why the schema is
+   insufficient, severity (`blocking` / `recommended`), smallest recommended
+   change, and impact on data / seed / APIs / tests.
+
+2. **Backend** — `sop/Backend amends.md` when the backend design prompt or
+   existing `backend/` needs API or behavior changes to match those
+   discoveries (endpoints, validation, relations, state transitions, etc.).
+
+Do **not** apply schema or backend changes in this step. Later implementation
+work should merge these files and then delete them.
+</optional>

@@ -25,11 +25,11 @@ wxBitmap RoleBitmap(const SopStep &step, const wxSize &size) {
     case SopRole::Shell:
         art = wxART_EXECUTABLE_FILE;
         break;
-    case SopRole::Gpt:
+    case SopRole::Chat:
         art = wxART_TIP;
         break;
-    case SopRole::Codex:
-    case SopRole::AltCodex:
+    case SopRole::Code:
+    case SopRole::AltCode:
         art = wxART_CDROM;
         break;
     default:

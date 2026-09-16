@@ -13,9 +13,10 @@
 #include "engine/engine.hpp"
 
 #include <cstdlib>
+#include <cstring>
 #include <getopt.h>
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <unistd.h>
 #include <bas/locale/i18n.h>
 #include <bas/log/deflog.h>
@@ -23,8 +24,6 @@
 extern "C" {
 #include <bas/proc/env.h>
 }
-
-
 
 enum {
     OPT_VERSION = 256,
@@ -36,33 +35,87 @@ enum {
     OPT_STAGE_DIR = 262,
 };
 
+enum class SopCmd {
+    Open,
+    Run,
+    CopyDlg,
+    Edit,
+    Version,
+};
 
 define_logger();
 
 static int verbose;
 
 static void usage(FILE *out) {
-    fputs("Usage: sopwin [OPTIONS] [PROJECTDIR]\n"
+    fputs("Usage: sopwin [OPTIONS] [CMD=open] ARGS...\n"
           "Guide project construction through SOP workflow steps.\n\n"
+          "Commands:\n"
+          "  open [PROJECTDIR]   Show main window and open the project (default)\n"
+          "  run PROJECTDIR      Run SOP in console mode\n"
+          "  copydlg             Clipboard & dialog helper (agent UI)\n"
+          "  edit SOPDIR         Show SOP editor\n"
+          "  version             Print version and exit\n\n"
+          "Global options:\n"
           "  -s, --suite NAME     SOP suite under suite/ (default: worldman)\n"
           "  -S, --sop-dir DIR    SOP directory (overrides --suite / LANG branch)\n"
           "      --stage-dir DIR  watch DIR for incoming files (also SOP_STAGE_DIR)\n"
-          "  -c, --console        console-only mode (no GUI)\n"
-          "  -g, --gui            force GUI mode\n"
+          "  -c, --console        alias for: run (deprecated)\n"
+          "  -g, --gui            alias for: open (deprecated)\n"
           "  -C, --chdir DIR      project directory (default: cwd or nearest .git)\n"
           "  -v, --verbose        repeat for more verbose loggings\n"
           "  -q, --quiet          show less logging messages\n"
           "  -h, --help           display this help and exit\n"
           "      --version        output version information and exit\n\n"
           "Suite branch (default / zh_CN / ja) is chosen from LANG / LC_ALL /\n"
-          "LC_MESSAGES unless --sop-dir is set.\n\n",
+          "LC_MESSAGES unless --sop-dir is set.\n\n"
+          "copydlg options (after 'copydlg'):\n"
+          "  -t, --title TEXT     window title\n"
+          "  -s, --status TEXT    status bar text\n"
+          "      --paste          paste-response mode (chat)\n"
+          "      --confirm        confirm-only mode (code)\n"
+          "      --stage-dir DIR  stagedir for expected files\n"
+          "      --expected FILE  expected project-relative path (repeatable)\n\n",
           out);
     fprintf(out, "Report bugs to: <%s>\n", PROJECT_EMAIL);
+}
+
+static void print_version() {
+    printf("sopwin %s\n", PROJECT_VERSION);
+    printf("Copyright (C) %d %s\n", PROJECT_YEAR, PROJECT_AUTHOR);
+    fputs("License AGPL-3.0-or-later: <https://www.gnu.org/licenses/agpl-3.0.html>\n"
+          "This is free software: you are free to change and redistribute it.\n"
+          "This project opposes AI exploitation and AI hegemony.\n"
+          "This project rejects mindless MIT-style licensing and politically naive "
+          "BSD-style licensing.\n"
+          "There is NO WARRANTY, to the extent permitted by law.\n",
+          stdout);
 }
 
 static bool has_display() {
     const char *display = getenv("DISPLAY");
     return display && display[0] != '\0';
+}
+
+static bool is_cmd_token(const char *s) {
+    return s && (!strcmp(s, "open") || !strcmp(s, "run") || !strcmp(s, "copydlg") ||
+                 !strcmp(s, "edit") || !strcmp(s, "version"));
+}
+
+static SopCmd parse_cmd(const char *s) {
+    if (!strcmp(s, "run")) {
+        return SopCmd::Run;
+    }
+    if (!strcmp(s, "copydlg")) {
+        return SopCmd::CopyDlg;
+    }
+    if (!strcmp(s, "edit")) {
+        return SopCmd::Edit;
+    }
+    if (!strcmp(s, "version")) {
+        return SopCmd::Version;
+    }
+    return SopCmd::Open;
 }
 
 int main(int argc, char **argv) {
@@ -76,6 +129,7 @@ int main(int argc, char **argv) {
     std::string stage_dir_cli;
     bool force_console = false;
     bool force_gui = false;
+    SopCmd cmd = SopCmd::Open;
 
     static const struct option long_opts[] = {
         {"suite", required_argument, NULL, 's'},
@@ -92,8 +146,13 @@ int main(int argc, char **argv) {
         {NULL, 0, NULL, 0},
     };
 
+    /* Parse only global options; stop before CMD / non-option args. */
+    optind = 1;
     for (;;) {
-        int c = getopt_long(argc, argv, "s:S:cgC:vqh", long_opts, NULL);
+        if (optind < argc && argv[optind] && argv[optind][0] != '-') {
+            break;
+        }
+        int c = getopt_long(argc, argv, "+s:S:cgC:vqh", long_opts, NULL);
         if (c == -1) {
             break;
         }
@@ -106,9 +165,11 @@ int main(int argc, char **argv) {
             break;
         case 'c':
             force_console = true;
+            cmd = SopCmd::Run;
             break;
         case 'g':
             force_gui = true;
+            cmd = SopCmd::Open;
             break;
         case 'C':
             chdir_dir = optarg;
@@ -123,15 +184,7 @@ int main(int argc, char **argv) {
             usage(stdout);
             return 0;
         case OPT_VERSION:
-            printf("sopwin %s\n", PROJECT_VERSION);
-            printf("Copyright (C) %d %s\n", PROJECT_YEAR, PROJECT_AUTHOR);
-            fputs("License AGPL-3.0-or-later: <https://www.gnu.org/licenses/agpl-3.0.html>\n"
-                  "This is free software: you are free to change and redistribute it.\n"
-                  "This project opposes AI exploitation and AI hegemony.\n"
-                  "This project rejects mindless MIT-style licensing and politically naive "
-                  "BSD-style licensing.\n"
-                  "There is NO WARRANTY, to the extent permitted by law.\n",
-                  stdout);
+            print_version();
             return 0;
         case OPT_STAGE_DIR:
             stage_dir_cli = optarg;
@@ -144,8 +197,33 @@ int main(int argc, char **argv) {
 
     argc -= optind;
     argv += optind;
-    if (argc > 0) {
-        project_arg = argv[0];
+
+    if (argc > 0 && is_cmd_token(argv[0])) {
+        cmd = parse_cmd(argv[0]);
+        argc--;
+        argv++;
+    }
+
+    if (cmd == SopCmd::Version) {
+        print_version();
+        return 0;
+    }
+
+    if (cmd == SopCmd::CopyDlg) {
+        return run_copydlg_mode(argc, argv);
+    }
+
+    if (cmd == SopCmd::Edit) {
+        std::string edit_dir;
+        if (argc > 0) {
+            edit_dir = argv[0];
+        } else if (!sop_dir.empty()) {
+            edit_dir = sop_dir;
+        } else {
+            fputs("sopwin edit: SOPDIR required\n", stderr);
+            return 1;
+        }
+        return run_edit_mode(edit_dir, argc, argv);
     }
 
 #ifdef SOURCE_ROOT
@@ -167,6 +245,10 @@ int main(int argc, char **argv) {
         }
     }
 
+    if (argc > 0) {
+        project_arg = argv[0];
+    }
+
     if (!chdir_dir.empty()) {
         opts.project_dir = find_project_dir(chdir_dir);
     } else if (!project_arg.empty()) {
@@ -175,20 +257,28 @@ int main(int argc, char **argv) {
         opts.project_dir = find_project_dir(".");
     }
 
-    if (force_console) {
+    if (cmd == SopCmd::Run || force_console) {
         opts.console = true;
         opts.gui = false;
-    } else if (force_gui) {
+    } else if (force_gui || cmd == SopCmd::Open) {
         opts.console = false;
-        opts.gui = true;
+        opts.gui = has_display();
+        if (!opts.gui) {
+            opts.console = true;
+        }
     } else {
         opts.gui = has_display();
         opts.console = !opts.gui;
     }
 
+    if (cmd == SopCmd::Run && project_arg.empty() && chdir_dir.empty()) {
+        fputs("sopwin run: PROJECTDIR required\n", stderr);
+        return 1;
+    }
+
     SopEngine engine(opts);
 
-    if (opts.gui) {
+    if (opts.gui && cmd == SopCmd::Open) {
         return run_gui_mode(engine, argc, argv);
     }
     return run_console_mode(engine);

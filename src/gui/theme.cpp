@@ -26,11 +26,11 @@ wxBitmap role_icon(const SopStep &step, const wxSize &size) {
     case SopRole::Shell:
         art = wxART_EXECUTABLE_FILE;
         break;
-    case SopRole::Gpt:
+    case SopRole::Chat:
         art = wxART_TIP;
         break;
-    case SopRole::Codex:
-    case SopRole::AltCodex:
+    case SopRole::Code:
+    case SopRole::AltCode:
         art = wxART_CDROM;
         break;
     default:
@@ -120,10 +120,10 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
             case SopStepStatus::Complete:
                 return wxString::FromUTF8("Step completed.");
             case SopStepStatus::Waiting:
-                return wxString::FromUTF8("Paste the GPT response in the dialog, then Save.");
+                return wxString::FromUTF8("Paste the chat response in the dialog, then Save.");
             default:
                 return wxString::FromUTF8(
-                    "Make/Get copies the prompt and opens Paste Response for the GPT reply.");
+                    "Make/Get runs the chat agent (default: sopwin copydlg --paste).");
             }
         }
         if (step->is_codex()) {
@@ -131,17 +131,18 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
             case SopStepStatus::Complete:
                 return wxString::FromUTF8("Step completed.");
             case SopStepStatus::Waiting:
-                return wxString::FromUTF8("Paste AI output below and click Apply.");
+                return wxString::FromUTF8(
+                    "Waiting for Code output (stagedir), or Make to continue.");
             default:
                 return wxString::FromUTF8(
-                    "Code copies the prompt; forward it to Codex, then Apply the reply.");
+                    "Code runs the code agent (default: sopwin copydlg --confirm).");
             }
         }
         switch (step->status) {
         case SopStepStatus::Complete:
             return wxString::FromUTF8("Step completed.");
         case SopStepStatus::Waiting:
-            return wxString::FromUTF8("Paste AI output below and click Apply.");
+            return wxString::FromUTF8("Waiting for expected output files.");
         default:
             return wxString::FromUTF8("Click Get/Code to copy the prompt to the clipboard.");
         }
@@ -169,9 +170,9 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
         case SopStepStatus::Complete:
             return wxString::FromUTF8("Step completed.");
         case SopStepStatus::Waiting:
-            return wxString::FromUTF8("Paste AI output below and click Apply.");
+            return wxString::FromUTF8("Waiting for expected output files.");
         default:
-            return wxString::FromUTF8("Complete this user step manually.");
+            return wxString::FromUTF8("Complete this user step manually, then Make.");
         }
     }
     if (!step->status_message.empty()) {

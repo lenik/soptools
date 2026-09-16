@@ -381,14 +381,14 @@ SopRole parse_role_slug(const std::string &slug) {
     if (slug == "sh" || slug == "shell") {
         return SopRole::Shell;
     }
-    if (slug == "gpt") {
-        return SopRole::Gpt;
+    if (slug == "chat" || slug == "gpt") {
+        return SopRole::Chat;
     }
-    if (slug == "codex") {
-        return SopRole::Codex;
+    if (slug == "code" || slug == "codex") {
+        return SopRole::Code;
     }
     if (slug.rfind("alt_", 0) == 0) {
-        return SopRole::AltCodex;
+        return SopRole::AltCode;
     }
     return SopRole::Other;
 }
@@ -400,7 +400,7 @@ SopStepKind infer_step_kind(const SopStep &step) {
     if (step.role == SopRole::Shell || !step.shell_script.empty()) {
         return SopStepKind::Shell;
     }
-    if (step.role == SopRole::Gpt || step.role == SopRole::Codex || step.role == SopRole::AltCodex) {
+    if (step.role == SopRole::Chat || step.role == SopRole::Code || step.role == SopRole::AltCode) {
         return SopStepKind::AiOutput;
     }
     return SopStepKind::Manual;
@@ -444,6 +444,12 @@ std::optional<SopStep> parse_sop_file(const std::string &path) {
 
     step.extension = ext;
     step.role = parse_role_slug(step.role_slug);
+    /* Canonicalize legacy slugs so step ids / status keys stay stable. */
+    if (step.role_slug == "gpt") {
+        step.role_slug = "chat";
+    } else if (step.role_slug == "codex") {
+        step.role_slug = "code";
+    }
 
     std::ostringstream body;
     body << in.rdbuf();
@@ -485,6 +491,69 @@ std::optional<SopStep> parse_sop_file(const std::string &path) {
         step.completion.wait_shell = true;
     }
     return step;
+}
+
+bool write_sop_file(const SopStep &step, const std::string &dir, std::string *error) {
+    char seq_buf[16];
+    std::snprintf(seq_buf, sizeof(seq_buf), "%03d", step.seq);
+    const std::string padded = pad_role_slug(step.role_slug);
+    const std::string filename = std::string(seq_buf) + step.variant + "." + padded + "." + step.name +
+                                 "." + step.extension;
+    const std::string path = dir + "/" + filename;
+
+    std::ostringstream content;
+    if (step.extension == "sh") {
+        content << (step.shell_script.empty() ? step.body : step.shell_script);
+    } else if (step.extension == "get") {
+        if (!step.save_as.empty()) {
+            content << "Save-As: " << step.save_as << "\n";
+        }
+        if (step.file_link == SopFileLink::Inode) {
+            content << "File-Link: inode\n";
+        } else if (step.file_link == SopFileLink::Sym) {
+            content << "File-Link: sym\n";
+        } else if (step.file_link == SopFileLink::None) {
+            content << "File-Link: none\n";
+        }
+        if (!step.parse_formats.empty()) {
+            content << "Parse: ";
+            for (size_t i = 0; i < step.parse_formats.size(); i++) {
+                if (i) {
+                    content << ", ";
+                }
+                content << step.parse_formats[i];
+            }
+            content << "\n";
+        }
+        if (step.interaction == SopInteraction::Select) {
+            content << "Interaction: select\n";
+        }
+        content << "\n";
+        content << step.body;
+        if (!step.body.empty() && step.body.back() != '\n') {
+            content << "\n";
+        }
+    } else {
+        if (step.extend == SopExtend::Previous) {
+            content << "---\nextend: previous\n---\n\n";
+        } else if (step.extend == SopExtend::Next) {
+            content << "---\nextend: next\n---\n\n";
+        }
+        content << step.body;
+        if (!step.body.empty() && step.body.back() != '\n') {
+            content << "\n";
+        }
+    }
+
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    if (!out) {
+        if (error) {
+            *error = "cannot write " + path;
+        }
+        return false;
+    }
+    out << content.str();
+    return true;
 }
 
 bool same_step_type(const SopStep &a, const SopStep &b) {

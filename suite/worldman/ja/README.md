@@ -14,10 +14,10 @@
 
 ```text
 000a._shell.refactor_figma.sh
-010a._codex.refactor_web.md
-020a.___gpt.create_prd.get
-020z._codex.create_prd.md
-050z._codex.prepare_backend_implementation.md
+010a.__code.refactor_web.md
+020a.__chat.create_prd.get
+020z.__code.create_prd.md
+050z.__code.prepare_backend_implementation.md
 ```
 
 シーケンス（`seq`）：3 桁の順序キー。同一番号のファイルが分岐候補になります（例：`020`）。
@@ -30,8 +30,8 @@
 ロール（先頭の `_` は `ls` 整列用で、解析時は無視）：
 
 - `shell` — shell／プロジェクト操作
-- `gpt` — GPT 仕様／成果物生成（拡張子 `.get`）
-- `codex` — Codex リポジトリ実装
+- `chat` — GPT 仕様／成果物生成（拡張子 `.get`）
+- `code` — Codex リポジトリ実装
 
 shell 手順は拡張子 `.sh`（コード主体、説明はコメント）。スクリプトは通常次で始まります：
 
@@ -49,7 +49,7 @@ extend: previous
 ---
 ```
 
-- `extend: previous` / `extend: next` — 本手順を前後の**同型**手順（`role` + 拡張子、例: どちらも `codex` + `.md`）に吸収します。型が一致しない場合は無視。グラフは結合後のアンカーノードのみ表示し、プロンプト本文は YAML ヘッダを除いて連結します。例: `011`（`extend: previous`）は `010` に結合。
+- `extend: previous` / `extend: next` — 本手順を前後の**同型**手順（`role` + 拡張子、例: どちらも `code` + `.md`）に吸収します。型が一致しない場合は無視。グラフは結合後のアンカーノードのみ表示し、プロンプト本文は YAML ヘッダを除いて連結します。例: `011`（`extend: previous`）は `010` に結合。
 
 GPT 手順は拡張子 `.get` です。任意の RFC822 風ヘッダ（名前は大文字小文字を区別しない）、空行のあとにプロンプト本文。エディタ modeline などは `Discard:` で書き、sopwin は無視します。
 

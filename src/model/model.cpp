@@ -42,6 +42,43 @@ std::string humanize_name(const std::string &name) {
     return out;
 }
 
+std::string pad_role_slug(const std::string &slug) {
+    /* Align role field to width 6 (matches _shell). */
+    const size_t width = 6;
+    if (slug.size() >= width) {
+        return slug;
+    }
+    return std::string(width - slug.size(), '_') + slug;
+}
+
+std::string resolve_step_id_alias(const SopDefinition &def, const std::string &id) {
+    if (def.steps.count(id)) {
+        return id;
+    }
+    auto try_one = [&](const std::string &from, const std::string &to) -> std::string {
+        if (id.size() > from.size() && id.compare(id.size() - from.size(), from.size(), from) == 0) {
+            const std::string cand = id.substr(0, id.size() - from.size()) + to;
+            if (def.steps.count(cand)) {
+                return cand;
+            }
+        }
+        return {};
+    };
+    if (auto a = try_one("gpt", "chat"); !a.empty()) {
+        return a;
+    }
+    if (auto a = try_one("codex", "code"); !a.empty()) {
+        return a;
+    }
+    if (auto a = try_one("chat", "gpt"); !a.empty()) {
+        return a;
+    }
+    if (auto a = try_one("code", "codex"); !a.empty()) {
+        return a;
+    }
+    return id;
+}
+
 std::string SopStep::default_title() const {
     return humanize_name(name);
 }
@@ -54,12 +91,12 @@ std::string SopStep::role_label() const {
     switch (role) {
     case SopRole::Shell:
         return "Shell";
-    case SopRole::Gpt:
-        return "GPT";
-    case SopRole::Codex:
-        return "Codex";
-    case SopRole::AltCodex:
-        return "Alt Codex";
+    case SopRole::Chat:
+        return "Chat";
+    case SopRole::Code:
+        return "Code";
+    case SopRole::AltCode:
+        return "Alt Code";
     default:
         return role_slug;
     }
@@ -69,11 +106,11 @@ bool SopStep::is_alt_branch() const {
     if (variant == 'z' || variant == 'Z') {
         return true;
     }
-    return role == SopRole::AltCodex || role_slug.rfind("alt_", 0) == 0;
+    return role == SopRole::AltCode || role_slug.rfind("alt_", 0) == 0;
 }
 
 bool SopStep::is_user() const {
-    return role == SopRole::Gpt || role == SopRole::Codex || role == SopRole::AltCodex ||
+    return role == SopRole::Chat || role == SopRole::Code || role == SopRole::AltCode ||
            kind == SopStepKind::AiOutput;
 }
 
@@ -86,17 +123,17 @@ bool SopStep::is_automatable() const {
 }
 
 bool SopStep::is_prompt_copy() const {
-    return role == SopRole::Gpt || role == SopRole::Codex || role == SopRole::AltCodex;
+    return role == SopRole::Chat || role == SopRole::Code || role == SopRole::AltCode;
 }
 
-bool SopStep::is_gpt_get() const {
-    return role == SopRole::Gpt &&
+bool SopStep::is_chat_get() const {
+    return role == SopRole::Chat &&
            (extension == "get" ||
             (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".get") == 0));
 }
 
-bool SopStep::is_codex() const {
-    return role == SopRole::Codex || role == SopRole::AltCodex;
+bool SopStep::is_code() const {
+    return role == SopRole::Code || role == SopRole::AltCode;
 }
 
 bool SopStep::has_parse_format(const std::string &fmt) const {

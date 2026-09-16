@@ -1,7 +1,7 @@
 # soptools
 
 `soptools` 是面向项目构建的**标准作业程序（SOP）**运行器。它加载一组步骤文件，
-引导你完成 shell 脚本、AI 提示采集（`.get`）以及 Codex 实现提示，并在
+引导你完成 shell 脚本、AI 提示采集（`.get`）以及 Code 实现提示，并在
 wxWidgets 图形界面（`sopwin`）或控制台中跟踪分支选择与进度。
 
 默认 SOP 套件用于从 Figma 原型导出构建 **WorldMan** 模块（web + backend + 可选
@@ -10,14 +10,19 @@ mobile）。语言分支：`default`（英文）、`zh_CN`、`ja`。
 ## 功能
 
 - **SOP 套件** — 位于 `suite/<名称>/<分支>/`，步骤支持 `a`/`z` 与角色
-  `shell`/`gpt`/`codex`
+  `shell`/`chat`/`code`（兼容旧名 `gpt`/`codex`）
 - **图形界面（`sopwin`）** — 流程图、步骤预览、Use… / Open… / Make /
   Execute·Get·Code / Run / Pause / Stop / Exit、可拆出的图与日志面板、状态栏反馈
-- **控制台模式** — 同一引擎，无需显示器
-- **GPT `.get` 流程** — 复制提示、粘贴响应对话框、附件下载、可选多段渲染/选择
+- **子命令** — `open`（默认）、`run`、`copydlg`、`edit`、`version`
+- **AGENTS** — 项目 `sop/AGENTS` 按角色配置外部代理；默认 chat/code 为
+  `sopwin copydlg`（fork 执行，主窗口保持可用并 busy 禁用部分控件）
+- **Chat `.get` 流程** — 代理复制提示并采集回复；Save-As、多分段、可选保存后选择
+- **Markdown 交互** — `\response`（最近一次 chat 输出）、`<select>` 运行前选择、
+  `<optional>` 运行前是否纳入
 - **Shell 步骤** — 在项目目录执行，扩展 `PATH`，经进度 FIFO 驱动进度条
 - **持久化** — 位置与排除项写入项目 `sop/status`
 - **语言 / 分支** — `LANG` 选择套件分支；**查看 → 语言** 在当前套件内切换
+- **SOP 编辑器** — `sopwin edit SOPDIR`
 
 ## SOP 套件
 
@@ -131,14 +136,14 @@ GUI **查看 → 语言** 在当前套件内切换 `default` / `zh_CN` / `ja`（
 <seq><variant>.<_padded_role>.<title>.(md|sh|get)
 ```
 
-例：`000a._shell.refactor_figma.sh`、`020a.___gpt.create_prd.get`、
-`060a._codex.implement_backend.md`。
+例：`000a._shell.refactor_figma.sh`、`020a.__chat.create_prd.get`、
+`060a.__code.implement_backend.md`。
 
 - **seq** — 三位序号，分支共享
 - **variant** — `a` 默认，`z` 备选
-- **role** — 前导下划线仅为对齐；有效角色为 `shell` / `gpt` / `codex`
+- **role** — 前导下划线仅为对齐；有效角色为 `shell` / `chat` / `code`
 
-各分支 `suite/worldman/{default,zh_CN,ja}/README.md` 有 WorldMan 架构、GPT
+各分支 `suite/worldman/{default,zh_CN,ja}/README.md` 有 WorldMan 架构、chat
 头字段与 shell 进度说明。
 
 ## 目标项目中的布局
@@ -149,7 +154,8 @@ GUI **查看 → 语言** 在当前套件内切换 `default` / `zh_CN` / `ja`（
 <project>/
   sop/
     status          # location=、排除、分支（自动保存）
-    <seq>/          # GPT 响应、分段、下载
+    AGENTS          # 可选：角色 → 代理命令行
+    <seq>/          # chat 响应、分段、下载、代理 prompt/response
     TODO.md …       # 后续步骤产生的工作文档
   …                 # backend/、web/、prisma/ 等由 SOP 创建
 ```

@@ -10,30 +10,11 @@ Discard: vim: set ft=markdown :
 
 本步不要修改或默默重新设计 `schema.prisma`。
 
-若 seed 设计暴露出现有 schema 无法充分表达重要产品需求、关系、生命周期状态、约束、历史案例或现实测试场景，同时创建 `prisma/request-for-refactor.md`。
-
-重构请求应描述：
-
-- 受影响的模型
-- 暴露问题的具体 seed 场景
-- 当前 schema 为何不足
-- 严重程度：`blocking` 或 `recommended`
-- 建议的最小 schema 变更
-- 对现有数据的预期影响
-- 对 seed 逻辑的预期影响
-- 对后端 API 的预期影响
-- 对测试的预期影响
-
-不要自动应用所提议的 schema 变更。
-
-若不需要 schema 变更，不要创建 `request-for-refactor.md`。
-
-将 seed 交付物输出为包含以下内容的 ZIP 归档：
+产出：
 
 ```text
 prisma/
     seed.ts
-    request-for-refactor.md   # 仅在需要时
 ```
 
 种子数据不应只是填充行。它应锻炼领域。
@@ -61,3 +42,18 @@ prisma/
 种子数据应足够确定，以支持自动化测试。
 
 优先使用稳定、可读的演示名称，而不是随机数据。
+
+<optional title="同时请求 schema / 后端修订？">
+若本次 seed 相对已有后端设计提示词或已有 `backend/` 暴露出缺口，按需写修订文件
+（不需要的可省略）：
+
+1. **Schema** — 当前 `schema.prisma` 无法表达产品需求、关系、生命周期状态、约束、
+   历史案例或现实测试场景时，写 `prisma/request-for-refactor.md`。每条写明：受影响
+   模型、暴露问题的 seed 场景、为何不足、严重程度（`blocking`/`recommended`）、
+   最小变更建议，以及对数据/seed/API/测试的影响。
+
+2. **后端** — 后端设计提示词或已有 `backend/` 需随上述发现调整 API/行为时，写
+   `sop/Backend amends.md`（端点、校验、关系、状态迁移等）。
+
+本步**不要**应用 schema 或后端变更。后续实现应合并这些文件后再删除它们。
+</optional>

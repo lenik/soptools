@@ -103,6 +103,9 @@ bool apply_config_to_engine(SopEngine &engine, const std::map<std::string, std::
             continue;
         }
         if (!def.steps.count(step_id)) {
+            step_id = resolve_step_id_alias(def, step_id);
+        }
+        if (!def.steps.count(step_id)) {
             continue;
         }
         if (kv.second == "excluded") {
@@ -130,6 +133,7 @@ bool apply_config_to_engine(SopEngine &engine, const std::map<std::string, std::
         }
     }
     if (!location.empty()) {
+        location = resolve_step_id_alias(def, location);
         if (!def.steps.count(location)) {
             return set_error("unknown location id: " + location);
         }

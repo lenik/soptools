@@ -13,7 +13,7 @@ sopwin - guided SOP workflow assistant for project construction
 
 == Synopsis
 
-*sopwin* [_OPTION_]... [_PROJECTDIR_]
+*sopwin* [_OPTION_]... [_CMD_=open] [_ARGS_]...
 
 == Description
 
@@ -21,17 +21,40 @@ sopwin - guided SOP workflow assistant for project construction
 user step-by-step through project construction tasks. Each step may be a shell
 script, an AI output capture, or a manual checkpoint.
 
+Commands:
+
+*open* [_PROJECTDIR_]::
+  Show the main window and open the project (default).
+
+*run* _PROJECTDIR_::
+  Run the SOP in console mode.
+
+*copydlg*::
+  Standalone clipboard helper used as the default chat/code agent UI
+  (*--paste* or *--confirm*).
+
+*edit* _SOPDIR_::
+  Open the SOP authoring editor for a suite directory.
+
+*version*::
+  Print version and license information.
+
 SOP files use the naming convention:
 
 [source]
 ----
-<seq><variant>.<_padded_role>.<title>.md
+<seq><variant>.<_padded_role>.<title>.(md|sh|get)
 ----
 
+Roles: *shell*, *chat*, *code* (legacy *gpt* / *codex* accepted).
 Variant *a* is the default branch choice; *z* is optional/alternative.
 Markdown steps may declare YAML frontmatter `extend: previous` or
 `extend: next` to merge into an adjacent step of the same type (role +
 extension); the graph shows one concatenated node.
+Bodies may use `\response` (nearest prior chat output) and `<select>` /
+`<option>` blocks (resolved with a dialog before the step runs).
+Project file *sop/AGENTS* maps roles to agent cmdlines (default: *sopwin
+copydlg* for chat/code).
 The builtin SOP suite is *worldman* under *suite/worldman/* (*default* / *zh_CN* / *ja*).
 
 The GUI shows a workflow graph, branch selection, forward/back navigation,

@@ -78,6 +78,7 @@ app_sources = [
     'src/util/paths.cpp',
     'src/model/model.cpp',
     'src/model/model_parse.cpp',
+    'src/model/step_interact.cpp',
     'src/engine/engine.cpp',
     'src/engine/shell.cpp',
     'src/engine/apply.cpp',
@@ -86,6 +87,7 @@ app_sources = [
     'src/engine/project.cpp',
     'src/engine/stage_files.cpp',
     'src/engine/stage_watcher.cpp',
+    'src/engine/agents.cpp',
     'src/ui/console.cpp',
     'src/gui/app.cpp',
     'src/gui/theme.cpp',
@@ -101,6 +103,7 @@ app_sources = [
     'src/gui/paste_response_dialog.cpp',
     'src/gui/codex_copy_dialog.cpp',
     'src/gui/render_response_dialog.cpp',
+    'src/gui/edit_frame.cpp',
 ]
 
 executable(

@@ -12,6 +12,9 @@
 #include "gui/codex_copy_dialog.hpp"
 #include "engine/project.hpp"
 #include "engine/stage_files.hpp"
+#include "engine/agents.hpp"
+#include "engine/gpt_response.hpp"
+#include "model/step_interact.hpp"
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
@@ -21,12 +24,16 @@
 #include <wx/statline.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
+#include <wx/radiobox.h>
+#include <wx/choicdlg.h>
 
 #include "config.h"
 
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <thread>
+#include <algorithm>
 
 #include "gui/command_ids.hpp"
 
@@ -139,58 +146,181 @@ void MainFrame::SetStatusBarMessage(const wxString &text, bool sticky) {
     }
 }
 
-bool MainFrame::OpenGptPasteFlow(const SopStep &step) {
-    wxString err;
-    if (!CopyStepPrompt(step, &err)) {
-        SetStatusBarMessage(err, true);
+void MainFrame::SetAgentBusy(bool busy) {
+    agent_busy_ = busy;
+    if (toolbar_) {
+        toolbar_->EnableTool(ID_MAKE, !busy);
+        toolbar_->EnableTool(ID_EXECUTE, !busy);
+        toolbar_->EnableTool(ID_START_RESUME, !busy);
+        toolbar_->EnableTool(ID_BACK, !busy);
+    }
+    RefreshRunTools();
+    RefreshNav();
+}
+
+bool MainFrame::ResolveStepInteractions(const SopStep &step, std::string *resolved_body) {
+    const std::string prior = find_nearest_chat_response(
+        engine_->definition(), engine_->active_steps(), engine_->current_index(),
+        engine_->options().project_dir);
+    auto selects = parse_selects(step.body);
+    auto optionals = parse_optionals(step.body);
+    if (selects.empty() && optionals.empty()) {
+        *resolved_body = expand_response_token(step.body, prior);
+        return true;
+    }
+
+    /* Document order: ask in start-offset order. */
+    struct Ask {
+        bool is_select = false;
+        size_t index = 0;
+        size_t start = 0;
+    };
+    std::vector<Ask> asks;
+    for (size_t i = 0; i < selects.size(); i++) {
+        asks.push_back(Ask{true, i, selects[i].start});
+    }
+    for (size_t i = 0; i < optionals.size(); i++) {
+        asks.push_back(Ask{false, i, optionals[i].start});
+    }
+    std::sort(asks.begin(), asks.end(),
+              [](const Ask &a, const Ask &b) { return a.start < b.start; });
+
+    std::vector<int> select_answers(selects.size(), 0);
+    std::vector<bool> optional_include(optionals.size(), false);
+
+    for (const Ask &ask : asks) {
+        if (ask.is_select) {
+            const auto &sel = selects[ask.index];
+            wxArrayString choices;
+            for (const auto &opt : sel.options) {
+                const std::string shown = expand_response_token(opt.text, prior);
+                const wxString label = wxString::FromUTF8(
+                    shown.size() > 120 ? shown.substr(0, 117) + "..." : shown);
+                choices.Add(label);
+            }
+            if (choices.empty()) {
+                select_answers[ask.index] = 0;
+                continue;
+            }
+            wxSingleChoiceDialog dlg(this, wxString::FromUTF8(sel.title),
+                                     wxString::FromUTF8("Step interaction"), choices);
+            dlg.SetSelection(0);
+            if (dlg.ShowModal() != wxID_OK) {
+                return false;
+            }
+            select_answers[ask.index] = dlg.GetSelection();
+        } else {
+            const auto &opt = optionals[ask.index];
+            const wxString preview = wxString::FromUTF8(
+                opt.body.size() > 400 ? opt.body.substr(0, 397) + "..." : opt.body);
+            const int rc = wxMessageBox(
+                preview.empty() ? wxString::FromUTF8("Include this optional section in the prompt?")
+                                : preview,
+                wxString::FromUTF8(opt.title), wxYES_NO | wxCANCEL | wxICON_QUESTION, this);
+            if (rc == wxCANCEL) {
+                return false;
+            }
+            optional_include[ask.index] = (rc == wxYES);
+        }
+    }
+
+    *resolved_body = apply_step_interactions(step.body, selects, select_answers, optionals,
+                                             optional_include, prior);
+    return true;
+}
+
+bool MainFrame::RunAgentFlow(const SopStep &step) {
+    if (agent_busy_) {
+        SetStatusBarMessage(wxString::FromUTF8("An agent is already running."), true);
         return false;
     }
+    std::string prompt;
+    if (!ResolveStepInteractions(step, &prompt)) {
+        SetStatusBarMessage(wxString::FromUTF8("Step interaction cancelled."), true);
+        return false;
+    }
+
+    const SopAgents agents = load_agents(engine_->options().project_dir);
+    const std::string cmdline = agent_cmdline_for_role(agents, step.role_slug);
+    if (cmdline.empty()) {
+        SetStatusBarMessage(wxString::FromUTF8("No agent configured for this role."), true);
+        return false;
+    }
+
     const std::string step_id = sop_step_id(step);
-    SopPasteResponseDialog paste(this, engine_->options().project_dir, step,
-                                 engine_->options().stage_dir);
-    if (paste.ShowModal() != wxID_OK || !paste.saved()) {
-        SetStatusBarMessage(wxString::FromUTF8("Paste Response cancelled."), true);
-        return false;
-    }
-    auto applied = engine_->apply_gpt_save_result(step_id, paste.save_result());
-    append_log(applied.ok ? 1 : 0, applied.message);
-    if (!applied.ok) {
-        wxMessageBox(wxString::FromUTF8(applied.message), wxString::FromUTF8("Save failed"),
-                     wxOK | wxICON_ERROR, this);
-        return false;
-    }
-    SetStatusBarMessage(wxString::FromUTF8(applied.message), true);
-    if (step.interaction == SopInteraction::Select) {
-        SopRenderResponseDialog render(this, paste.save_result());
-        render.ShowModal();
-    }
+    agent_step_id_ = step_id;
+    SetAgentBusy(true);
+    SetStatusBarMessage(wxString::FromUTF8("Running agent…"));
+    append_log(1, "agent: " + cmdline);
+
+    const std::string project_dir = engine_->options().project_dir;
+    const std::string sop_dir = engine_->options().sop_dir;
+    const int loglevel = engine_->options().verbose;
+    const bool is_chat = step.is_chat_get() || step.role == SopRole::Chat;
+    const bool is_code = step.is_code();
+    const SopInteraction interaction = step.interaction;
+    SopStep step_copy = step;
+
+    std::thread([this, step_id, cmdline, prompt, project_dir, sop_dir, loglevel, is_chat, is_code,
+                 interaction, step_copy]() {
+        std::string agent_log;
+        auto result = run_agent_blocking(project_dir, sop_dir, step_copy, cmdline, prompt, loglevel,
+                                         nullptr, nullptr, &agent_log);
+        CallAfter([this, step_id, result, agent_log, is_chat, is_code, interaction, step_copy]() {
+            if (!agent_log.empty()) {
+                append_log(2, agent_log);
+            }
+            if (!result.ok) {
+                SetStatusBarMessage(wxString::FromUTF8(result.message), true);
+                append_log(0, result.message);
+                SetAgentBusy(false);
+                agent_step_id_.clear();
+                RefreshAll();
+                return;
+            }
+            if (is_chat) {
+                std::vector<SopGptAttachment> empty;
+                auto saved =
+                    save_gpt_response(engine_->options().project_dir, step_copy, result.response_text, empty);
+                if (!saved.ok && result.response_text.empty()) {
+                    /* confirm-style empty ok for stage-only */
+                    engine_->mark_complete(step_id, true);
+                    SetStatusBarMessage(wxString::FromUTF8("Agent finished (no response body)."), true);
+                } else {
+                    auto applied = engine_->apply_gpt_save_result(step_id, saved);
+                    append_log(applied.ok ? 1 : 0, applied.message);
+                    SetStatusBarMessage(wxString::FromUTF8(applied.message), true);
+                    if (applied.ok && interaction == SopInteraction::Select) {
+                        SopRenderResponseDialog render(this, saved);
+                        render.ShowModal();
+                    }
+                }
+            } else if (is_code) {
+                engine_->mark_complete(step_id, true);
+                SetStatusBarMessage(wxString::FromUTF8("Code agent finished."), true);
+                append_log(1, "code agent complete");
+            } else {
+                engine_->mark_complete(step_id, true);
+                SetStatusBarMessage(wxString::FromUTF8(result.message), true);
+            }
+            SetAgentBusy(false);
+            agent_step_id_.clear();
+            RefreshAll();
+        });
+    }).detach();
     return true;
 }
 
-bool MainFrame::OpenCodexCopyFlow(const SopStep &step) {
-    wxString err;
-    if (!CopyStepPrompt(step, &err)) {
-        SetStatusBarMessage(err, true);
-        return false;
-    }
-    if (!show_codex_copy_dialog(this, step)) {
-        SetStatusBarMessage(wxString::FromUTF8("Code cancelled."), true);
-        return false;
-    }
-    SetStatusBarMessage(wxString::FromUTF8("Prompt copied — forward it to Codex."), true);
-    return true;
-}
-
-bool MainFrame::MaybeOpenGptPasteForCurrent() {
+bool MainFrame::MaybeOpenChatAgentForCurrent() {
     const SopStep *step = engine_->step_at(engine_->current_index());
-    if (!step || !step->is_gpt_get()) {
+    if (!step || !step->is_chat_get()) {
         return false;
     }
     const std::string sid = engine_->current_step_id();
     if (engine_->is_complete(sid)) {
         return false;
     }
-    const bool ok = OpenGptPasteFlow(*step);
+    const bool ok = RunAgentFlow(*step);
     RefreshAll();
     return ok;
 }
@@ -221,33 +351,21 @@ bool MainFrame::CopyStepPrompt(const SopStep &step, wxString *err) {
 }
 
 void MainFrame::RunStepAction(const std::string &step_id, bool force) {
+    if (agent_busy_) {
+        return;
+    }
     if (!engine_->definition().steps.count(step_id)) {
         return;
     }
     const SopStep &step = engine_->definition().steps.at(step_id);
-    if (step.is_gpt_get()) {
-        OpenGptPasteFlow(step);
+    if (step.is_chat_get() || step.is_code() || step.is_prompt_copy()) {
+        RunAgentFlow(step);
         RefreshAll();
-        return;
-    }
-    if (step.is_codex()) {
-        OpenCodexCopyFlow(step);
-        RefreshAll();
-        return;
-    }
-    if (step.is_prompt_copy()) {
-        wxString err;
-        if (!CopyStepPrompt(step, &err)) {
-            SetStatusBarMessage(err, true);
-        }
-        RefreshProgressBar();
-        RefreshStepView();
-        RefreshNav();
         return;
     }
     if (step.is_user()) {
-        SetStatusBarMessage(wxString::FromUTF8("Paste AI output below and click Apply."));
-        append_log(1, "user step: paste AI output and click Apply");
+        SetStatusBarMessage(wxString::FromUTF8("Complete this user step, then Make."));
+        append_log(1, "user step: complete manually, then Make");
         RefreshAll();
         return;
     }
@@ -272,13 +390,8 @@ void MainFrame::DoCopy() {
     if (!step) {
         return;
     }
-    if (step->is_gpt_get()) {
-        OpenGptPasteFlow(*step);
-        RefreshAll();
-        return;
-    }
-    if (step->is_codex()) {
-        OpenCodexCopyFlow(*step);
+    if (step->is_chat_get() || step->is_code()) {
+        RunAgentFlow(*step);
         RefreshAll();
         return;
     }
@@ -362,7 +475,6 @@ void MainFrame::PreviewStep(const std::string &step_id) {
     status_label_->SetLabel(status_text(step));
     status_label_->SetForegroundColour(status_colour(step));
     body_view_->SetValue(wxString::FromUTF8(step.body));
-    ai_panel_->Show(step.is_user() && !step.is_gpt_get());
     Layout();
 }
 
@@ -384,7 +496,6 @@ void MainFrame::RefreshStepView() {
     status_label_->SetLabel(status_text(*step));
     status_label_->SetForegroundColour(status_colour(*step));
     body_view_->SetValue(wxString::FromUTF8(step->body));
-    ai_panel_->Show(step->is_user() && !step->is_gpt_get());
     Layout();
 }
 
@@ -418,7 +529,7 @@ void MainFrame::RefreshActionTool() {
     } else if (step && step->is_codex()) {
         label = wxString::FromUTF8("Code");
         art = wxART_COPY;
-        help = wxString::FromUTF8("Copy prompt for Codex (Ctrl+Enter)");
+        help = wxString::FromUTF8("Run code agent (Ctrl+Enter)");
         menu_label = wxString::FromUTF8("&Code\tCtrl-Enter");
     }
 
@@ -462,10 +573,15 @@ void MainFrame::RefreshRunTools() {
 void MainFrame::RefreshNav() {
     if (toolbar_) {
         const bool has_step = engine_->current_index() < engine_->active_steps().size();
-        toolbar_->EnableTool(ID_MAKE, has_step);
+        const bool enable = has_step && !agent_busy_;
+        toolbar_->EnableTool(ID_MAKE, enable);
+        toolbar_->EnableTool(ID_EXECUTE, !agent_busy_);
+        toolbar_->EnableTool(ID_START_RESUME, !agent_busy_ && engine_->auto_run_state() != SopAutoRunState::Running);
         if (GetMenuBar()) {
-            GetMenuBar()->Enable(ID_MAKE, has_step);
-            GetMenuBar()->Enable(ID_BACK, engine_->current_index() > 0);
+            GetMenuBar()->Enable(ID_MAKE, enable);
+            GetMenuBar()->Enable(ID_EXECUTE, !agent_busy_);
+            GetMenuBar()->Enable(ID_BACK, !agent_busy_ && engine_->current_index() > 0);
+            GetMenuBar()->Enable(ID_START_RESUME, !agent_busy_);
         }
     }
     RefreshRunTools();

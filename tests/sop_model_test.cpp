@@ -66,12 +66,12 @@ int main(void) {
         expect_true("shell not alt", !step->is_alt_branch());
     }
 
-    auto gpt = parse_sop_file((sop_dir / "020a.___gpt.create_prd.get").string());
+    auto gpt = parse_sop_file((sop_dir / "020a.__chat.create_prd.get").string());
     expect_true("parse gpt step", gpt.has_value());
     if (gpt) {
-        expect_eq_str("gpt id", sop_step_id(*gpt), "020agpt");
+        expect_eq_str("gpt id", sop_step_id(*gpt), "020achat");
         expect_true("kind ai", gpt->kind == SopStepKind::AiOutput);
-        expect_true("gpt get", gpt->is_gpt_get());
+        expect_true("gpt get", gpt->is_chat_get());
         expect_eq_str("save-as", gpt->save_as, "sop/PRD.md");
         expect_true("file-link inode", gpt->file_link == SopFileLink::Inode);
         expect_true("parse multi-parts", gpt->has_parse_format("multi-parts"));
@@ -86,7 +86,7 @@ int main(void) {
         expect_true("no emacs modeline in body", gpt->body.find("-*-") == std::string::npos);
     }
 
-    auto schema = parse_sop_file((sop_dir / "030a.___gpt.create_prisma_schema.get").string());
+    auto schema = parse_sop_file((sop_dir / "030a.__chat.create_prisma_schema.get").string());
     expect_true("parse schema gpt", schema.has_value());
     if (schema) {
         expect_eq_str("030 save-as", schema->save_as, "prisma/schema.prisma");
@@ -95,21 +95,21 @@ int main(void) {
         expect_true("030 interaction none", schema->interaction == SopInteraction::None);
     }
 
-    auto seed = parse_sop_file((sop_dir / "040a.___gpt.create_seed.get").string());
+    auto seed = parse_sop_file((sop_dir / "040a.__chat.create_seed.get").string());
     expect_true("parse seed gpt", seed.has_value());
     if (seed) {
         expect_eq_str("040 save-as", seed->save_as, "prisma/seed.ts");
         expect_true("040 no parse", seed->parse_formats.empty());
     }
 
-    auto prompt = parse_sop_file((sop_dir / "050a.___gpt.write_backend_prompt.get").string());
+    auto prompt = parse_sop_file((sop_dir / "050a.__chat.write_backend_prompt.get").string());
     expect_true("parse backend prompt gpt", prompt.has_value());
     if (prompt) {
         expect_true("050 parse multi-parts", prompt->has_parse_format("multi-parts"));
         expect_true("050 interaction select", prompt->interaction == SopInteraction::Select);
     }
 
-    auto wf = parse_sop_file((sop_dir / "100a.___gpt.create_workflows.get").string());
+    auto wf = parse_sop_file((sop_dir / "100a.__chat.create_workflows.get").string());
     expect_true("parse workflows gpt", wf.has_value());
     if (wf) {
         expect_eq_str("100 save-as", wf->save_as, "web-e2e/workflows.md");
@@ -117,47 +117,47 @@ int main(void) {
         expect_true("100 interaction none", wf->interaction == SopInteraction::None);
     }
 
-    auto prep = parse_sop_file((sop_dir / "050z._codex.prepare_backend_implementation.md").string());
+    auto prep = parse_sop_file((sop_dir / "050z.__code.prepare_backend_implementation.md").string());
     expect_true("parse 050z prepare", prep.has_value());
     if (prep) {
-        expect_eq_str("050z id", sop_step_id(*prep), "050zcodex");
+        expect_eq_str("050z id", sop_step_id(*prep), "050zcode");
         expect_true("050z alt", prep->is_alt_branch());
     }
 
-    auto theme = parse_sop_file((sop_dir / "011a._codex.theme_web.md").string());
+    auto theme = parse_sop_file((sop_dir / "011a.__code.theme_web.md").string());
     expect_true("parse theme step", theme.has_value());
     if (theme) {
-        expect_eq_str("theme id", sop_step_id(*theme), "011acodex");
+        expect_eq_str("theme id", sop_step_id(*theme), "011acode");
         expect_true("theme extend previous", theme->extend == SopExtend::Previous);
         expect_true("theme body has heading", theme->body.find("#") != std::string::npos);
     }
 
-    auto codex = parse_sop_file((sop_dir / "010a._codex.refactor_web.md").string());
+    auto codex = parse_sop_file((sop_dir / "010a.__code.refactor_web.md").string());
     expect_true("parse codex step", codex.has_value());
     if (codex) {
-        expect_eq_str("codex id", sop_step_id(*codex), "010acodex");
+        expect_eq_str("codex id", sop_step_id(*codex), "010acode");
         expect_true("codex user", codex->is_user());
         expect_true("codex not automatable", !codex->is_automatable());
         expect_true("codex prompt copy", codex->is_prompt_copy());
         expect_true("codex no extend", codex->extend == SopExtend::None);
     }
 
-    auto alt = parse_sop_file((sop_dir / "020z._codex.create_prd.md").string());
+    auto alt = parse_sop_file((sop_dir / "020z.__code.create_prd.md").string());
     expect_true("parse z alt step", alt.has_value());
     if (alt) {
-        expect_eq_str("alt id", sop_step_id(*alt), "020zcodex");
+        expect_eq_str("alt id", sop_step_id(*alt), "020zcode");
         expect_true("alt variant z", alt->variant == 'z');
-        expect_true("alt role codex", alt->role == SopRole::Codex);
+        expect_true("alt role codex", alt->role == SopRole::Code);
         expect_true("alt is alt branch", alt->is_alt_branch());
         expect_true("alt prompt copy", alt->is_prompt_copy());
     }
 
     SopDefinition def = load_sop_directory(sop_dir.string());
     expect_true("load sop dir", !def.steps.empty());
-    expect_true("011 absorbed into 010", def.steps.count("011acodex") == 0);
-    expect_true("010 remains", def.steps.count("010acodex") == 1);
-    if (def.steps.count("010acodex")) {
-        const std::string &body = def.steps.at("010acodex").body;
+    expect_true("011 absorbed into 010", def.steps.count("011acode") == 0);
+    expect_true("010 remains", def.steps.count("010acode") == 1);
+    if (def.steps.count("010acode")) {
+        const std::string &body = def.steps.at("010acode").body;
         expect_true("010 body has refactor", body.find("Refactor") != std::string::npos ||
                                                  body.find("refactor") != std::string::npos);
         expect_true("010 body has theme extend", body.find("Theme") != std::string::npos ||
@@ -171,7 +171,7 @@ int main(void) {
                 std::find(def.seq_order.begin(), def.seq_order.end(), 11) == def.seq_order.end());
     expect_true("branch at 020", def.branch_groups[20].step_ids.size() >= 2);
     if (def.branch_groups[20].step_ids.size() >= 2) {
-        expect_eq_str("020 default first", def.branch_groups[20].step_ids.front(), "020agpt");
+        expect_eq_str("020 default first", def.branch_groups[20].step_ids.front(), "020achat");
     }
 
     auto order = build_active_step_order(def, {});

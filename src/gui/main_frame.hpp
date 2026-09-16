@@ -44,8 +44,6 @@ private:
     wxStaticText *desc_label_ = nullptr;
     wxStaticText *status_label_ = nullptr;
     wxTextCtrl *body_view_ = nullptr;
-    wxTextCtrl *ai_input_ = nullptr;
-    wxPanel *ai_panel_ = nullptr;
     SopLogView *log_view_ = nullptr;
     wxPanel *log_host_ = nullptr;
     wxBoxSizer *log_host_sizer_ = nullptr;
@@ -64,6 +62,8 @@ private:
     wxString sticky_status_;
     size_t sticky_status_index_ = static_cast<size_t>(-1);
     std::unique_ptr<SopStageWatcher> stage_watcher_;
+    bool agent_busy_ = false;
+    std::string agent_step_id_;
 
     void CreateMenu();
     void CreateAppToolBar();
@@ -75,11 +75,12 @@ private:
     void OnFrameSize(wxSizeEvent &evt);
     void append_log(int level, const std::string &msg);
     void SetStatusBarMessage(const wxString &text, bool sticky = false);
-    bool OpenGptPasteFlow(const SopStep &step);
-    bool OpenCodexCopyFlow(const SopStep &step);
+    void SetAgentBusy(bool busy);
+    bool ResolveStepInteractions(const SopStep &step, std::string *resolved_body);
+    bool RunAgentFlow(const SopStep &step);
     bool CopyStepPrompt(const SopStep &step, wxString *err = nullptr);
-    /* If current step is an incomplete GPT .get, copy prompt + paste dialog. */
-    bool MaybeOpenGptPasteForCurrent();
+    /* If current step is an incomplete chat .get, run agent. */
+    bool MaybeOpenChatAgentForCurrent();
     void RunStepAction(const std::string &step_id, bool force);
     void DoExecute(bool force);
     void DoCopy();
@@ -112,7 +113,6 @@ private:
     void OnStartResume(wxCommandEvent &);
     void OnPause(wxCommandEvent &);
     void OnStop(wxCommandEvent &);
-    void OnApply(wxCommandEvent &);
     void OnGraphDetachedClose(wxCloseEvent &evt);
     void OnToggleGraph(wxCommandEvent &);
     void OnToggleLog(wxCommandEvent &);

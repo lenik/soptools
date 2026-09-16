@@ -12,10 +12,10 @@ Examples:
 
 ```text
 000a._shell.refactor_figma.sh
-010a._codex.refactor_web.md
-020a.___gpt.create_prd.get
-020z._codex.create_prd.md
-050z._codex.prepare_backend_implementation.md
+010a.__code.refactor_web.md
+020a.__chat.create_prd.get
+020z.__code.create_prd.md
+050z.__code.prepare_backend_implementation.md
 ```
 
 Sequence (`seq`): three-digit order key shared by branch alternatives (for example `020`).
@@ -28,8 +28,8 @@ Variant:
 Roles (leading underscores are visual padding for `ls` alignment and are ignored):
 
 - `shell` — shell/project operation (prefer executable `*.sh` steps)
-- `gpt` — GPT specification/artifact generation step (extension `.get`)
-- `codex` — Codex repository implementation step
+- `chat` — Chat specification/artifact generation step (extension `.get`)
+- `code` — Code repository implementation step
 
 Shell steps use extension `.sh` (code-first, documentation in comments). They usually begin with:
 
@@ -37,7 +37,7 @@ Shell steps use extension `.sh` (code-first, documentation in comments). They us
 . sop-script
 ```
 
-`sopwin` runs them with `cwd` = project directory and exports `PATH` (including `<pkgdatadir>/extension/bash`), `SOP_PROJECT_DIR`, `SOP_DIR`, `SOP_STEP_ID`, `SOP_LOGLEVEL`, `LOGLEVEL`, and `SOP_PROGRESS_FIFO`. A running script reports **its own** progress with `set_progress 10%` (or `30.78%`) — not the overall SOP session progress. sopwin reads the FIFO and updates the gauge for that script. Codex prompt steps remain Markdown (`.md`).
+`sopwin` runs them with `cwd` = project directory and exports `PATH` (including `<pkgdatadir>/extension/bash`), `SOP_PROJECT_DIR`, `SOP_DIR`, `SOP_STEP_ID`, `SOP_LOGLEVEL`, `LOGLEVEL`, and `SOP_PROGRESS_FIFO`. A running script reports **its own** progress with `set_progress 10%` (or `30.78%`) — not the overall SOP session progress. sopwin reads the FIFO and updates the gauge for that script. Code prompt steps remain Markdown (`.md`).
 
 Markdown / `.get` steps may start with an optional YAML frontmatter block:
 
@@ -47,9 +47,9 @@ extend: previous
 ---
 ```
 
-- `extend: previous` / `extend: next` — absorb this step into the previous/next step of the **same type** (`role` + extension, e.g. both `codex` + `.md`). Type mismatch is ignored. The graph shows one merged node (the anchor); prompt bodies are concatenated with the YAML header removed. Example: `011` (`extend: previous`) merges into `010`.
+- `extend: previous` / `extend: next` — absorb this step into the previous/next step of the **same type** (`role` + extension, e.g. both `code` + `.md`). Type mismatch is ignored. The graph shows one merged node (the anchor); prompt bodies are concatenated with the YAML header removed. Example: `011` (`extend: previous`) merges into `010`.
 
-GPT steps use extension `.get`. They begin with optional RFC822-style headers (names case-insensitive), then a blank line, then the prompt body. Use `Discard:` for editor modelines and other ignored lines.
+Chat steps use extension `.get`. They begin with optional RFC822-style headers (names case-insensitive), then a blank line, then the prompt body. Use `Discard:` for editor modelines and other ignored lines.
 
 ```text
 Save-As: sop/PRD.md
@@ -67,8 +67,14 @@ Discard: vim: set ft=markdown :
 - `File-Link` — `default`/`auto` (inode on ext2/3/4, otherwise copy), `none` (copy), `inode` (hard link), or `sym` (symlink)
 - `Parse` — comma-separated formats; currently `multi-parts` splits a multi-part response into `partNN` files under `sop/<seq>/`
 - `Interaction` — `none` (default: save only) or `select` (show rendered response / part picker after save)
+- Body markup — `<select title="…">` / `<option>…` (choose one before run); `<optional title="…">…</optional>` (yes/no include before run); `\response` expands to the nearest prior chat response
+
 - `Discard` — ignored by sopwin (editor modelines, notes, …)
-When a GPT step runs, sopwin copies the prompt, then opens a Paste Response dialog for the model reply and attachment downloads. Responses are stored under `sop/<seq>/` (leading zeros stripped from `seq`).
+When a chat step runs, sopwin invokes the `chat` agent from `sop/AGENTS`
+(default: `sopwin copydlg --paste`). The agent copies the prompt and captures
+the reply; responses are stored under `sop/<seq>/` (leading zeros stripped from
+`seq`). Bodies may use `\response` and `<select>` interactions before the agent
+runs.
 
 ## WorldMan architecture
 
@@ -136,10 +142,10 @@ Do not leave unrelated default listen ports (`5173`, …) in committed source.
 ## Design choices in this SOP
 
 - Start from the Figma prototype: step `000` must refactor the export under `web/` before specification or backend work.
-- The GPT specification track and the Codex implementation track stay logically independent (`a` vs `z` branches).
+- The Chat specification track and the Code implementation track stay logically independent (`a` vs `z` branches).
 - `schema.prisma` and `seed.ts` are generated separately to avoid output-length pressure and to let seed generation pressure-test the domain model.
 - Seed generation must not silently rewrite the schema.
-- If seed generation reveals a schema problem, it may additionally produce `prisma/request-for-refactor.md` (`blocking` or `recommended`).
+- Seed may optionally request amends when it can run after the backend prompt (`050`): `prisma/request-for-refactor.md` and/or `sop/Backend amends.md` (via `<optional>`). Step `060` merges both and deletes the request files.
 - Cross-module references are scalar cuid2 fields + API lookups, not cross-database FKs, unless explicitly required.
 - Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`); keep them updated during build/refactor.
 - `web-e2e/workflows.md` is generated late so it can synthesize `sop/` PRD/TUC/NTC/ECS, schema, seed scenarios, and backend design.

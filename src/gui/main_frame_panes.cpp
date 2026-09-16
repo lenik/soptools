@@ -267,6 +267,9 @@ bool MainFrame::DrainStageOrPromptExtras(const SopStep *step) {
 }
 
 void MainFrame::OnBack(wxCommandEvent &) {
+    if (agent_busy_) {
+        return;
+    }
     sticky_status_.clear();
     engine_->retreat();
     RefreshAll();
@@ -274,15 +277,22 @@ void MainFrame::OnBack(wxCommandEvent &) {
 
 void MainFrame::OnMake(wxCommandEvent &) {
     sticky_status_.clear();
+    if (agent_busy_) {
+        return;
+    }
 
     const SopStep *step = engine_->step_at(engine_->current_index());
-    if (step && step->is_gpt_get()) {
+    if (step && step->is_chat_get()) {
         const std::string sid = engine_->current_step_id();
         if (!engine_->is_complete(sid)) {
-            if (!OpenGptPasteFlow(*step)) {
+            if (!RunAgentFlow(*step)) {
                 RefreshAll();
                 return;
             }
+            /* Agent runs async; Make advance continues after completion via user Make again,
+             * or when already complete below. */
+            RefreshAll();
+            return;
         }
         if (!DrainStageOrPromptExtras(step)) {
             RefreshAll();
@@ -290,26 +300,29 @@ void MainFrame::OnMake(wxCommandEvent &) {
         }
         if (engine_->advance()) {
             RefreshAll();
-            MaybeOpenGptPasteForCurrent();
+            MaybeOpenChatAgentForCurrent();
         } else {
             RefreshAll();
         }
         return;
     }
 
-    if (step && step->is_codex()) {
-        if (!OpenCodexCopyFlow(*step)) {
+    if (step && step->is_code()) {
+        if (!engine_->is_complete(engine_->current_step_id())) {
+            if (!RunAgentFlow(*step)) {
+                RefreshAll();
+                return;
+            }
             RefreshAll();
             return;
         }
-        engine_->mark_complete(engine_->current_step_id(), true);
         if (!DrainStageOrPromptExtras(step)) {
             RefreshAll();
             return;
         }
         if (engine_->advance()) {
             RefreshAll();
-            MaybeOpenGptPasteForCurrent();
+            MaybeOpenChatAgentForCurrent();
         } else {
             RefreshAll();
         }
@@ -322,22 +335,16 @@ void MainFrame::OnMake(wxCommandEvent &) {
     }
     if (engine_->try_advance_with_run()) {
         RefreshAll();
-        MaybeOpenGptPasteForCurrent();
+        MaybeOpenChatAgentForCurrent();
     }
 }
 
 void MainFrame::OnExecute(wxCommandEvent &) {
+    if (agent_busy_) {
+        return;
+    }
     const SopStep *step = engine_->step_at(engine_->current_index());
-    if (step && step->is_gpt_get()) {
-        DoCopy();
-        return;
-    }
-    if (step && step->is_codex()) {
-        OpenCodexCopyFlow(*step);
-        RefreshAll();
-        return;
-    }
-    if (step && step->is_prompt_copy()) {
+    if (step && (step->is_chat_get() || step->is_code() || step->is_prompt_copy())) {
         DoCopy();
         return;
     }
@@ -368,21 +375,6 @@ void MainFrame::OnStop(wxCommandEvent &) {
     }
     engine_->stop_shell(sid);
     SetStatusBarMessage(wxString::FromUTF8("Stop requested for the current step."), true);
-    RefreshAll();
-}
-
-void MainFrame::OnApply(wxCommandEvent &) {
-    const std::string sid = engine_->active_steps()[engine_->current_index()];
-    const wxString text = ai_input_->GetValue();
-    auto result = engine_->apply_ai_output(sid, text.ToUTF8().data());
-    append_log(result.ok ? 1 : 0, result.message);
-    if (result.ok) {
-        ai_input_->Clear();
-        SetStatusBarMessage(wxString::FromUTF8(result.message), true);
-    } else {
-        SetStatusBarMessage(wxString::FromUTF8("Apply failed: ") + wxString::FromUTF8(result.message));
-        wxMessageBox(wxString::FromUTF8(result.message), wxString::FromUTF8("Apply failed"), wxOK | wxICON_ERROR);
-    }
     RefreshAll();
 }
 

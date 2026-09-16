@@ -14,10 +14,10 @@
 
 ```text
 000a._shell.refactor_figma.sh
-010a._codex.refactor_web.md
-020a.___gpt.create_prd.get
-020z._codex.create_prd.md
-050z._codex.prepare_backend_implementation.md
+010a.__code.refactor_web.md
+020a.__chat.create_prd.get
+020z.__code.create_prd.md
+050z.__code.prepare_backend_implementation.md
 ```
 
 序号（`seq`）：三位顺序键，同一序号下的文件构成分支备选（例如 `020`）。
@@ -30,8 +30,8 @@
 角色（role；前导下划线仅用于 `ls` 对齐，解析时忽略）：
 
 - `shell` — shell / 项目操作
-- `gpt` — GPT 规格/产物生成（扩展名 `.get`）
-- `codex` — Codex 仓库实现
+- `chat` — GPT 规格/产物生成（扩展名 `.get`）
+- `code` — Codex 仓库实现
 
 Shell 步骤使用扩展名 `.sh`（以代码为主，说明写在注释里）。脚本通常以以下内容开头：
 
@@ -49,7 +49,7 @@ extend: previous
 ---
 ```
 
-- `extend: previous` / `extend: next` — 将本步骤并入前/后一个**同类型**步骤（`role` + 扩展名，如均为 `codex` + `.md`）。类型不一致则忽略。图上只显示合并后的锚点节点；提示词正文拼接且去掉 YAML 头。例：`011`（`extend: previous`）并入 `010`。
+- `extend: previous` / `extend: next` — 将本步骤并入前/后一个**同类型**步骤（`role` + 扩展名，如均为 `code` + `.md`）。类型不一致则忽略。图上只显示合并后的锚点节点；提示词正文拼接且去掉 YAML 头。例：`011`（`extend: previous`）并入 `010`。
 
 GPT 步骤使用扩展名 `.get`。可选 RFC822 风格文件头（名称不分大小写），空行后是提示词正文。编辑器 modeline 等用 `Discard:` 写出，sopwin 忽略。
 

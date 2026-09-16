@@ -6,7 +6,6 @@
 constexpr int ID_BACK = wxID_HIGHEST + 1;
 constexpr int ID_MAKE = wxID_HIGHEST + 2;
 constexpr int ID_EXECUTE = wxID_HIGHEST + 3;
-constexpr int ID_APPLY = wxID_HIGHEST + 4;
 constexpr int ID_SHOW_LOG = wxID_HIGHEST + 7;
 constexpr int ID_SHOW_GRAPH = wxID_HIGHEST + 8;
 constexpr int ID_PAUSE = wxID_HIGHEST + 11;

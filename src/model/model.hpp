@@ -8,9 +8,9 @@
 
 enum class SopRole {
     Shell,
-    Gpt,
-    Codex,
-    AltCodex,
+    Chat, /* formerly Gpt */
+    Code, /* formerly Codex */
+    AltCode,
     Other,
 };
 
@@ -81,7 +81,7 @@ struct SopStep {
     SopCompletionRule completion;
     SopBranchKind branch_kind = SopBranchKind::None;
 
-    /* .get headers (GPT steps). */
+    /* .get headers (chat steps). */
     std::string save_as;
     SopFileLink file_link = SopFileLink::Default;
     std::vector<std::string> parse_formats;
@@ -99,9 +99,13 @@ struct SopStep {
     bool is_action() const;
     bool is_automatable() const;
     bool is_prompt_copy() const;
-    bool is_gpt_get() const;
-    bool is_codex() const;
+    bool is_chat_get() const;
+    bool is_code() const;
     bool has_parse_format(const std::string &fmt) const;
+
+    /* Compatibility aliases. */
+    bool is_gpt_get() const { return is_chat_get(); }
+    bool is_codex() const { return is_code(); }
 };
 
 struct SopBranchGroup {
@@ -131,7 +135,10 @@ SopRole parse_role_slug(const std::string &slug);
 SopStepKind infer_step_kind(const SopStep &step);
 std::string sop_step_id(const SopStep &step);
 std::string humanize_name(const std::string &name);
+std::string pad_role_slug(const std::string &slug);
+std::string resolve_step_id_alias(const SopDefinition &def, const std::string &id);
 std::optional<SopStep> parse_sop_file(const std::string &path);
+bool write_sop_file(const SopStep &step, const std::string &dir, std::string *error = nullptr);
 SopDefinition load_sop_directory(const std::string &dir);
 std::vector<std::string> build_active_step_order(
     const SopDefinition &def,

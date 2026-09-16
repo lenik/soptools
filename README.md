@@ -2,7 +2,7 @@
 
 `soptools` is a guided **Standard Operating Procedure (SOP)** runner for project
 construction. It loads a directory of step files, walks you through shell
-scripts, AI prompt capture (`.get`), and Codex implementation prompts, and
+scripts, AI prompt capture (`.get`), and Code implementation prompts, and
 tracks branch choices and progress in a wxWidgets GUI (`sopwin`) or a console
 session.
 
@@ -12,20 +12,25 @@ mobile) from a Figma prototype export. Localized branches ship for English
 
 ## Features
 
-- **SOP suites** — ordered Markdown / shell / GPT steps under
+- **SOP suites** — ordered Markdown / shell / chat steps under
   `suite/<name>/<branch>/` with branching (`a` / `z`) and roles
-  (`shell`, `gpt`, `codex`)
+  (`shell`, `chat`, `code`) — legacy `gpt` / `codex` slugs still parse
 - **GUI (`sopwin`)** — workflow graph, step preview, Use… / Open… / Make /
   Execute·Get·Code / Run / Pause / Stop / Exit, detachable graph & log panes,
   status bar feedback
-- **Console mode** — same engine without a display
-- **GPT `.get` flow** — copy prompt, Paste Response dialog, attachment download,
-  optional multi-part render / select
+- **Commands** — `open` (default), `run`, `copydlg`, `edit`, `version`
+- **AGENTS** — `<project>/sop/AGENTS` maps roles to external cmdlines; default
+  chat/code agents are `sopwin copydlg` (forked; main window stays up, busy-gated)
+- **Chat `.get` flow** — agent copies prompt / captures response; Save-As,
+  multi-part parse, optional post-save select render
+- **Markdown interactions** — `\response` (nearest prior chat output),
+  `<select>` option dialogs, and `<optional>` include/skip before a step runs
 - **Shell steps** — run with project cwd, enriched `PATH`, progress FIFO for the
   gauge
 - **Persistence** — workflow location and exclusions under project `sop/status`
 - **Language / branch** — `LANG` selects suite branch; **View → Language**
   switches within the current suite
+- **SOP editor** — `sopwin edit SOPDIR` authoring UI for suite-style step files
 
 ## SOP suites
 
@@ -150,16 +155,16 @@ current suite (reloads steps; project config is keyed as
 <seq><variant>.<_padded_role>.<title>.(md|sh|get)
 ```
 
-Examples: `000a._shell.refactor_figma.sh`, `020a.___gpt.create_prd.get`,
-`060a._codex.implement_backend.md`.
+Examples: `000a._shell.refactor_figma.sh`, `020a.__chat.create_prd.get`,
+`060a.__code.implement_backend.md`.
 
 - **seq** — three-digit order key shared by branch alternatives
 - **variant** — `a` default, `z` optional alternative
-- **role** — leading underscores are padding; effective role is `shell` / `gpt` /
-  `codex`
+- **role** — leading underscores are padding; effective role is `shell` / `chat` /
+  `code` (aliases: `gpt`, `codex`)
 
 See each branch’s `README.md` under `suite/worldman/{default,zh_CN,ja}/` for
-WorldMan architecture, GPT headers (`Save-As`, `Parse`, `Interaction`, …), and
+WorldMan architecture, chat `.get` headers (`Save-As`, `Parse`, `Interaction`, …), and
 shell progress helpers.
 
 ## Project layout under the target app
@@ -170,7 +175,8 @@ While running, sopwin uses / writes:
 <project>/
   sop/
     status          # location=, exclusions, branch choices (auto-saved)
-    <seq>/          # GPT responses, parts, downloads
+    AGENTS          # optional role → agent cmdline map
+    <seq>/          # chat responses, parts, downloads, agent prompt/response
     TODO.md …       # working docs created by later SOP steps
   …                 # backend/, web/, prisma/, … as the SOP creates them
 ```
