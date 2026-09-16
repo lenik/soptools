@@ -12,7 +12,9 @@
 
 #include "config.h"
 
+#include <array>
 #include <cerrno>
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -222,42 +224,75 @@ bool SopEngine::run_shell(const std::string &step_id) {
             }
         }
 
-        FILE *pipe = popen(cmd.c_str(), "r");
-        if (!pipe) {
-            run->log += "failed to start shell\n";
+        int pipefd[2] = {-1, -1};
+        FILE *out = nullptr;
+        pid_t child = -1;
+        if (::pipe(pipefd) != 0) {
+            run->log += "failed to create pipe\n";
             run->exit_code = 127;
-            run->running = false;
-            if (progress_reader.joinable()) {
-                if (fifo_hold_fd >= 0) {
-                    close(fifo_hold_fd);
-                    fifo_hold_fd = -1;
+        } else {
+            child = fork();
+            if (child < 0) {
+                run->log += "failed to fork shell\n";
+                run->exit_code = 127;
+                close(pipefd[0]);
+                close(pipefd[1]);
+            } else if (child == 0) {
+                /* Own process group so Stop can kill the whole tree. */
+                setpgid(0, 0);
+                close(pipefd[0]);
+                if (dup2(pipefd[1], STDOUT_FILENO) < 0 || dup2(pipefd[1], STDERR_FILENO) < 0) {
+                    _exit(127);
                 }
-                progress_reader.join();
+                if (pipefd[1] != STDOUT_FILENO && pipefd[1] != STDERR_FILENO) {
+                    close(pipefd[1]);
+                }
+                execl("/bin/bash", "bash", "-c", cmd.c_str(), static_cast<char *>(nullptr));
+                _exit(127);
+            } else {
+                setpgid(child, child);
+                close(pipefd[1]);
+                pipefd[1] = -1;
+                run->pid = child;
+                out = fdopen(pipefd[0], "r");
+                if (!out) {
+                    close(pipefd[0]);
+                    pipefd[0] = -1;
+                    kill(-child, SIGTERM);
+                    int st = 0;
+                    waitpid(child, &st, 0);
+                    run->log += "failed to start shell\n";
+                    run->exit_code = 127;
+                    run->pid = -1;
+                }
             }
-            if (!fifo_path.empty()) {
-                unlink(fifo_path.c_str());
-            }
-            ensure_sop_config_dirs(project_dir, sop_dir);
-            const std::string log_path = sop_step_log_path(project_dir, sop_dir, step_id);
-            std::ofstream log_out(log_path, std::ios::trunc);
-            if (log_out) {
-                log_out << run->log;
-            }
-            notify_changed();
-            return;
         }
 
-        std::array<char, 4096> buf{};
-        while (fgets(buf.data(), static_cast<int>(buf.size()), pipe) != nullptr) {
-            run->log += buf.data();
-        }
-        run->exit_code = pclose(pipe);
-        if (run->exit_code == -1) {
-            run->exit_code = 127;
-        } else if (WIFEXITED(run->exit_code)) {
-            run->exit_code = WEXITSTATUS(run->exit_code);
-        } else {
-            run->exit_code = 1;
+        if (out) {
+            std::array<char, 4096> buf{};
+            while (!run->stop_requested &&
+                   fgets(buf.data(), static_cast<int>(buf.size()), out) != nullptr) {
+                run->log += buf.data();
+            }
+            if (run->stop_requested && run->pid > 0) {
+                kill(-run->pid, SIGTERM);
+            }
+            fclose(out);
+            out = nullptr;
+            int status = 0;
+            if (waitpid(child, &status, 0) < 0) {
+                run->exit_code = 127;
+            } else if (WIFEXITED(status)) {
+                run->exit_code = WEXITSTATUS(status);
+            } else if (WIFSIGNALED(status)) {
+                run->exit_code = 128 + WTERMSIG(status);
+                if (run->stop_requested) {
+                    run->log += "\n[stopped]\n";
+                }
+            } else {
+                run->exit_code = 1;
+            }
+            run->pid = -1;
         }
         run->running = false;
 
@@ -286,6 +321,24 @@ bool SopEngine::run_shell(const std::string &step_id) {
 }
 
 void SopEngine::stop_shell(const std::string &step_id) {
-    (void)step_id;
+    std::shared_ptr<SopShellRun> run;
+    {
+        std::lock_guard<std::mutex> lock(shell_mu_);
+        auto it = shell_runs_.find(step_id);
+        if (it == shell_runs_.end() || !it->second || !it->second->running) {
+            return;
+        }
+        run = it->second;
+    }
+    run->stop_requested = true;
+    pending_advance_ = false;
+    if (auto_run_state_ == SopAutoRunState::Running) {
+        auto_run_state_ = SopAutoRunState::Paused;
+    }
+    if (run->pid > 0) {
+        kill(-run->pid, SIGTERM);
+    }
+    log(1, "stopping shell for " + step_id);
+    notify_changed();
 }
 

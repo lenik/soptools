@@ -26,9 +26,15 @@
       </select>
     </label>
     <p id="meta" class="meta"></p>
-    <button type="button" id="mode-toggle" class="mode-toggle" aria-pressed="false" title="Index chrome: Light / Dark / Auto">
-      Auto
-    </button>
+    <div class="chrome-controls">
+      <label class="entire-check" title="When on, Light/Dark also paints the index chrome">
+        <input type="checkbox" id="entire-window" checked />
+        <span>Entire Window</span>
+      </label>
+      <button type="button" id="mode-toggle" class="mode-toggle" aria-pressed="false" title="Light / Dark">
+        Light
+      </button>
+    </div>
   </header>
 
   <main class="scenes">

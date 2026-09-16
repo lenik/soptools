@@ -11,8 +11,8 @@ mobile）。语言分支：`default`（英文）、`zh_CN`、`ja`。
 
 - **SOP 套件** — 位于 `suite/<名称>/<分支>/`，步骤支持 `a`/`z` 与角色
   `shell`/`gpt`/`codex`
-- **图形界面（`sopwin`）** — 流程图、步骤预览、Back / Next / Run / Pause、
-  Execute·Get·Copy、可拆出的图与日志面板、状态栏反馈
+- **图形界面（`sopwin`）** — 流程图、步骤预览、Use… / Open… / Make /
+  Execute·Get·Code / Run / Pause / Stop / Exit、可拆出的图与日志面板、状态栏反馈
 - **控制台模式** — 同一引擎，无需显示器
 - **GPT `.get` 流程** — 复制提示、粘贴响应对话框、附件下载、可选多段渲染/选择
 - **Shell 步骤** — 在项目目录执行，扩展 `PATH`，经进度 FIFO 驱动进度条
@@ -115,11 +115,11 @@ GUI **查看 → 语言** 在当前套件内切换 `default` / `zh_CN` / `ja`（
 | 按键 | 作用 |
 |------|------|
 | `Alt+F` / `Alt+P` / `Alt+V` / `Alt+H` | 打开 文件 / 流程 / 查看 / 帮助 |
-| `Ctrl+O` / `Ctrl+S` | 打开项目 / 保存状态 |
-| `Ctrl+U` | 加载 SOP 目录 |
-| `PgUp` / `PgDn` | 上一步 / 下一步 |
-| `F5` / `F8` | 运行·继续 / 暂停自动跑 |
-| `Ctrl+Enter` | 执行 / Get / 复制当前步 |
+| `Ctrl+O` / `Ctrl+S` | Open…（项目位置）/ 保存状态 |
+| `Ctrl+U` | Use…（打开 SOP） |
+| `PgUp` / `PgDn` | Back / Make |
+| `F5` / `F8` | Run / Pause 自动跑 |
+| `Ctrl+Enter` | Execute / Get / Code 当前步 |
 | `F2` / `Ctrl+L` | 切换图 / 日志 |
 | `F1` | 快捷键说明 |
 | 图：滚轮 | 纵向平移 |

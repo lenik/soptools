@@ -2,18 +2,21 @@ import { DEMO } from './demo-data.js';
 
 const select = document.getElementById('theme-select');
 const groupFilter = document.getElementById('group-filter');
+const entireWindow = document.getElementById('entire-window');
 const modeToggle = document.getElementById('mode-toggle');
 const meta = document.getElementById('meta');
 const tokenSample = document.getElementById('token-sample');
 
 const GROUP_ORDER = { minor: 0, vibe: 1, country: 2 };
 const TYPE_ORDER = { light: 0, dark: 1 };
-const MODE_KEY = 'worldman-themes-demo-chrome';
-const MODE_CYCLE = ['light', 'dark', 'auto'];
-const MODE_LABEL = { light: 'Light', dark: 'Dark', auto: 'Auto' };
+const ENTIRE_KEY = 'worldman-themes-demo-entire';
+const MODE_KEY = 'worldman-themes-demo-mode';
+const MODE_LABEL = { light: 'Light', dark: 'Dark' };
 
-/** User preference: light | dark | auto */
-let chromePref = 'auto';
+/** When true, Light/Dark paints index chrome with the theme. */
+let entire = true;
+/** light | dark — chrome when Entire on; theme-type target when Entire off. */
+let mode = 'light';
 
 tokenSample.innerHTML = [
   `<span class="tok-comment">// theme token sample</span>`,
@@ -31,37 +34,95 @@ function compareThemes(a, b) {
   return a.label.localeCompare(b.label, 'en');
 }
 
-function selectedThemeType() {
-  if (!select.value) return 'light';
-  const [group, paletteKey] = select.value.split(':');
-  const entry = DEMO.catalog.find((c) => c.group === group && c.paletteKey === paletteKey);
-  return entry?.type === 'dark' ? 'dark' : 'light';
+function catalogEntry(value = select.value) {
+  if (!value) return null;
+  const [group, paletteKey] = value.split(':');
+  return DEMO.catalog.find((c) => c.group === group && c.paletteKey === paletteKey) || null;
 }
 
-/** Resolve effective chrome appearance from preference + theme. */
-function resolvedChromeMode() {
-  return chromePref === 'auto' ? selectedThemeType() : chromePref;
+function optionValue(entry) {
+  return `${entry.group}:${entry.paletteKey}`;
 }
 
-function applyChrome() {
-  const mode = resolvedChromeMode();
-  document.documentElement.dataset.mode = mode;
-  modeToggle.textContent = MODE_LABEL[chromePref];
-  modeToggle.setAttribute('aria-pressed', chromePref === 'dark' ? 'true' : 'false');
-  modeToggle.title =
-    chromePref === 'auto'
-      ? 'Index chrome follows theme (Auto)'
-      : `Index chrome locked to ${MODE_LABEL[chromePref]}`;
+/** Same family (+ prefer same group) of the opposite / requested type. */
+function findSibling(entry, type) {
+  if (!entry) return null;
+  return (
+    DEMO.catalog.find(
+      (c) => c.family === entry.family && c.group === entry.group && c.type === type,
+    ) ||
+    DEMO.catalog.find((c) => c.family === entry.family && c.type === type) ||
+    null
+  );
 }
 
-function setChromePref(pref) {
-  chromePref = MODE_CYCLE.includes(pref) ? pref : 'auto';
+function persist() {
   try {
-    localStorage.setItem(MODE_KEY, chromePref);
+    localStorage.setItem(ENTIRE_KEY, entire ? '1' : '0');
+    localStorage.setItem(MODE_KEY, mode);
   } catch {
     /* ignore */
   }
+}
+
+function applyChrome() {
+  if (entire) {
+    document.documentElement.dataset.mode = mode;
+  }
+  /* Entire off: leave data-mode frozen (do not touch framework). */
+  modeToggle.textContent = MODE_LABEL[mode];
+  modeToggle.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');
+  modeToggle.title = entire
+    ? `Entire window: ${MODE_LABEL[mode]} chrome + theme`
+    : `Theme only: switch to ${MODE_LABEL[mode === 'light' ? 'dark' : 'light']} (chrome frozen)`;
+  entireWindow.checked = entire;
+}
+
+function selectThemeEntry(entry) {
+  if (!entry) return;
+  const value = optionValue(entry);
+  if (![...select.options].some((o) => o.value === value)) {
+    const opt = document.createElement('option');
+    opt.value = value;
+    opt.textContent = `${entry.label} · ${entry.group}`;
+    select.appendChild(opt);
+  }
+  select.value = value;
+  applyTheme();
+}
+
+function setVars(prefix, obj, root = document.documentElement) {
+  if (!obj) return;
+  for (const [k, v] of Object.entries(obj)) {
+    root.style.setProperty(`--${prefix}-${k}`, v);
+  }
+}
+
+function applyTheme() {
+  const entry = catalogEntry();
+  if (!entry) return;
+  const pack = DEMO.groups[entry.group];
+  if (!pack) return;
+  const { paletteKey } = entry;
+
+  setVars('ui', pack.ui[paletteKey]);
+  setVars('web', pack.web[paletteKey]);
+  setVars('erp', pack.erp[paletteKey]);
+
+  const tok = pack.token[paletteKey] || {};
+  setVars('tok', tok);
+  const ui = pack.ui[paletteKey] || {};
+  document.documentElement.style.setProperty(
+    '--tok-bg',
+    ui.surfaceBg || ui.windowBg || '#1e1e1e',
+  );
+
+  const locs = entry.locales ? ` · locales ${entry.locales.replace(/\|/g, ', ')}` : '';
+  meta.textContent = `${entry.id} · ${entry.type} · ${entry.family}${locs} · ${DEMO.catalog.length} themes`;
+
+  mode = entry.type === 'dark' ? 'dark' : 'light';
   applyChrome();
+  persist();
 }
 
 function fillSelect() {
@@ -86,7 +147,7 @@ function fillSelect() {
       else lightGroup = og;
     }
     const opt = document.createElement('option');
-    opt.value = `${c.group}:${c.paletteKey}`;
+    opt.value = optionValue(c);
     opt.textContent = `${c.label} · ${c.group}`;
     opt.dataset.type = c.type;
     opt.dataset.family = c.family;
@@ -101,51 +162,54 @@ function fillSelect() {
   applyTheme();
 }
 
-function setVars(prefix, obj, root = document.documentElement) {
-  if (!obj) return;
-  for (const [k, v] of Object.entries(obj)) {
-    root.style.setProperty(`--${prefix}-${k}`, v);
+function toggleMode() {
+  const next = mode === 'light' ? 'dark' : 'light';
+  const sibling = findSibling(catalogEntry(), next);
+  if (sibling) {
+    selectThemeEntry(sibling);
+    return;
   }
+  mode = next;
+  applyChrome();
+  persist();
 }
 
-function applyTheme() {
-  if (!select.value) return;
-  const [group, paletteKey] = select.value.split(':');
-  const entry = DEMO.catalog.find((c) => c.group === group && c.paletteKey === paletteKey);
-  const pack = DEMO.groups[group];
-  if (!pack || !entry) return;
-
-  setVars('ui', pack.ui[paletteKey]);
-  setVars('web', pack.web[paletteKey]);
-  setVars('erp', pack.erp[paletteKey]);
-
-  const tok = pack.token[paletteKey] || {};
-  setVars('tok', tok);
-  const ui = pack.ui[paletteKey] || {};
-  document.documentElement.style.setProperty(
-    '--tok-bg',
-    ui.surfaceBg || ui.windowBg || '#1e1e1e',
-  );
-
-  const locs = entry.locales ? ` · locales ${entry.locales.replace(/\|/g, ', ')}` : '';
-  meta.textContent = `${entry.id} · ${entry.type} · ${entry.family}${locs} · ${DEMO.catalog.length} themes`;
-
-  if (chromePref === 'auto') applyChrome();
+function setEntire(on) {
+  entire = !!on;
+  if (entire) {
+    const cur = catalogEntry();
+    mode = cur?.type === 'dark' ? 'dark' : mode;
+    applyChrome();
+  } else {
+    /* Freeze framework at current chrome; Light/Dark will only move themes. */
+    const cur = catalogEntry();
+    if (cur) mode = cur.type === 'dark' ? 'dark' : 'light';
+    applyChrome();
+  }
+  persist();
 }
 
 groupFilter.addEventListener('change', fillSelect);
 select.addEventListener('change', applyTheme);
-modeToggle.addEventListener('click', () => {
-  const i = MODE_CYCLE.indexOf(chromePref);
-  setChromePref(MODE_CYCLE[(i + 1) % MODE_CYCLE.length]);
-});
+entireWindow.addEventListener('change', () => setEntire(entireWindow.checked));
+modeToggle.addEventListener('click', toggleMode);
 
-let initial = 'auto';
 try {
-  const saved = localStorage.getItem(MODE_KEY);
-  if (MODE_CYCLE.includes(saved)) initial = saved;
+  const savedEntire = localStorage.getItem(ENTIRE_KEY);
+  if (savedEntire === '0' || savedEntire === '1') entire = savedEntire === '1';
+  const savedMode = localStorage.getItem(MODE_KEY);
+  if (savedMode === 'light' || savedMode === 'dark') mode = savedMode;
+  /* Migrate old Auto chrome pref. */
+  if (savedMode === 'auto') mode = 'light';
 } catch {
   /* ignore */
 }
-setChromePref(initial);
+
+if (entire) {
+  document.documentElement.dataset.mode = mode;
+} else {
+  document.documentElement.dataset.mode = 'light';
+}
+entireWindow.checked = entire;
+applyChrome();
 fillSelect();

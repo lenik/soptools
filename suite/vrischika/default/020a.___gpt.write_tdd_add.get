@@ -1,0 +1,12 @@
+Save-As: sop/TDD.md
+File-Link: inode
+Interaction: none
+
+# Write TDD and ADD from GDD
+
+From `sop/GDD.md`, produce technical and art plans:
+
+- Update `sop/TDD.md` — engine verbs, stage pipeline, risks, tests
+- Update `sop/ADD.md` — palette, key assets, audio sketch
+
+Stay inside the vertical slice. No MMO/backend scope.

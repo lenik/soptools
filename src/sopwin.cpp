@@ -33,6 +33,7 @@ enum {
     OPT_GUI = 259,
     OPT_CHDIR = 260,
     OPT_SUITE = 261,
+    OPT_STAGE_DIR = 262,
 };
 
 
@@ -45,6 +46,7 @@ static void usage(FILE *out) {
           "Guide project construction through SOP workflow steps.\n\n"
           "  -s, --suite NAME     SOP suite under suite/ (default: worldman)\n"
           "  -S, --sop-dir DIR    SOP directory (overrides --suite / LANG branch)\n"
+          "      --stage-dir DIR  watch DIR for incoming files (also SOP_STAGE_DIR)\n"
           "  -c, --console        console-only mode (no GUI)\n"
           "  -g, --gui            force GUI mode\n"
           "  -C, --chdir DIR      project directory (default: cwd or nearest .git)\n"
@@ -71,6 +73,7 @@ int main(int argc, char **argv) {
     std::string suite = "worldman";
     std::string chdir_dir;
     std::string project_arg;
+    std::string stage_dir_cli;
     bool force_console = false;
     bool force_gui = false;
 
@@ -78,6 +81,7 @@ int main(int argc, char **argv) {
         {"suite", required_argument, NULL, 's'},
         {"sop-dir", required_argument, NULL, 'S'},
         {"sop", required_argument, NULL, 'S'}, /* deprecated alias */
+        {"stage-dir", required_argument, NULL, OPT_STAGE_DIR},
         {"console", no_argument, NULL, 'c'},
         {"gui", no_argument, NULL, 'g'},
         {"chdir", required_argument, NULL, 'C'},
@@ -129,6 +133,9 @@ int main(int argc, char **argv) {
                   "There is NO WARRANTY, to the extent permitted by law.\n",
                   stdout);
             return 0;
+        case OPT_STAGE_DIR:
+            stage_dir_cli = optarg;
+            break;
         default:
             usage(stderr);
             return 1;
@@ -151,6 +158,14 @@ int main(int argc, char **argv) {
     opts.verbose = verbose;
     const std::string branch = suite_branch_from_env();
     opts.sop_dir = resolve_sop_dir(sop_dir, suite, branch, source_root);
+
+    if (!stage_dir_cli.empty()) {
+        opts.stage_dir = stage_dir_cli;
+    } else if (const char *env_stage = getenv("SOP_STAGE_DIR")) {
+        if (env_stage[0]) {
+            opts.stage_dir = env_stage;
+        }
+    }
 
     if (!chdir_dir.empty()) {
         opts.project_dir = find_project_dir(chdir_dir);

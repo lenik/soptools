@@ -84,6 +84,8 @@ app_sources = [
     'src/engine/ai_output.cpp',
     'src/engine/gpt_response.cpp',
     'src/engine/project.cpp',
+    'src/engine/stage_files.cpp',
+    'src/engine/stage_watcher.cpp',
     'src/ui/console.cpp',
     'src/gui/app.cpp',
     'src/gui/theme.cpp',
@@ -97,6 +99,7 @@ app_sources = [
     'src/gui/graph_style.cpp',
     'src/gui/log_view.cpp',
     'src/gui/paste_response_dialog.cpp',
+    'src/gui/codex_copy_dialog.cpp',
     'src/gui/render_response_dialog.cpp',
 ]
 

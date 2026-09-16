@@ -135,6 +135,13 @@ bool apply_config_to_engine(SopEngine &engine, const std::map<std::string, std::
         }
         engine.set_current_step_id(location);
     }
+
+    if (engine.options().stage_dir.empty()) {
+        const auto sit = values.find("stage-dir");
+        if (sit != values.end() && !sit->second.empty()) {
+            engine.options().stage_dir = sit->second;
+        }
+    }
     return true;
 }
 

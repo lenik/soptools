@@ -34,3 +34,18 @@ Branch selection: `sopwin` picks `default` / `zh_CN` / `ja` from `LANG` (or
 `LC_ALL` / `LC_MESSAGES`). Override with `-S/--sop-dir`, or choose suite with
 `-s/--suite` (default `worldman`). GUI **View → Language** switches branches
 within the current suite.
+
+## vrischika
+
+Guided **game vertical slice** construction from Vrischika templates (`vsk`).
+
+```text
+suite/vrischika/
+    default/
+    zh_CN/
+    catalog.md
+```
+
+Design artifacts land in the game project under `sop/GDD.md`,
+`sop/GDD-zh_CN.md`, `sop/TDD.md`, `sop/ADD.md`.
+

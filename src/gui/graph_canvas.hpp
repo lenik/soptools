@@ -128,6 +128,7 @@ private:
     void OnSize(wxSizeEvent &);
     void OnMouseWheel(wxMouseEvent &);
     void OnMouseDown(wxMouseEvent &);
+    void OnMouseDClick(wxMouseEvent &);
     void OnMouseUp(wxMouseEvent &);
     void OnMouseMove(wxMouseEvent &);
     void OnMouseLeave(wxMouseEvent &);
@@ -144,6 +145,8 @@ private:
     void RelayoutIfNeeded();
     int LayoutColumnsKey() const;
     void ClampPan();
+    /* Move workflow location to node (Enter / double-click / context menu). */
+    void MoveLocationToNode(int node_index);
 };
 
 #endif /* GUI_GRAPH_CANVAS_HPP */

@@ -15,8 +15,9 @@ mobile) from a Figma prototype export. Localized branches ship for English
 - **SOP suites** — ordered Markdown / shell / GPT steps under
   `suite/<name>/<branch>/` with branching (`a` / `z`) and roles
   (`shell`, `gpt`, `codex`)
-- **GUI (`sopwin`)** — workflow graph, step preview, Back / Next / Run / Pause,
-  Execute·Get·Copy, detachable graph & log panes, status bar feedback
+- **GUI (`sopwin`)** — workflow graph, step preview, Use… / Open… / Make /
+  Execute·Get·Code / Run / Pause / Stop / Exit, detachable graph & log panes,
+  status bar feedback
 - **Console mode** — same engine without a display
 - **GPT `.get` flow** — copy prompt, Paste Response dialog, attachment download,
   optional multi-part render / select
@@ -133,11 +134,11 @@ current suite (reloads steps; project config is keyed as
 | Key | Action |
 |-----|--------|
 | `Alt+F` / `Alt+P` / `Alt+V` / `Alt+H` | Open File / Procedure / View / Help |
-| `Ctrl+O` / `Ctrl+S` | Open project / Save status |
-| `Ctrl+U` | Load SOP directory |
-| `PgUp` / `PgDn` | Back / Next |
-| `F5` / `F8` | Run·Resume / Pause auto-run |
-| `Ctrl+Enter` | Execute / Get / Copy current step |
+| `Ctrl+O` / `Ctrl+S` | Open… (project) / Save status |
+| `Ctrl+U` | Use… (open SOP directory) |
+| `PgUp` / `PgDn` | Back / Make |
+| `F5` / `F8` | Run / Pause auto-run |
+| `Ctrl+Enter` | Execute / Get / Code current step |
 | `F2` / `Ctrl+L` | Toggle graph / loggings |
 | `F1` | Shortcuts dialog |
 | Graph: wheel | Pan vertically |

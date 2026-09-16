@@ -3,6 +3,8 @@
  * Keys = catalog file stem (Innocent, China, France, …).
  */
 
+import { MONTH_CATALOG } from './month-vibe-themes.mjs';
+
 /** @typedef {{ group: string, locales?: string[], meaning_en: string, meaning_zh: string, variants: { id: string, label: string, type: string, paletteKey: string, en: string, zh: string }[] }} CatalogFamily */
 
 /** @type {Record<string, CatalogFamily>} */
@@ -441,6 +443,7 @@ export const CATALOG = {
             },
         ],
     },
+    ...MONTH_CATALOG,
 };
 
 /** Country families: locales + bilingual cultural briefs. */

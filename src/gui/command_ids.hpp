@@ -4,12 +4,11 @@
 #include <wx/defs.h>
 
 constexpr int ID_BACK = wxID_HIGHEST + 1;
-constexpr int ID_NEXT = wxID_HIGHEST + 2;
+constexpr int ID_MAKE = wxID_HIGHEST + 2;
 constexpr int ID_EXECUTE = wxID_HIGHEST + 3;
 constexpr int ID_APPLY = wxID_HIGHEST + 4;
 constexpr int ID_SHOW_LOG = wxID_HIGHEST + 7;
 constexpr int ID_SHOW_GRAPH = wxID_HIGHEST + 8;
-constexpr int ID_AUTO_RUN = wxID_HIGHEST + 10;
 constexpr int ID_PAUSE = wxID_HIGHEST + 11;
 constexpr int ID_START_RESUME = wxID_HIGHEST + 12;
 constexpr int ID_COPY = wxID_HIGHEST + 13;
@@ -23,5 +22,6 @@ constexpr int ID_HELP_ABOUT = wxID_HIGHEST + 20;
 constexpr int ID_LANG_EN = wxID_HIGHEST + 21;
 constexpr int ID_LANG_ZH_CN = wxID_HIGHEST + 22;
 constexpr int ID_LANG_JA = wxID_HIGHEST + 23;
+constexpr int ID_STOP = wxID_HIGHEST + 24;
 
 #endif /* GUI_COMMAND_IDS_HPP */

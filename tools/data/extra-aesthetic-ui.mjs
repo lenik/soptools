@@ -3,8 +3,10 @@
  * Merged by tools/rebuild-worldman-themes.mjs after extract.
  *
  * Lady, Gal, Tomboy, Gym Bro, Femboy, Moe Girl → minor
- * Liaozhai (聊斋), Thrones (权力的游戏), Aroma → vibe
+ * Liaozhai (聊斋), Thrones (权力的游戏), Aroma, January–December → vibe
  */
+
+import { monthVibeExtraUi } from './month-vibe-themes.mjs';
 
 /** @typedef {Record<string, string>} UiPalette */
 
@@ -505,4 +507,5 @@ export const vibeExtraUi = {
         gitDeleted: 'hsl(0, 75%, 58%)',
         gitUntracked: 'hsl(150, 35%, 48%)',
     }),
+    ...monthVibeExtraUi,
 };

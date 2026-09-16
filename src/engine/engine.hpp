@@ -4,12 +4,15 @@
 #include "model/model.hpp"
 #include "engine/gpt_response.hpp"
 
+#include <atomic>
 #include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include <sys/types.h>
 
 struct SopWrittenFile {
     std::string relative_path;
@@ -31,6 +34,8 @@ struct SopShellRun {
     std::string progress_label;
     std::string log;
     std::string progress_fifo;
+    pid_t pid = -1;
+    std::atomic<bool> stop_requested{false};
 };
 
 enum class SopAutoRunState {

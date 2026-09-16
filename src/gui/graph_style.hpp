@@ -19,6 +19,7 @@ struct SopGraphNodeStyle {
 
 wxColour SopGraphBgColour();
 wxColour SopGraphCurrentBeige();
+wxColour SopGraphCurrentGreen();
 wxColour SopGraphHoverYellow();
 wxColour SopGraphAccentColour();
 wxColour SopGraphForkColour();

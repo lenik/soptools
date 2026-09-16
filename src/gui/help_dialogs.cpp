@@ -86,20 +86,21 @@ void show_shortcuts_dialog(wxWindow *parent) {
     auto *inner = new wxBoxSizer(wxVERTICAL);
     inner->Add(MakeShortcutSection(
                    scroll, wxString::FromUTF8("File"),
-                   {{"Ctrl+O", "Open Project"},
+                   {{"Ctrl+U", "Use… (open SOP)"},
+                    {"Ctrl+O", "Open… (project directory)"},
                     {"Ctrl+S", "Save project status (sop/status)"},
-                    {"Ctrl+Q", "Quit"}}),
+                    {"Ctrl+Q", "Exit"}}),
                0, wxEXPAND | wxALL, 12);
     inner->Add(new wxStaticLine(scroll), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
     inner->Add(MakeShortcutSection(
                    scroll, wxString::FromUTF8("Procedure"),
-                   {{"Ctrl+U", "Load SOP"},
+                   {{"PgDn", "Make (run step, then next on success)"},
+                    {"Ctrl+Enter", "Execute / Get / Code (stay on step)"},
+                    {"F5", "Run auto-run from current step"},
+                    {"F8", "Pause after the current in-flight step"},
                     {"PgUp", "Back"},
-                    {"PgDn", "Next"},
-                    {"Enter", "Set location to selected graph node"},
-                    {"F5", "Run / Resume auto-run"},
-                    {"F8", "Pause auto-run"},
-                    {"Ctrl+Enter", "Execute / Get current step"}}),
+                    {"Enter", "Set location to selected / focused graph node"},
+                    {"Double-click", "Set location to clicked graph node"}}),
                0, wxEXPAND | wxALL, 12);
     inner->Add(new wxStaticLine(scroll), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
     inner->Add(MakeShortcutSection(

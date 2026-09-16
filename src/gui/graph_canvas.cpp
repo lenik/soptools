@@ -41,6 +41,7 @@ wxBEGIN_EVENT_TABLE(SopGraphCanvas, wxPanel)
     EVT_SIZE(SopGraphCanvas::OnSize)
     EVT_MOUSEWHEEL(SopGraphCanvas::OnMouseWheel)
     EVT_LEFT_DOWN(SopGraphCanvas::OnMouseDown)
+    EVT_LEFT_DCLICK(SopGraphCanvas::OnMouseDClick)
     EVT_LEFT_UP(SopGraphCanvas::OnMouseUp)
     EVT_MOTION(SopGraphCanvas::OnMouseMove)
     EVT_LEAVE_WINDOW(SopGraphCanvas::OnMouseLeave)
@@ -436,17 +437,40 @@ void SopGraphCanvas::ShowNodeContextMenu(const wxPoint &screen_pos, const std::s
     if (step.is_gpt_get()) {
         cmd_label = wxString::FromUTF8("Get");
         cmd_art = wxART_GO_DOWN;
+    } else if (step.is_codex()) {
+        cmd_label = wxString::FromUTF8("Code");
+        cmd_art = wxART_COPY;
     } else if (step.is_prompt_copy()) {
-        cmd_label = wxString::FromUTF8("Copy");
+        cmd_label = wxString::FromUTF8("Get");
         cmd_art = wxART_COPY;
     } else if (!step.is_automatable()) {
-        cmd_label = wxString::FromUTF8("Run");
+        cmd_label = wxString::FromUTF8("Make");
         cmd_art = wxART_GO_FORWARD;
     }
     AppendMenuItem(&menu, ID_CTX_EXECUTE, cmd_label, cmd_art);
     menu.AppendSeparator();
     AppendMenuItem(&menu, ID_REDRAW, wxString::FromUTF8("Redraw"), wxART_REFRESH);
     PopupMenu(&menu, screen_pos);
+}
+
+void SopGraphCanvas::MoveLocationToNode(int node_index) {
+    if (node_index < 0 || node_index >= static_cast<int>(nodes_.size()) || !move_to_fn_) {
+        return;
+    }
+    const SopGraphNode &node = nodes_[static_cast<size_t>(node_index)];
+    selected_step_id_ = node.step_id;
+    tab_focus_node_ = node_index;
+    for (auto &n : nodes_) {
+        n.selected = n.step_id == selected_step_id_;
+    }
+    if (node.on_active_path) {
+        move_to_fn_(node.step_id, node.path_index);
+        ReportStatus(wxString::Format(wxString::FromUTF8("Location set to %s."),
+                                      wxString::FromUTF8(node.step_id)));
+    } else {
+        ReportStatus(wxString::FromUTF8("Cannot set location: step is not on the active path."));
+    }
+    Refresh(false);
 }
 
 void SopGraphCanvas::OnMouseDown(wxMouseEvent &evt) {
@@ -490,6 +514,16 @@ void SopGraphCanvas::OnMouseDown(wxMouseEvent &evt) {
     pan_origin_ = pan_;
     CaptureMouse();
     SetCursor(wxCursor(wxCURSOR_HAND));
+}
+
+void SopGraphCanvas::OnMouseDClick(wxMouseEvent &evt) {
+    SetFocus();
+    const int hit = HitTestNode(ScreenToGraph(evt.GetPosition()));
+    if (hit >= 0) {
+        MoveLocationToNode(hit);
+        return;
+    }
+    evt.Skip();
 }
 
 void SopGraphCanvas::OnMouseUp(wxMouseEvent &) {
@@ -557,22 +591,7 @@ void SopGraphCanvas::OnKeyDown(wxKeyEvent &evt) {
         if (idx < 0) {
             idx = HitTestNode(ScreenToGraph(ScreenToClient(wxGetMousePosition())));
         }
-        if (idx >= 0 && move_to_fn_) {
-            const SopGraphNode &node = nodes_[static_cast<size_t>(idx)];
-            selected_step_id_ = node.step_id;
-            tab_focus_node_ = idx;
-            for (auto &n : nodes_) {
-                n.selected = n.step_id == selected_step_id_;
-            }
-            if (node.on_active_path) {
-                move_to_fn_(node.step_id, node.path_index);
-                ReportStatus(wxString::Format(wxString::FromUTF8("Location set to %s."),
-                                              wxString::FromUTF8(node.step_id)));
-            } else {
-                ReportStatus(wxString::FromUTF8("Cannot set location: step is not on the active path."));
-            }
-            Refresh(false);
-        }
+        MoveLocationToNode(idx);
         return;
     }
     if (evt.GetKeyCode() == ' ') {

@@ -9,7 +9,9 @@
 #include "gui/help_dialogs.hpp"
 #include "gui/paste_response_dialog.hpp"
 #include "gui/render_response_dialog.hpp"
+#include "gui/codex_copy_dialog.hpp"
 #include "engine/project.hpp"
+#include "engine/stage_files.hpp"
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
@@ -144,7 +146,8 @@ bool MainFrame::OpenGptPasteFlow(const SopStep &step) {
         return false;
     }
     const std::string step_id = sop_step_id(step);
-    SopPasteResponseDialog paste(this, engine_->options().project_dir, step);
+    SopPasteResponseDialog paste(this, engine_->options().project_dir, step,
+                                 engine_->options().stage_dir);
     if (paste.ShowModal() != wxID_OK || !paste.saved()) {
         SetStatusBarMessage(wxString::FromUTF8("Paste Response cancelled."), true);
         return false;
@@ -161,6 +164,20 @@ bool MainFrame::OpenGptPasteFlow(const SopStep &step) {
         SopRenderResponseDialog render(this, paste.save_result());
         render.ShowModal();
     }
+    return true;
+}
+
+bool MainFrame::OpenCodexCopyFlow(const SopStep &step) {
+    wxString err;
+    if (!CopyStepPrompt(step, &err)) {
+        SetStatusBarMessage(err, true);
+        return false;
+    }
+    if (!show_codex_copy_dialog(this, step)) {
+        SetStatusBarMessage(wxString::FromUTF8("Code cancelled."), true);
+        return false;
+    }
+    SetStatusBarMessage(wxString::FromUTF8("Prompt copied — forward it to Codex."), true);
     return true;
 }
 
@@ -213,6 +230,11 @@ void MainFrame::RunStepAction(const std::string &step_id, bool force) {
         RefreshAll();
         return;
     }
+    if (step.is_codex()) {
+        OpenCodexCopyFlow(step);
+        RefreshAll();
+        return;
+    }
     if (step.is_prompt_copy()) {
         wxString err;
         if (!CopyStepPrompt(step, &err)) {
@@ -252,6 +274,11 @@ void MainFrame::DoCopy() {
     }
     if (step->is_gpt_get()) {
         OpenGptPasteFlow(*step);
+        RefreshAll();
+        return;
+    }
+    if (step->is_codex()) {
+        OpenCodexCopyFlow(*step);
         RefreshAll();
         return;
     }
@@ -377,76 +404,70 @@ void MainFrame::RefreshActionTool() {
         return;
     }
     const SopStep *step = engine_->step_at(engine_->current_index());
-    const bool gpt_get = step && step->is_gpt_get();
-    const bool copy_mode = step && step->is_prompt_copy();
-    const bool exec_mode = step && step->is_automatable();
+
+    wxString label = wxString::FromUTF8("Execute");
+    wxArtID art = wxART_EXECUTABLE_FILE;
+    wxString help = wxString::FromUTF8("Run this step and stay here (Ctrl+Enter)");
+    wxString menu_label = wxString::FromUTF8("&Execute\tCtrl-Enter");
+
+    if (step && step->is_gpt_get()) {
+        label = wxString::FromUTF8("Get");
+        art = wxART_GO_DOWN;
+        help = wxString::FromUTF8("Copy prompt and open Paste Response (Ctrl+Enter)");
+        menu_label = wxString::FromUTF8("&Get\tCtrl-Enter");
+    } else if (step && step->is_codex()) {
+        label = wxString::FromUTF8("Code");
+        art = wxART_COPY;
+        help = wxString::FromUTF8("Copy prompt for Codex (Ctrl+Enter)");
+        menu_label = wxString::FromUTF8("&Code\tCtrl-Enter");
+    }
 
     int pos = toolbar_->GetToolPos(ID_EXECUTE);
     if (pos == wxNOT_FOUND) {
-        pos = toolbar_->GetToolPos(ID_COPY);
-    }
-    if (pos == wxNOT_FOUND) {
         pos = static_cast<int>(toolbar_->GetToolsCount());
-    }
-
-    if (toolbar_->GetToolPos(ID_EXECUTE) != wxNOT_FOUND) {
+    } else {
         toolbar_->DeleteTool(ID_EXECUTE);
     }
+    /* Drop legacy ID_COPY tool if a prior build left it. */
     if (toolbar_->GetToolPos(ID_COPY) != wxNOT_FOUND) {
         toolbar_->DeleteTool(ID_COPY);
     }
 
-    if (gpt_get) {
-        toolbar_->InsertTool(pos, ID_COPY, wxString::FromUTF8("Get"),
-                             wxArtProvider::GetBitmap(wxART_GO_DOWN, wxART_TOOLBAR), wxNullBitmap,
-                             wxITEM_NORMAL,
-                             wxString::FromUTF8("Get prompt + open Paste Response (Ctrl+Enter)"));
-    } else if (copy_mode) {
-        toolbar_->InsertTool(pos, ID_COPY, wxString::FromUTF8("Copy"),
-                             wxArtProvider::GetBitmap(wxART_COPY, wxART_TOOLBAR), wxNullBitmap,
-                             wxITEM_NORMAL, wxString::FromUTF8("Copy prompt to clipboard (Ctrl+Enter)"));
-    } else if (exec_mode) {
-        toolbar_->InsertTool(pos, ID_EXECUTE, wxString::FromUTF8("Execute"),
-                             wxArtProvider::GetBitmap(wxART_EXECUTABLE_FILE, wxART_TOOLBAR), wxNullBitmap,
-                             wxITEM_NORMAL, wxString::FromUTF8("Execute current step (Ctrl+Enter)"));
-    }
+    toolbar_->InsertTool(pos, ID_EXECUTE, label, wxArtProvider::GetBitmap(art, wxART_TOOLBAR), wxNullBitmap,
+                         wxITEM_NORMAL, help);
     toolbar_->Realize();
+
+    if (action_menu_item_) {
+        action_menu_item_->SetItemLabel(menu_label);
+    }
 }
 
-void MainFrame::RefreshAutoRunTool() {
+void MainFrame::RefreshRunTools() {
     if (!toolbar_) {
         return;
     }
-    wxString label = wxString::FromUTF8("Run");
-    wxArtID art = wxART_EXECUTABLE_FILE;
-    switch (engine_->auto_run_state()) {
-    case SopAutoRunState::Running:
-        label = wxString::FromUTF8("Pause");
-        art = wxART_STOP;
-        break;
-    case SopAutoRunState::Paused:
-        label = wxString::FromUTF8("Resume");
-        art = wxART_EXECUTABLE_FILE;
-        break;
-    default:
-        break;
-    }
-    const wxString help = label + wxString::FromUTF8(" automated workflow (F5)");
-    const int pos = toolbar_->GetToolPos(ID_AUTO_RUN);
-    if (pos != wxNOT_FOUND) {
-        toolbar_->DeleteTool(ID_AUTO_RUN);
-        toolbar_->InsertTool(pos, ID_AUTO_RUN, label, wxArtProvider::GetBitmap(art, wxART_TOOLBAR), wxNullBitmap,
-                             wxITEM_NORMAL, help);
-        toolbar_->Realize();
+    const bool running = engine_->auto_run_state() == SopAutoRunState::Running;
+    const std::string sid = engine_->current_step_id();
+    const bool shell_running = !sid.empty() && engine_->is_shell_running(sid);
+    toolbar_->EnableTool(ID_START_RESUME, !running);
+    toolbar_->EnableTool(ID_PAUSE, running);
+    toolbar_->EnableTool(ID_STOP, shell_running);
+    if (GetMenuBar()) {
+        GetMenuBar()->Enable(ID_START_RESUME, !running);
+        GetMenuBar()->Enable(ID_PAUSE, running);
+        GetMenuBar()->Enable(ID_STOP, shell_running);
     }
 }
 
 void MainFrame::RefreshNav() {
     if (toolbar_) {
-        toolbar_->EnableTool(ID_BACK, engine_->current_index() > 0);
-        toolbar_->EnableTool(ID_NEXT, engine_->can_advance());
+        const bool has_step = engine_->current_index() < engine_->active_steps().size();
+        toolbar_->EnableTool(ID_MAKE, has_step);
+        if (GetMenuBar()) {
+            GetMenuBar()->Enable(ID_MAKE, has_step);
+            GetMenuBar()->Enable(ID_BACK, engine_->current_index() > 0);
+        }
     }
-    RefreshAutoRunTool();
+    RefreshRunTools();
     RefreshActionTool();
 }
-

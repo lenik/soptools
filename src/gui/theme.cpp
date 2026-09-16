@@ -123,7 +123,18 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
                 return wxString::FromUTF8("Paste the GPT response in the dialog, then Save.");
             default:
                 return wxString::FromUTF8(
-                    "Next/Get copies the prompt and opens Paste Response for the GPT reply.");
+                    "Make/Get copies the prompt and opens Paste Response for the GPT reply.");
+            }
+        }
+        if (step->is_codex()) {
+            switch (step->status) {
+            case SopStepStatus::Complete:
+                return wxString::FromUTF8("Step completed.");
+            case SopStepStatus::Waiting:
+                return wxString::FromUTF8("Paste AI output below and click Apply.");
+            default:
+                return wxString::FromUTF8(
+                    "Code copies the prompt; forward it to Codex, then Apply the reply.");
             }
         }
         switch (step->status) {
@@ -132,7 +143,7 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
         case SopStepStatus::Waiting:
             return wxString::FromUTF8("Paste AI output below and click Apply.");
         default:
-            return wxString::FromUTF8("Click Copy to copy the prompt to the clipboard.");
+            return wxString::FromUTF8("Click Get/Code to copy the prompt to the clipboard.");
         }
     }
     if (step->is_automatable()) {

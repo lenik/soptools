@@ -13,7 +13,8 @@ class SopPasteResponseDialog : public wxDialog {
 public:
     SopPasteResponseDialog(wxWindow *parent,
                            const std::string &project_dir,
-                           const SopStep &step);
+                           const SopStep &step,
+                           const std::string &stage_dir = {});
 
     /* Non-empty after successful Save. */
     const SopGptSaveResult &save_result() const { return save_result_; }
@@ -21,29 +22,22 @@ public:
 
 private:
     void SetDialogStatus(const wxString &text);
-    void RebuildLinkList();
+    void RebuildFileList();
     void OnTextChanged(wxCommandEvent &);
     void OnPasteClipboard(wxCommandEvent &);
-    void OnDownload(wxCommandEvent &);
     void OnSave(wxCommandEvent &);
     void OnCancel(wxCommandEvent &);
-    void StartDownloads(bool then_save);
-    void FinishDownloadsAndMaybeSave();
-    void MarkLinkDone(size_t index, bool ok, const std::string &path, const std::string &err);
     void DoSave();
 
     std::string project_dir_;
+    std::string stage_dir_;
     SopStep step_;
-    std::vector<SopGptAttachment> attachments_;
+    std::vector<std::string> expected_files_;
     SopGptSaveResult save_result_;
     bool saved_ = false;
-    bool downloading_ = false;
-    bool save_after_download_ = false;
-    int pending_downloads_ = 0;
 
     class wxTextCtrl *text_ = nullptr;
-    class wxListBox *links_ = nullptr;
-    class wxButton *download_btn_ = nullptr;
+    class wxListBox *files_ = nullptr;
     class wxButton *save_btn_ = nullptr;
     class wxStaticText *hint_label_ = nullptr;
     class wxStaticText *status_label_ = nullptr;

@@ -2,6 +2,7 @@
 #define GUI_MAIN_FRAME_HPP
 
 #include "engine/engine.hpp"
+#include "engine/stage_watcher.hpp"
 #include "gui/graph_canvas.hpp"
 #include "gui/log_view.hpp"
 
@@ -17,11 +18,13 @@
 #include <wx/textctrl.h>
 #include <wx/toolbar.h>
 
+#include <memory>
 #include <string>
 
 class MainFrame : public wxFrame {
 public:
     explicit MainFrame(SopEngine *engine);
+    ~MainFrame() override;
     void UpdateWindowTitle();
 
 private:
@@ -51,6 +54,7 @@ private:
     wxToolBar *toolbar_ = nullptr;
     wxMenu *view_menu_ = nullptr;
     wxMenu *lang_menu_ = nullptr;
+    wxMenuItem *action_menu_item_ = nullptr;
     bool show_log_ = false;
     bool show_graph_ = true;
     bool graph_layout_dirty_ = true;
@@ -59,6 +63,7 @@ private:
     std::string last_current_step_id_;
     wxString sticky_status_;
     size_t sticky_status_index_ = static_cast<size_t>(-1);
+    std::unique_ptr<SopStageWatcher> stage_watcher_;
 
     void CreateMenu();
     void CreateAppToolBar();
@@ -71,6 +76,7 @@ private:
     void append_log(int level, const std::string &msg);
     void SetStatusBarMessage(const wxString &text, bool sticky = false);
     bool OpenGptPasteFlow(const SopStep &step);
+    bool OpenCodexCopyFlow(const SopStep &step);
     bool CopyStepPrompt(const SopStep &step, wxString *err = nullptr);
     /* If current step is an incomplete GPT .get, copy prompt + paste dialog. */
     bool MaybeOpenGptPasteForCurrent();
@@ -82,7 +88,7 @@ private:
     void RefreshStepView();
     void RefreshStatusBar();
     void RefreshActionTool();
-    void RefreshAutoRunTool();
+    void RefreshRunTools();
     void RefreshNav();
     void SyncLanguageMenu();
     void SwitchLanguagePack(const std::string &lang);
@@ -95,13 +101,17 @@ private:
     void ReattachLogPane();
     void ToggleLogDetach();
     void RefreshAll();
+    void StartStageWatcher();
+    void OnStageDirChanged();
+    /* Claim expected stage files; prompt if leftovers remain. false = block advance. */
+    bool DrainStageOrPromptExtras(const SopStep *step);
     void OnBack(wxCommandEvent &);
-    void OnNext(wxCommandEvent &);
+    void OnMake(wxCommandEvent &);
     void OnExecute(wxCommandEvent &);
     void OnCopy(wxCommandEvent &);
-    void OnAutoRun(wxCommandEvent &);
     void OnStartResume(wxCommandEvent &);
     void OnPause(wxCommandEvent &);
+    void OnStop(wxCommandEvent &);
     void OnApply(wxCommandEvent &);
     void OnGraphDetachedClose(wxCloseEvent &evt);
     void OnToggleGraph(wxCommandEvent &);

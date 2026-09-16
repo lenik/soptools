@@ -33,6 +33,30 @@ light-liaozhai	Light Liaozhai	light	vibe	Liaozhai	liaozhai	catalog/Liaozhai.md
 dark-liaozhai	Dark Liaozhai	dark	vibe	Liaozhai	darkLiaozhai	catalog/Liaozhai.md	
 light-thrones	Light Game of Thrones	light	vibe	Thrones	thrones	catalog/Thrones.md	
 dark-thrones	Dark Game of Thrones	dark	vibe	Thrones	darkThrones	catalog/Thrones.md	
+light-january	Light January	light	vibe	January	january	catalog/January.md	
+dark-january	Dark January	dark	vibe	January	darkJanuary	catalog/January.md	
+light-february	Light February	light	vibe	February	february	catalog/February.md	
+dark-february	Dark February	dark	vibe	February	darkFebruary	catalog/February.md	
+light-march	Light March	light	vibe	March	march	catalog/March.md	
+dark-march	Dark March	dark	vibe	March	darkMarch	catalog/March.md	
+light-april	Light April	light	vibe	April	april	catalog/April.md	
+dark-april	Dark April	dark	vibe	April	darkApril	catalog/April.md	
+light-may	Light May	light	vibe	May	may	catalog/May.md	
+dark-may	Dark May	dark	vibe	May	darkMay	catalog/May.md	
+light-june	Light June	light	vibe	June	june	catalog/June.md	
+dark-june	Dark June	dark	vibe	June	darkJune	catalog/June.md	
+light-july	Light July	light	vibe	July	july	catalog/July.md	
+dark-july	Dark July	dark	vibe	July	darkJuly	catalog/July.md	
+light-august	Light August	light	vibe	August	august	catalog/August.md	
+dark-august	Dark August	dark	vibe	August	darkAugust	catalog/August.md	
+light-september	Light September	light	vibe	September	september	catalog/September.md	
+dark-september	Dark September	dark	vibe	September	darkSeptember	catalog/September.md	
+light-october	Light October	light	vibe	October	october	catalog/October.md	
+dark-october	Dark October	dark	vibe	October	darkOctober	catalog/October.md	
+light-november	Light November	light	vibe	November	november	catalog/November.md	
+dark-november	Dark November	dark	vibe	November	darkNovember	catalog/November.md	
+light-december	Light December	light	vibe	December	december	catalog/December.md	
+dark-december	Dark December	dark	vibe	December	darkDecember	catalog/December.md	
 country-brasil	Country: Brasil	light	country	Brasil	countryBrasil	catalog/Brasil.md	pt_BR
 dark-country-brasil	Country: Brasil (Dark)	dark	country	Brasil	darkCountryBrasil	catalog/Brasil.md	pt_BR
 country-canada	Country: Canada	light	country	Canada	countryCanada	catalog/Canada.md	

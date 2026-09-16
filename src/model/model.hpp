@@ -100,6 +100,7 @@ struct SopStep {
     bool is_automatable() const;
     bool is_prompt_copy() const;
     bool is_gpt_get() const;
+    bool is_codex() const;
     bool has_parse_format(const std::string &fmt) const;
 };
 
@@ -119,6 +120,8 @@ struct SopDefinition {
 struct SopRuntimeOptions {
     std::string project_dir;
     std::string sop_dir;
+    /* Optional drop folder watched via inotify (Linux). Empty = disabled. */
+    std::string stage_dir;
     int verbose = 0;
     bool gui = true;
     bool console = false;

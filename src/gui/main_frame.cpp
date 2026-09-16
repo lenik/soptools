@@ -93,6 +93,14 @@ MainFrame::MainFrame(SopEngine *engine)
     UpdateWindowTitle();
     RelayoutMainPanes();
     Bind(wxEVT_SIZE, &MainFrame::OnFrameSize, this);
+    StartStageWatcher();
+}
+
+MainFrame::~MainFrame() {
+    if (stage_watcher_) {
+        stage_watcher_->stop();
+        stage_watcher_.reset();
+    }
 }
 
 void MainFrame::UpdateWindowTitle() {
@@ -104,23 +112,26 @@ void MainFrame::CreateMenu() {
     auto *menu_bar = new wxMenuBar();
 
     auto *file_menu = new wxMenu();
-    AppendIconMenuItem(file_menu, ID_OPEN_PROJECT, wxString::FromUTF8("&Open Project\tCtrl-O"), wxART_FOLDER_OPEN);
+    AppendIconMenuItem(file_menu, ID_LOAD_SOP, wxString::FromUTF8("&Use...\tCtrl-U"), wxART_FILE_OPEN);
+    AppendIconMenuItem(file_menu, ID_OPEN_PROJECT, wxString::FromUTF8("&Open...\tCtrl-O"), wxART_FOLDER_OPEN);
+    file_menu->AppendSeparator();
     AppendIconMenuItem(file_menu, ID_SAVE_PROJECT, wxString::FromUTF8("&Save\tCtrl-S"), wxART_FILE_SAVE);
     AppendIconMenuItem(file_menu, ID_REVERT_PROJECT, wxString::FromUTF8("&Revert"), wxART_UNDO);
     file_menu->AppendSeparator();
-    AppendIconMenuItem(file_menu, wxID_EXIT, wxString::FromUTF8("&Quit\tCtrl-Q"), wxART_QUIT);
+    AppendIconMenuItem(file_menu, wxID_EXIT, wxString::FromUTF8("E&xit\tCtrl-Q"), wxART_QUIT);
 
     auto *procedure_menu = new wxMenu();
-    AppendIconMenuItem(procedure_menu, ID_LOAD_SOP, wxString::FromUTF8("&Load SOP...\tCtrl-U"), wxART_FILE_OPEN);
+    AppendIconMenuItem(procedure_menu, ID_MAKE, wxString::FromUTF8("&Make\tPgDn"), wxART_GO_FORWARD);
+    action_menu_item_ =
+        AppendIconMenuItem(procedure_menu, ID_EXECUTE, wxString::FromUTF8("&Execute\tCtrl-Enter"),
+                           wxART_EXECUTABLE_FILE);
+    procedure_menu->AppendSeparator();
+    AppendIconMenuItem(procedure_menu, ID_START_RESUME, wxString::FromUTF8("&Run\tF5"),
+                       wxString::FromUTF8("system-run"));
+    AppendIconMenuItem(procedure_menu, ID_PAUSE, wxString::FromUTF8("&Pause\tF8"), wxART_STOP);
+    AppendIconMenuItem(procedure_menu, ID_STOP, wxString::FromUTF8("&Stop"), wxART_DELETE);
     procedure_menu->AppendSeparator();
     AppendIconMenuItem(procedure_menu, ID_BACK, wxString::FromUTF8("&Back\tPgUp"), wxART_GO_BACK);
-    AppendIconMenuItem(procedure_menu, ID_NEXT, wxString::FromUTF8("&Next\tPgDn"), wxART_GO_FORWARD);
-    procedure_menu->AppendSeparator();
-    AppendIconMenuItem(procedure_menu, ID_START_RESUME, wxString::FromUTF8("&Run / Resume\tF5"),
-                       wxART_EXECUTABLE_FILE);
-    AppendIconMenuItem(procedure_menu, ID_PAUSE, wxString::FromUTF8("&Pause\tF8"), wxART_STOP);
-    AppendIconMenuItem(procedure_menu, ID_EXECUTE, wxString::FromUTF8("&Execute / Get\tCtrl-Enter"),
-                       wxART_EXECUTABLE_FILE);
 
     view_menu_ = new wxMenu();
     AppendIconCheckItem(view_menu_, ID_SHOW_GRAPH, wxString::FromUTF8("Toggle &Graph\tF2"), wxART_REPORT_VIEW);
@@ -151,7 +162,7 @@ void MainFrame::CreateMenu() {
     Bind(wxEVT_MENU, &MainFrame::OnRevertProject, this, ID_REVERT_PROJECT);
     Bind(wxEVT_MENU, &MainFrame::OnLoadSop, this, ID_LOAD_SOP);
     Bind(wxEVT_MENU, &MainFrame::OnBack, this, ID_BACK);
-    Bind(wxEVT_MENU, &MainFrame::OnNext, this, ID_NEXT);
+    Bind(wxEVT_MENU, &MainFrame::OnMake, this, ID_MAKE);
     Bind(wxEVT_MENU, &MainFrame::OnQuit, this, wxID_EXIT);
     Bind(wxEVT_MENU, &MainFrame::OnToggleGraph, this, ID_SHOW_GRAPH);
     Bind(wxEVT_MENU, &MainFrame::OnToggleLog, this, ID_SHOW_LOG);
@@ -159,6 +170,7 @@ void MainFrame::CreateMenu() {
     Bind(wxEVT_MENU, &MainFrame::OnCopy, this, ID_COPY);
     Bind(wxEVT_MENU, &MainFrame::OnStartResume, this, ID_START_RESUME);
     Bind(wxEVT_MENU, &MainFrame::OnPause, this, ID_PAUSE);
+    Bind(wxEVT_MENU, &MainFrame::OnStop, this, ID_STOP);
     Bind(wxEVT_MENU, &MainFrame::OnHelpShortcuts, this, ID_HELP_SHORTCUTS);
     Bind(wxEVT_MENU, &MainFrame::OnHelpLicense, this, ID_HELP_LICENSE);
     Bind(wxEVT_MENU, &MainFrame::OnHelpAbout, this, ID_HELP_ABOUT);
@@ -168,23 +180,43 @@ void MainFrame::CreateMenu() {
 void MainFrame::CreateAppToolBar() {
     toolbar_ = wxFrame::CreateToolBar(wxTB_TEXT | wxTB_HORIZONTAL | wxTB_FLAT);
     toolbar_->SetBackgroundColour(ios_card());
-    toolbar_->AddTool(ID_BACK, wxString::FromUTF8("Back"), wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_TOOLBAR),
-                      wxString::FromUTF8("Previous step"));
-    toolbar_->AddTool(ID_NEXT, wxString::FromUTF8("Next"), wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR),
-                      wxString::FromUTF8("Run and go to next step"));
+    toolbar_->AddTool(ID_LOAD_SOP, wxString::FromUTF8("Use..."),
+                      wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_TOOLBAR),
+                      wxString::FromUTF8("Open SOP suite / branch (Ctrl+U)"));
+    toolbar_->AddTool(ID_OPEN_PROJECT, wxString::FromUTF8("Open..."),
+                      wxArtProvider::GetBitmap(wxART_FOLDER_OPEN, wxART_TOOLBAR),
+                      wxString::FromUTF8("Open project directory (Ctrl+O)"));
     toolbar_->AddSeparator();
-    toolbar_->AddTool(ID_AUTO_RUN, wxString::FromUTF8("Run"),
-                      wxArtProvider::GetBitmap(wxART_EXECUTABLE_FILE, wxART_TOOLBAR),
-                      wxString::FromUTF8("Run / Resume automated workflow (F5)"));
+    toolbar_->AddTool(ID_MAKE, wxString::FromUTF8("Make"),
+                      wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR),
+                      wxString::FromUTF8("Run this step; on success go to the next (PgDn)"));
     toolbar_->AddTool(ID_EXECUTE, wxString::FromUTF8("Execute"),
                       wxArtProvider::GetBitmap(wxART_EXECUTABLE_FILE, wxART_TOOLBAR),
-                      wxString::FromUTF8("Execute current step (Ctrl+Enter)"));
+                      wxString::FromUTF8("Run this step and stay here (Ctrl+Enter)"));
+    toolbar_->AddSeparator();
+    toolbar_->AddTool(ID_START_RESUME, wxString::FromUTF8("Run"),
+                      wxArtProvider::GetBitmap(wxString::FromUTF8("system-run"), wxART_TOOLBAR),
+                      wxString::FromUTF8("Auto-run continuously from the current step (F5)"));
+    toolbar_->AddTool(ID_PAUSE, wxString::FromUTF8("Pause"),
+                      wxArtProvider::GetBitmap(wxART_WARNING, wxART_TOOLBAR),
+                      wxString::FromUTF8("Request pause after the current in-flight step (F8)"));
+    toolbar_->AddTool(ID_STOP, wxString::FromUTF8("Stop"),
+                      wxArtProvider::GetBitmap(wxART_DELETE, wxART_TOOLBAR),
+                      wxString::FromUTF8("Forcibly interrupt the currently running step"));
+    toolbar_->AddSeparator();
+    toolbar_->AddTool(wxID_EXIT, wxString::FromUTF8("Exit"),
+                      wxArtProvider::GetBitmap(wxART_QUIT, wxART_TOOLBAR),
+                      wxString::FromUTF8("Exit the program (Ctrl+Q)"));
     toolbar_->Realize();
-    Bind(wxEVT_TOOL, &MainFrame::OnBack, this, ID_BACK);
-    Bind(wxEVT_TOOL, &MainFrame::OnNext, this, ID_NEXT);
-    Bind(wxEVT_TOOL, &MainFrame::OnAutoRun, this, ID_AUTO_RUN);
+    Bind(wxEVT_TOOL, &MainFrame::OnLoadSop, this, ID_LOAD_SOP);
+    Bind(wxEVT_TOOL, &MainFrame::OnOpenProject, this, ID_OPEN_PROJECT);
+    Bind(wxEVT_TOOL, &MainFrame::OnMake, this, ID_MAKE);
     Bind(wxEVT_TOOL, &MainFrame::OnExecute, this, ID_EXECUTE);
     Bind(wxEVT_TOOL, &MainFrame::OnCopy, this, ID_COPY);
+    Bind(wxEVT_TOOL, &MainFrame::OnStartResume, this, ID_START_RESUME);
+    Bind(wxEVT_TOOL, &MainFrame::OnPause, this, ID_PAUSE);
+    Bind(wxEVT_TOOL, &MainFrame::OnStop, this, ID_STOP);
+    Bind(wxEVT_TOOL, &MainFrame::OnQuit, this, wxID_EXIT);
 }
 
 void MainFrame::SetupAccelerators() {
@@ -193,7 +225,7 @@ void MainFrame::SetupAccelerators() {
     entries[1].Set(wxACCEL_CTRL, static_cast<int>('S'), ID_SAVE_PROJECT);
     entries[2].Set(wxACCEL_CTRL, static_cast<int>('U'), ID_LOAD_SOP);
     entries[3].Set(wxACCEL_NORMAL, WXK_PAGEUP, ID_BACK);
-    entries[4].Set(wxACCEL_NORMAL, WXK_PAGEDOWN, ID_NEXT);
+    entries[4].Set(wxACCEL_NORMAL, WXK_PAGEDOWN, ID_MAKE);
     entries[5].Set(wxACCEL_CTRL, WXK_RETURN, ID_EXECUTE);
     entries[6].Set(wxACCEL_NORMAL, WXK_F5, ID_START_RESUME);
     entries[7].Set(wxACCEL_NORMAL, WXK_F8, ID_PAUSE);

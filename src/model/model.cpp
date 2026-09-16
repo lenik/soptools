@@ -95,6 +95,10 @@ bool SopStep::is_gpt_get() const {
             (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".get") == 0));
 }
 
+bool SopStep::is_codex() const {
+    return role == SopRole::Codex || role == SopRole::AltCodex;
+}
+
 bool SopStep::has_parse_format(const std::string &fmt) const {
     std::string want = fmt;
     for (char &ch : want) {

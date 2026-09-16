@@ -52,9 +52,30 @@ body {
   color: var(--page-fg);
 }
 .meta { margin: 0; flex: 1 1 160px; font-size: 12px; color: var(--chrome-muted); }
-.mode-toggle {
+.chrome-controls {
   margin-left: auto;
   align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+.entire-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--page-fg);
+  cursor: pointer;
+  user-select: none;
+}
+.entire-check input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--page-fg);
+  cursor: pointer;
+}
+.mode-toggle {
   min-width: 76px;
   padding: 7px 12px;
   border-radius: 999px;

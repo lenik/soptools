@@ -1,3 +1,26 @@
+soptools (1.2.1) UNRELEASED; urgency=medium
+
+  * Graph: current-node mint fill distinct from Complete green.
+  * Codex Code dialog: styled confirm; Make marks complete and advances.
+  * Paste Response: Files list from Save-As / backtick paths; drop
+    Download button.
+  * stagedir: --stage-dir / SOP_STAGE_DIR / conf stage-dir=; inotify
+    claim with basename normalize; extras gate (pending/delete/cancel).
+  * Themes (vibe): January–December light/dark month packs, each
+    anchored to a country + seasonal/festival color language.
+  * Graph: double-click/Enter moves location; current node light-green
+    + bold border; selection fill-only; hover lightens fill.
+  * Run toolbar/menu uses the system-run (running) icon.
+  * sopwin toolbar/menus: Use…, Open…, Make, Execute/Get/Code, Run,
+    Pause, Stop, Exit; Code copies prompt and confirms for Codex.
+  * Implement Stop by killing the shell process group (fork instead of
+    popen).
+  * themes demo: Entire Window checkbox; Light/Dark toggles chrome+theme
+    or theme-only.
+  * Suite: ship vrischika game vertical-slice SOP pack (default/zh_CN).
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 10:01:00 +0800
+
 soptools (1.2.0) unstable; urgency=medium
 
   * Move Morandi to vibe; add Gal, Tomboy, Liaozhai, Game of Thrones

@@ -1,0 +1,17 @@
+Save-As: sop/GDD.md
+File-Link: inode
+Interaction: none
+Discard: -*- mode: markdown -*-
+
+# Review / deepen GDD storyline
+
+Open the template theme for this project (see README and existing sop/GDD.md).
+
+Rewrite or deepen `sop/GDD.md` so that:
+
+1. The place and stakes are concrete (proper nouns, timers, objects).
+2. Storyline beats (cold open → mandate → twist → climax → button ending) are explicit.
+3. The demo stage id remains `some_puff1`.
+4. No generic genre filler.
+
+Also refresh `sop/GDD-zh_CN.md` to match.

@@ -10,6 +10,7 @@
 #include "gui/paste_response_dialog.hpp"
 #include "gui/render_response_dialog.hpp"
 #include "engine/project.hpp"
+#include "engine/stage_files.hpp"
 #include "util/paths.hpp"
 
 #include <wx/wx.h>
@@ -170,13 +171,108 @@ void MainFrame::RefreshAll() {
     RefreshStatusBar();
 }
 
+void MainFrame::StartStageWatcher() {
+    if (stage_watcher_) {
+        stage_watcher_->stop();
+        stage_watcher_.reset();
+    }
+    const std::string &stage = engine_->options().stage_dir;
+    if (stage.empty()) {
+        return;
+    }
+    std::error_code ec;
+    std::filesystem::create_directories(stage, ec);
+    stage_watcher_ = std::make_unique<SopStageWatcher>();
+    stage_watcher_->start(stage, [this]() {
+        if (auto *app = wxTheApp) {
+            app->CallAfter([this]() { OnStageDirChanged(); });
+        }
+    });
+    append_log(1, "watching stagedir " + stage);
+}
+
+void MainFrame::OnStageDirChanged() {
+    const SopStep *step = engine_->step_at(engine_->current_index());
+    if (!step) {
+        return;
+    }
+    const auto expected = expected_files_for_step(*step);
+    if (expected.empty()) {
+        return;
+    }
+    auto claimed =
+        claim_stage_files(engine_->options().project_dir, engine_->options().stage_dir, expected);
+    if (!claimed.moved.empty()) {
+        for (const auto &m : claimed.moved) {
+            append_log(1, "stage: " + m);
+        }
+        SetStatusBarMessage(wxString::FromUTF8(claimed.message), true);
+        RefreshAll();
+    }
+}
+
+bool MainFrame::DrainStageOrPromptExtras(const SopStep *step) {
+    const std::string &stage = engine_->options().stage_dir;
+    if (stage.empty()) {
+        return true;
+    }
+    std::vector<std::string> expected;
+    if (step) {
+        expected = expected_files_for_step(*step);
+        if (!expected.empty()) {
+            auto claimed = claim_stage_files(engine_->options().project_dir, stage, expected);
+            for (const auto &m : claimed.moved) {
+                append_log(1, "stage: " + m);
+            }
+        }
+    }
+    auto extras = list_stage_basenames(stage);
+    if (extras.empty()) {
+        return true;
+    }
+
+    wxString list;
+    for (const auto &n : extras) {
+        list += wxString::FromUTF8("• ") + wxString::FromUTF8(n) + wxString::FromUTF8("\n");
+    }
+    const wxString msg =
+        wxString::FromUTF8("stagedir 还有多余文件，本步骤不能前进：\n\n") + list +
+        wxString::FromUTF8("\n选择处理方式：\n"
+                           "是 = 全部移入 sop/pending/\n"
+                           "否 = 删除多余文件\n"
+                           "取消 = 取消前进");
+    const int rc = wxMessageBox(msg, wxString::FromUTF8("stagedir extras"),
+                                wxYES_NO | wxCANCEL | wxICON_WARNING, this);
+    std::string err;
+    if (rc == wxYES) {
+        if (!move_stage_extras_to_pending(engine_->options().project_dir, stage, &err)) {
+            wxMessageBox(wxString::FromUTF8(err), wxString::FromUTF8("Move failed"), wxOK | wxICON_ERROR,
+                         this);
+            return false;
+        }
+        append_log(1, "moved stage extras to sop/pending/");
+        return list_stage_basenames(stage).empty();
+    }
+    if (rc == wxNO) {
+        if (!delete_stage_extras(stage, &err)) {
+            wxMessageBox(wxString::FromUTF8(err), wxString::FromUTF8("Delete failed"), wxOK | wxICON_ERROR,
+                         this);
+            return false;
+        }
+        append_log(1, "deleted stage extras");
+        return list_stage_basenames(stage).empty();
+    }
+    SetStatusBarMessage(wxString::FromUTF8("Advance cancelled: stagedir still has files."), true);
+    return false;
+}
+
 void MainFrame::OnBack(wxCommandEvent &) {
     sticky_status_.clear();
     engine_->retreat();
     RefreshAll();
 }
 
-void MainFrame::OnNext(wxCommandEvent &) {
+void MainFrame::OnMake(wxCommandEvent &) {
     sticky_status_.clear();
 
     const SopStep *step = engine_->step_at(engine_->current_index());
@@ -188,6 +284,10 @@ void MainFrame::OnNext(wxCommandEvent &) {
                 return;
             }
         }
+        if (!DrainStageOrPromptExtras(step)) {
+            RefreshAll();
+            return;
+        }
         if (engine_->advance()) {
             RefreshAll();
             MaybeOpenGptPasteForCurrent();
@@ -197,6 +297,29 @@ void MainFrame::OnNext(wxCommandEvent &) {
         return;
     }
 
+    if (step && step->is_codex()) {
+        if (!OpenCodexCopyFlow(*step)) {
+            RefreshAll();
+            return;
+        }
+        engine_->mark_complete(engine_->current_step_id(), true);
+        if (!DrainStageOrPromptExtras(step)) {
+            RefreshAll();
+            return;
+        }
+        if (engine_->advance()) {
+            RefreshAll();
+            MaybeOpenGptPasteForCurrent();
+        } else {
+            RefreshAll();
+        }
+        return;
+    }
+
+    if (!DrainStageOrPromptExtras(step)) {
+        RefreshAll();
+        return;
+    }
     if (engine_->try_advance_with_run()) {
         RefreshAll();
         MaybeOpenGptPasteForCurrent();
@@ -205,6 +328,15 @@ void MainFrame::OnNext(wxCommandEvent &) {
 
 void MainFrame::OnExecute(wxCommandEvent &) {
     const SopStep *step = engine_->step_at(engine_->current_index());
+    if (step && step->is_gpt_get()) {
+        DoCopy();
+        return;
+    }
+    if (step && step->is_codex()) {
+        OpenCodexCopyFlow(*step);
+        RefreshAll();
+        return;
+    }
     if (step && step->is_prompt_copy()) {
         DoCopy();
         return;
@@ -213,15 +345,6 @@ void MainFrame::OnExecute(wxCommandEvent &) {
 }
 
 void MainFrame::OnCopy(wxCommandEvent &) { DoCopy(); }
-
-void MainFrame::OnAutoRun(wxCommandEvent &) {
-    if (engine_->auto_run_state() == SopAutoRunState::Running) {
-        engine_->pause_auto_run();
-    } else {
-        engine_->start_auto_run();
-    }
-    RefreshAll();
-}
 
 void MainFrame::OnStartResume(wxCommandEvent &) {
     if (engine_->auto_run_state() == SopAutoRunState::Running) {
@@ -233,6 +356,18 @@ void MainFrame::OnStartResume(wxCommandEvent &) {
 
 void MainFrame::OnPause(wxCommandEvent &) {
     engine_->pause_auto_run();
+    RefreshAll();
+}
+
+void MainFrame::OnStop(wxCommandEvent &) {
+    const std::string sid = engine_->current_step_id();
+    if (sid.empty() || !engine_->is_shell_running(sid)) {
+        SetStatusBarMessage(wxString::FromUTF8("No running step to stop."), true);
+        RefreshNav();
+        return;
+    }
+    engine_->stop_shell(sid);
+    SetStatusBarMessage(wxString::FromUTF8("Stop requested for the current step."), true);
     RefreshAll();
 }
 
@@ -286,6 +421,7 @@ void MainFrame::OnOpenProject(wxCommandEvent &) {
     graph_layout_dirty_ = true;
     sticky_status_.clear();
     UpdateWindowTitle();
+    StartStageWatcher();
     RefreshAll();
     SetStatusText(wxString::FromUTF8("Project opened."));
 }
@@ -318,13 +454,13 @@ void MainFrame::OnRevertProject(wxCommandEvent &) {
 }
 
 void MainFrame::OnLoadSop(wxCommandEvent &) {
-    wxDirDialog dlg(this, wxString::FromUTF8("Load SOP"), wxString::FromUTF8(engine_->options().sop_dir),
+    wxDirDialog dlg(this, wxString::FromUTF8("Use SOP"), wxString::FromUTF8(engine_->options().sop_dir),
                     wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
     if (dlg.ShowModal() != wxID_OK) {
         return;
     }
     if (!engine_->reload_sop(dlg.GetPath().ToUTF8().data())) {
-        wxMessageBox(wxString::FromUTF8("Failed to load SOP."), wxString::FromUTF8("Load SOP"), wxOK | wxICON_ERROR);
+        wxMessageBox(wxString::FromUTF8("Failed to load SOP."), wxString::FromUTF8("Use SOP"), wxOK | wxICON_ERROR);
         return;
     }
     graph_layout_dirty_ = true;
