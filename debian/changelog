@@ -10,7 +10,7 @@ soptools (1.3.0) unstable; urgency=medium
   * 060: merge request-for-refactor into schema then always delete the
     file.
   * sopwin edit SOPDIR: suite-style SOP authoring UI.
-  * sopwin: drop main-window AI paste textbox (from 1.2.2).
+  * sopwin: drop main-window AI paste textbox and Apply button.
   * WorldMan 050/060: sync Save-As/Checkout path sop/Backend
     implementation prompt.md (fix Backand; add to zh_CN/ja).
   * WorldMan: document 050-before-040 backend amend path; 060 merges
