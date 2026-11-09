@@ -192,6 +192,7 @@ wm port -n <name>
 - Seed 可在后端提示之后运行时可选地请求修订（`050`）：`prisma/request-for-refactor.md` 和/或 `sop/Backend amends.md`（经 `<optional>`）。步骤 `060` 合并二者并删除请求文件。
 - 跨模块引用是标量 cuid2 字段 + API 查询，不是跨库 FK（除非明确要求）。
 - 施工期工作文档放在 `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`、`theme-default.md`）；构建/重构期间持续更新。
+- 根 `package.json`（自步骤 `010`）持有运维脚本：`dev` / `dev:*`、`db:generate`、`db:migrate`（= deploy）、`db:migrate:dev`、`db:seed`、`e2e`。优先 `db:*`，勿再并存根上的 `prisma:*` 别名。
 - 本地化 demo 资源：Google / Google Fonts / gstatic / Facebook CDN 等**必须**经本地 HTTP 代理 `http://localhost:8118`。
 - `web-e2e/workflows.md` 靠后生成，以便综合 `sop/` 下的 PRD/TUC/NTC/ECS、schema、seed 场景与后端设计。
 - `docs/api.md` 在后端实现/集成之后编写，作为建成态 API 合同。

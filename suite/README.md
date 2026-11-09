@@ -33,7 +33,7 @@ Rough coverage (same step ids across branches):
 | Seq | Role | Purpose |
 |-----|------|---------|
 | 000 | shell | Refactor Figma export into WorldMan layout; archive scaffolding; delete `.git` (no revert to export); seed `sop/themes/`; `[sop000]` commit |
-| 010 | codex | Freeze `sop/design-inventory.md`; refactor web; localize demo assets (Google* via `:8118`); evolving `[sop010]` commits |
+| 010 | codex | Freeze `sop/design-inventory.md`; refactor web; root `package.json` `db:*` / `dev:*` scripts; localize demo assets (Google* via `:8118`); evolving `[sop010]` commits |
 | 011 | codex | Optional theming (`extend: previous` → merges into `010` when included) |
 | 020 | gpt/codex | PRD (inventory-backed UI structure) |
 | 030–040 | gpt/codex | Prisma schema + seed (mock extraction + `seed-coverage.md`) |

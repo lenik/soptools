@@ -187,6 +187,7 @@ wm port -n <name>
 - Seed はバックエンドプロンプト（`050`）の後に走れる場合、任意で修正要求を出してよい：`prisma/request-for-refactor.md` および／または `sop/Backend amends.md`（`<optional>` 経由）。手順 `060` は両方をマージし、要求ファイルを削除する。
 - モジュール横断参照はスカラー cuid2 フィールド＋ API 照会であり、明示要求がなければ横断 DB FK にしない。
 - 施工中の作業文書は `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`、`theme-default.md`）に置き、構築／再構成中に更新し続ける。
+- ルート `package.json`（手順 `010` から）が運用スクリプトを持つ：`dev` / `dev:*`、`db:generate`、`db:migrate`（= deploy）、`db:migrate:dev`、`db:seed`、`e2e`。`db:*` を好み、ルートの重複 `prisma:*` 別名を置かない。
 - デモアセットのローカライズ：Google／Google Fonts／gstatic／Facebook CDN などは**必ず**ローカル HTTP プロキシ `http://localhost:8118` 経由にする。
 - `web-e2e/workflows.md` は後半で生成し、`sop/` の PRD/TUC/NTC/ECS・schema・seed シナリオ・バックエンド設計を統合する。
 - `docs/api.md` は実装／統合後に書き、as-built API 契約とする。

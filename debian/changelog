@@ -26,6 +26,9 @@ soptools (1.3.1) unstable; urgency=medium
   * Suites: per-suite `VERSION` (worldman 1.1, vrischika 1.0); Tabler icons
     under `assets/icons/suite/` with Meson `rsvg-convert` PNGs; sopwin status
     bar shows suite badge `[icon] name version` on the right.
+  * WorldMan 010: require root `package.json` / `pnpm-workspace` common scripts
+    (`dev:*`, `db:*`, `e2e`); unify on `db:generate` (drop root `prisma:generate`);
+    keep both `db:migrate` (deploy) and `db:migrate:dev` (dev) — not aliases.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

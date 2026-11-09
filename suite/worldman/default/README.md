@@ -190,6 +190,7 @@ Do not leave unrelated default listen ports (`5173`, …) in committed source.
 - Seed may optionally request amends when it can run after the backend prompt (`050`): `prisma/request-for-refactor.md` and/or `sop/Backend amends.md` (via `<optional>`). Step `060` merges both and deletes the request files.
 - Cross-module references are scalar cuid2 fields + API lookups, not cross-database FKs, unless explicitly required.
 - Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`, `design-inventory.md`, `seed-coverage.md`, `theme-default.md`); keep them updated during build/refactor.
+- Root `package.json` (from step `010`) owns operator scripts: `dev` / `dev:*`, `db:generate`, `db:migrate` (= deploy), `db:migrate:dev`, `db:seed`, `e2e`. Prefer `db:*` over duplicate `prisma:*` root aliases.
 - Localizing demo assets: Google / Google Fonts / gstatic / Facebook CDNs and similar **must** go through the local HTTP proxy `http://localhost:8118`.
 - `web-e2e/workflows.md` is generated late so it can synthesize `sop/` PRD/TUC/NTC/ECS, schema, seed scenarios, and backend design.
 - `docs/api.md` is written after backend implementation/integration as the as-built API contract.
