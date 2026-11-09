@@ -6,6 +6,7 @@
 
 #include "gui/paste_response_dialog.hpp"
 #include "gui/theme.hpp"
+#include "gui/display_util.hpp"
 #include "engine/stage_files.hpp"
 
 #include <wx/artprov.h>
@@ -160,6 +161,7 @@ SopPasteResponseDialog::SopPasteResponseDialog(wxWindow *parent,
 
     RebuildFileList();
     SetDialogStatus(wxString::FromUTF8("📋 Prompt has been copied to clipboard"));
+    centre_on_same_display(this, GetParent());
 }
 
 void SopPasteResponseDialog::SetDialogStatus(const wxString &text) {

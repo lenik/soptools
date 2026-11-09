@@ -38,7 +38,7 @@ enum {
 enum class SopCmd {
     Open,
     Run,
-    CopyDlg,
+    SopDlg,
     Edit,
     Version,
 };
@@ -53,7 +53,8 @@ static void usage(FILE *out) {
           "Commands:\n"
           "  open [PROJECTDIR]   Show main window and open the project (default)\n"
           "  run PROJECTDIR      Run SOP in console mode\n"
-          "  copydlg             Clipboard & dialog helper (agent UI)\n"
+          "  sopdlg             Pseudo-agent dialog (Save-As / Append-To / drop)\n"
+          "  copydlg             Alias for sopdlg\n"
           "  edit SOPDIR         Show SOP editor\n"
           "  version             Print version and exit\n\n"
           "Global options:\n"
@@ -69,13 +70,15 @@ static void usage(FILE *out) {
           "      --version        output version information and exit\n\n"
           "Suite branch (default / zh_CN / ja) is chosen from LANG / LC_ALL /\n"
           "LC_MESSAGES unless --sop-dir is set.\n\n"
-          "copydlg options (after 'copydlg'):\n"
+          "sopdlg options (after 'sopdlg' / 'copydlg'):\n"
           "  -t, --title TEXT     window title\n"
           "  -s, --status TEXT    status bar text\n"
           "      --paste          paste-response mode (chat)\n"
           "      --confirm        confirm-only mode (code)\n"
           "      --stage-dir DIR  stagedir for expected files\n"
-          "      --expected FILE  expected project-relative path (repeatable)\n\n",
+          "      --expected FILE  expected project-relative path (repeatable)\n"
+          "Env: SOP_SAVE_AS SOP_APPEND_TO SOP_PARSE SOP_FILE_LINK\n"
+          "     SOP_PARENT_DISPLAY SOP_PROJECT_DIR PROMPT_FILE RESPONSE_FILE\n\n",
           out);
     fprintf(out, "Report bugs to: <%s>\n", PROJECT_EMAIL);
 }
@@ -98,16 +101,16 @@ static bool has_display() {
 }
 
 static bool is_cmd_token(const char *s) {
-    return s && (!strcmp(s, "open") || !strcmp(s, "run") || !strcmp(s, "copydlg") ||
-                 !strcmp(s, "edit") || !strcmp(s, "version"));
+    return s && (!strcmp(s, "open") || !strcmp(s, "run") || !strcmp(s, "sopdlg") ||
+                 !strcmp(s, "copydlg") || !strcmp(s, "edit") || !strcmp(s, "version"));
 }
 
 static SopCmd parse_cmd(const char *s) {
     if (!strcmp(s, "run")) {
         return SopCmd::Run;
     }
-    if (!strcmp(s, "copydlg")) {
-        return SopCmd::CopyDlg;
+    if (!strcmp(s, "sopdlg") || !strcmp(s, "copydlg")) {
+        return SopCmd::SopDlg;
     }
     if (!strcmp(s, "edit")) {
         return SopCmd::Edit;
@@ -209,8 +212,8 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    if (cmd == SopCmd::CopyDlg) {
-        return run_copydlg_mode(argc, argv);
+    if (cmd == SopCmd::SopDlg) {
+        return run_sopdlg_mode(argc, argv);
     }
 
     if (cmd == SopCmd::Edit) {

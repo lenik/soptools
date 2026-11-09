@@ -12,6 +12,9 @@ std::vector<std::string> expected_files_for_step(const SopStep &step);
 /* Strip download suffixes: TODO(1).md / TUC(20260912-060309).md → TODO.md / TUC.md */
 std::string normalize_stage_basename(const std::string &filename);
 
+/* Simple glob: only '*' wildcards (e.g. TUC*.md). */
+bool match_simple_glob(const std::string &pattern, const std::string &name);
+
 struct SopStageClaimResult {
     std::vector<std::string> moved;   /* "src -> dest" */
     std::vector<std::string> extras;  /* leftover basenames in stagedir */

@@ -79,6 +79,35 @@ std::string normalize_stage_basename(const std::string &filename) {
     return filename;
 }
 
+bool match_simple_glob(const std::string &pattern, const std::string &name) {
+    if (pattern.empty()) {
+        return false;
+    }
+    size_t pi = 0;
+    size_t ni = 0;
+    size_t star_p = std::string::npos;
+    size_t star_n = std::string::npos;
+    while (ni < name.size()) {
+        if (pi < pattern.size() && pattern[pi] == '*') {
+            star_p = pi++;
+            star_n = ni;
+        } else if (pi < pattern.size() &&
+                   (pattern[pi] == name[ni] || pattern[pi] == '?')) {
+            pi++;
+            ni++;
+        } else if (star_p != std::string::npos) {
+            pi = star_p + 1;
+            ni = ++star_n;
+        } else {
+            return false;
+        }
+    }
+    while (pi < pattern.size() && pattern[pi] == '*') {
+        pi++;
+    }
+    return pi == pattern.size();
+}
+
 std::vector<std::string> expected_files_for_step(const SopStep &step) {
     std::vector<std::string> out;
     std::set<std::string> seen;
@@ -95,6 +124,9 @@ std::vector<std::string> expected_files_for_step(const SopStep &step) {
 
     if (!step.save_as.empty()) {
         add(step.save_as);
+    }
+    for (const auto &rule : step.append_tos) {
+        add(rule.dest);
     }
 
     /* Backtick paths: `sop/TODO.md` or `TODO.md` */

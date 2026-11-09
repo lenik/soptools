@@ -52,6 +52,12 @@ enum class SopInteraction {
     Select, /* show rendered response / part picker after save */
 };
 
+struct SopAppendTo {
+    std::string dest;    /* project-relative, e.g. sop/TUC.md */
+    std::string pattern; /* glob against basename, e.g. TUC*.md */
+    bool delete_src = false;
+};
+
 /* Merge this step into an adjacent step of the same type (role + extension). */
 enum class SopExtend {
     None,
@@ -86,6 +92,7 @@ struct SopStep {
     SopFileLink file_link = SopFileLink::Default;
     std::vector<std::string> parse_formats;
     SopInteraction interaction = SopInteraction::None;
+    std::vector<SopAppendTo> append_tos;
 
     SopStepStatus status = SopStepStatus::Pending;
     std::string status_message;

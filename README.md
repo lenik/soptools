@@ -18,11 +18,14 @@ mobile) from a Figma prototype export. Localized branches ship for English
 - **GUI (`sopwin`)** — workflow graph, step preview, Use… / Open… / Make /
   Execute·Get·Code / Run / Pause / Stop / Exit, detachable graph & log panes,
   status bar feedback
-- **Commands** — `open` (default), `run`, `copydlg`, `edit`, `version`
+- **Commands** — `open` (default), `run`, `sopdlg` (`copydlg` alias), `edit`,
+  `version`
 - **AGENTS** — `<project>/sop/AGENTS` maps roles to external cmdlines; default
-  chat/code agents are `sopwin copydlg` (forked; main window stays up, busy-gated)
+  chat/code agents are `sopwin sopdlg` (forked pseudo-agent; main window stays
+  up, busy-gated)
 - **Chat `.get` flow** — agent copies prompt / captures response; Save-As,
-  multi-part parse, optional post-save select render
+  Append-To (drop-match merge), multi-part parse, optional post-save select
+  render
 - **Markdown interactions** — `\response` (nearest prior chat output),
   `<select>` option dialogs, and `<optional>` include/skip before a step runs
 - **Shell steps** — run with project cwd, enriched `PATH`, progress FIFO for the
@@ -164,7 +167,8 @@ Examples: `000a._shell.refactor_figma.sh`, `020a.__chat.create_prd.get`,
   `code` (aliases: `gpt`, `codex`)
 
 See each branch’s `README.md` under `suite/worldman/{default,zh_CN,ja}/` for
-WorldMan architecture, chat `.get` headers (`Save-As`, `Parse`, `Interaction`, …), and
+WorldMan architecture, chat `.get` headers (`Save-As`, `Parse`, `Append-To`,
+`Interaction`, …), and
 shell progress helpers.
 
 ## Project layout under the target app
@@ -191,7 +195,8 @@ Shell steps typically start with `. sop-script`. sopwin runs them with:
 - `PATH` including `<prefix>/share/soptools/extension/bash` (or source
   `extension/bash`)
 - `SOP_PROJECT_DIR`, `SOP_DIR`, `SOP_STEP_ID`, `SOP_LOGLEVEL`, `LOGLEVEL`,
-  `SOP_PROGRESS_FIFO`
+  `SOP_PROGRESS_FIFO`, `SOP_SAVE_AS`, `SOP_APPEND_TO`, `SOP_PARSE`,
+  `SOP_FILE_LINK`, `SOP_PARENT_DISPLAY`
 
 Scripts report **their own** progress with `set_progress 10%` (not overall SOP
 progress). The GUI gauge follows that FIFO.

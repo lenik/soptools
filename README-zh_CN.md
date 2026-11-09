@@ -13,10 +13,10 @@ mobile）。语言分支：`default`（英文）、`zh_CN`、`ja`。
   `shell`/`chat`/`code`（兼容旧名 `gpt`/`codex`）
 - **图形界面（`sopwin`）** — 流程图、步骤预览、Use… / Open… / Make /
   Execute·Get·Code / Run / Pause / Stop / Exit、可拆出的图与日志面板、状态栏反馈
-- **子命令** — `open`（默认）、`run`、`copydlg`、`edit`、`version`
+- **子命令** — `open`（默认）、`run`、`sopdlg`（`copydlg` 别名）、`edit`、`version`
 - **AGENTS** — 项目 `sop/AGENTS` 按角色配置外部代理；默认 chat/code 为
-  `sopwin copydlg`（fork 执行，主窗口保持可用并 busy 禁用部分控件）
-- **Chat `.get` 流程** — 代理复制提示并采集回复；Save-As、多分段、可选保存后选择
+  `sopwin sopdlg`（fork 伪代理；主窗口保持可用并 busy 禁用部分控件）
+- **Chat `.get` 流程** — 代理复制提示并采集回复；Save-As、Append-To（拖放匹配合并）、多分段、可选保存后选择
 - **Markdown 交互** — `\response`（最近一次 chat 输出）、`<select>` 运行前选择、
   `<optional>` 运行前是否纳入
 - **Shell 步骤** — 在项目目录执行，扩展 `PATH`，经进度 FIFO 驱动进度条
@@ -169,7 +169,8 @@ Shell 步骤通常以 `. sop-script` 开头。sopwin 提供：
 - 工作目录 = 项目目录
 - `PATH` 含 `<prefix>/share/soptools/extension/bash`（或源码 `extension/bash`）
 - `SOP_PROJECT_DIR`、`SOP_DIR`、`SOP_STEP_ID`、`SOP_LOGLEVEL`、`LOGLEVEL`、
-  `SOP_PROGRESS_FIFO`
+  `SOP_PROGRESS_FIFO`、`SOP_SAVE_AS`、`SOP_APPEND_TO`、`SOP_PARSE`、
+  `SOP_FILE_LINK`、`SOP_PARENT_DISPLAY`
 
 脚本用 `set_progress 10%` 报告**自身**进度（非整条 SOP）。GUI 进度条跟该 FIFO。
 

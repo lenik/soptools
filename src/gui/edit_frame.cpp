@@ -96,7 +96,7 @@ public:
         name_ = new wxTextCtrl(right, wxID_ANY);
         form->Add(name_, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 8);
 
-        form->Add(new wxStaticText(right, wxID_ANY, wxString::FromUTF8(".get headers (Save-As / Parse / …)")), 0,
+        form->Add(new wxStaticText(right, wxID_ANY, wxString::FromUTF8(".get headers (Save-As / Parse / Append-To / …)")), 0,
                   wxLEFT | wxRIGHT, 8);
         headers_ = new wxTextCtrl(right, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(-1, 80),
                                   wxTE_MULTILINE);
@@ -180,6 +180,13 @@ private:
         if (s.interaction == SopInteraction::Select) {
             hdr += "Interaction: select\n";
         }
+        for (const auto &rule : s.append_tos) {
+            hdr += "Append-To: " + rule.dest + " from " + rule.pattern;
+            if (rule.delete_src) {
+                hdr += " (delete)";
+            }
+            hdr += "\n";
+        }
         headers_->SetValue(wxString::FromUTF8(hdr));
     }
 
@@ -234,6 +241,7 @@ private:
         /* Re-parse headers from the headers box for .get */
         s.save_as.clear();
         s.parse_formats.clear();
+        s.append_tos.clear();
         s.file_link = SopFileLink::Default;
         s.interaction = SopInteraction::None;
         if (s.extension == "get") {
@@ -254,6 +262,7 @@ private:
                 s.file_link = parsed->file_link;
                 s.parse_formats = parsed->parse_formats;
                 s.interaction = parsed->interaction;
+                s.append_tos = parsed->append_tos;
                 s.body = parsed->body;
             }
         }

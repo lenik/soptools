@@ -6,6 +6,7 @@
 
 #include "gui/codex_copy_dialog.hpp"
 #include "gui/theme.hpp"
+#include "gui/display_util.hpp"
 
 #include <wx/button.h>
 #include <wx/sizer.h>
@@ -55,6 +56,6 @@ bool show_codex_copy_dialog(wxWindow *parent, const SopStep &step) {
     root->Add(btns, 0, wxEXPAND | wxALL, 16);
 
     dlg.SetSizer(root);
-    dlg.CentreOnParent();
+    centre_on_same_display(&dlg, parent);
     return dlg.ShowModal() == wxID_OK;
 }

@@ -6,6 +6,7 @@
 
 #include "gui/main_frame.hpp"
 #include "gui/theme.hpp"
+#include "gui/display_util.hpp"
 #include "gui/help_dialogs.hpp"
 #include "gui/paste_response_dialog.hpp"
 #include "gui/render_response_dialog.hpp"
@@ -28,6 +29,9 @@
 #include <wx/choicdlg.h>
 
 #include "config.h"
+
+#include <cstdlib>
+#include <filesystem>
 
 #include <fstream>
 #include <sstream>
@@ -260,6 +264,8 @@ bool MainFrame::RunAgentFlow(const SopStep &step) {
     const bool is_code = step.is_code();
     const SopInteraction interaction = step.interaction;
     SopStep step_copy = step;
+    const std::string parent_display = encode_display_geometry(this);
+    setenv("SOP_PARENT_DISPLAY", parent_display.c_str(), 1);
 
     std::thread([this, step_id, cmdline, prompt, project_dir, sop_dir, loglevel, is_chat, is_code,
                  interaction, step_copy]() {
@@ -292,6 +298,7 @@ bool MainFrame::RunAgentFlow(const SopStep &step) {
                     SetStatusBarMessage(wxString::FromUTF8(applied.message), true);
                     if (applied.ok && interaction == SopInteraction::Select) {
                         SopRenderResponseDialog render(this, saved);
+                        centre_on_same_display(&render, this);
                         render.ShowModal();
                     }
                 }

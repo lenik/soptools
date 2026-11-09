@@ -252,6 +252,26 @@ bool is_editor_modeline(const std::string &line) {
     return std::regex_match(t, vim_any);
 }
 
+bool parse_append_to_value(const std::string &value, SopAppendTo &out) {
+    /* dest from pattern [(delete|remove)] */
+    static const std::regex re(
+        R"(^(.+?)\s+from\s+(\S+?)(?:\s*\((delete|remove)\))?\s*$)",
+        std::regex::icase);
+    std::smatch m;
+    if (!std::regex_match(value, m, re)) {
+        return false;
+    }
+    out.dest = trim(m[1].str());
+    out.pattern = trim(m[2].str());
+    if (out.pattern.size() >= 2 &&
+        ((out.pattern.front() == '"' && out.pattern.back() == '"') ||
+         (out.pattern.front() == '\'' && out.pattern.back() == '\''))) {
+        out.pattern = out.pattern.substr(1, out.pattern.size() - 2);
+    }
+    out.delete_src = m[3].matched;
+    return !out.dest.empty() && !out.pattern.empty();
+}
+
 void parse_get_header_line(const std::string &line, SopStep &step) {
     if (is_editor_modeline(line)) {
         return;
@@ -287,6 +307,16 @@ void parse_get_header_line(const std::string &line, SopStep &step) {
         }
     } else if (key == "interaction") {
         step.interaction = parse_interaction(value);
+    } else if (key == "append-to" || key == "append_to" || key == "appendto") {
+        SopAppendTo rule;
+        if (parse_append_to_value(value, rule)) {
+            step.append_tos.push_back(rule);
+            if (!rule.dest.empty() &&
+                std::find(step.output_paths.begin(), step.output_paths.end(), rule.dest) ==
+                    step.output_paths.end()) {
+                step.output_paths.push_back(rule.dest);
+            }
+        }
     } else if (key == "discard") {
         /* Editor modelines / ignored metadata, e.g. Discard: vim: set ft=markdown : */
         return;
@@ -527,6 +557,13 @@ bool write_sop_file(const SopStep &step, const std::string &dir, std::string *er
         }
         if (step.interaction == SopInteraction::Select) {
             content << "Interaction: select\n";
+        }
+        for (const auto &rule : step.append_tos) {
+            content << "Append-To: " << rule.dest << " from " << rule.pattern;
+            if (rule.delete_src) {
+                content << " (delete)";
+            }
+            content << "\n";
         }
         content << "\n";
         content << step.body;

@@ -6,6 +6,7 @@
 
 #include "gui/help_dialogs.hpp"
 #include "gui/theme.hpp"
+#include "gui/display_util.hpp"
 
 #include "config.h"
 
@@ -123,6 +124,7 @@ void show_shortcuts_dialog(wxWindow *parent) {
     dlg.Layout();
     scroll->FitInside();
     scroll->Scroll(0, 0);
+    centre_on_same_display(&dlg, parent);
     dlg.ShowModal();
 }
 
@@ -201,6 +203,7 @@ void show_license_dialog(wxWindow *parent) {
     dlg.Layout();
     reflow();
     scroll->Scroll(0, 0);
+    centre_on_same_display(&dlg, parent);
     dlg.ShowModal();
 }
 
@@ -235,5 +238,6 @@ void show_about_dialog(wxWindow *parent) {
     root->Add(header, 1, wxEXPAND);
     root->Add(new wxButton(&dlg, wxID_OK, wxString::FromUTF8("Close")), 0, wxALIGN_CENTER | wxBOTTOM, 12);
     dlg.SetSizer(root);
+    centre_on_same_display(&dlg, parent);
     dlg.ShowModal();
 }

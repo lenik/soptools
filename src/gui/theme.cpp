@@ -123,7 +123,7 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
                 return wxString::FromUTF8("Paste the chat response in the dialog, then Save.");
             default:
                 return wxString::FromUTF8(
-                    "Make/Get runs the chat agent (default: sopwin copydlg --paste).");
+                    "Make/Get runs the chat agent (default: sopwin sopdlg --paste).");
             }
         }
         if (step->is_codex()) {
@@ -135,7 +135,7 @@ wxString status_bar_text(const SopStep *step, SopEngine *engine) {
                     "Waiting for Code output (stagedir), or Make to continue.");
             default:
                 return wxString::FromUTF8(
-                    "Code runs the code agent (default: sopwin copydlg --confirm).");
+                    "Code runs the code agent (default: sopwin sopdlg --confirm).");
             }
         }
         switch (step->status) {

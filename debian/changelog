@@ -1,3 +1,12 @@
+soptools (1.3.1) unstable; urgency=medium
+
+  * sopdlg: rename from copydlg; Save-As / Parse / Append-To; file drop
+    Accept; same-monitor placement.
+  * Append-To: sop/<file> from Pattern (delete); worldman chat steps use it
+    for TUC/NTC/ECS attachments.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
+
 soptools (1.3.0) unstable; urgency=medium
 
   * sopwin CMDs: open/run/copydlg/edit/version.

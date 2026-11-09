@@ -90,6 +90,7 @@ app_sources = [
     'src/engine/agents.cpp',
     'src/ui/console.cpp',
     'src/gui/app.cpp',
+    'src/gui/display_util.cpp',
     'src/gui/theme.cpp',
     'src/gui/main_frame.cpp',
     'src/gui/main_frame_actions.cpp',

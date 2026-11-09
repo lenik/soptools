@@ -58,10 +58,10 @@ std::string self_sopwin() {
 std::string default_agent_cmdline(const std::string &role_slug) {
     const std::string bin = self_sopwin();
     if (role_slug == "chat" || role_slug == "gpt") {
-        return bin + " copydlg --paste -s \"Prompt has been copied to the clipboard\"";
+        return bin + " sopdlg --paste -s \"Prompt has been copied to the clipboard\"";
     }
     if (role_slug == "code" || role_slug == "codex") {
-        return bin + " copydlg --confirm -t \"Code\" -s \"Prompt copied — forward to Code\"";
+        return bin + " sopdlg --confirm -t \"Code\" -s \"Prompt copied — forward to Code\"";
     }
     if (role_slug == "shell" || role_slug == "sh") {
         return "/bin/bash";
@@ -185,6 +185,43 @@ SopAgentRunResult run_agent_blocking(const std::string &project_dir,
         setenv("SOP_STEP_ID", sop_step_id(step).c_str(), 1);
         setenv("PROMPT_FILE", prompt_path.c_str(), 1);
         setenv("RESPONSE_FILE", response_path.c_str(), 1);
+        if (!step.save_as.empty()) {
+            setenv("SOP_SAVE_AS", step.save_as.c_str(), 1);
+        } else {
+            unsetenv("SOP_SAVE_AS");
+        }
+        if (!step.parse_formats.empty()) {
+            std::ostringstream ps;
+            for (size_t i = 0; i < step.parse_formats.size(); i++) {
+                if (i) {
+                    ps << ',';
+                }
+                ps << step.parse_formats[i];
+            }
+            setenv("SOP_PARSE", ps.str().c_str(), 1);
+        } else {
+            unsetenv("SOP_PARSE");
+        }
+        {
+            const char *fl = "default";
+            if (step.file_link == SopFileLink::Inode) {
+                fl = "inode";
+            } else if (step.file_link == SopFileLink::Sym) {
+                fl = "sym";
+            } else if (step.file_link == SopFileLink::None) {
+                fl = "none";
+            }
+            setenv("SOP_FILE_LINK", fl, 1);
+        }
+        if (!step.append_tos.empty()) {
+            std::ostringstream ap;
+            for (const auto &r : step.append_tos) {
+                ap << r.dest << '|' << r.pattern << '|' << (r.delete_src ? '1' : '0') << '\n';
+            }
+            setenv("SOP_APPEND_TO", ap.str().c_str(), 1);
+        } else {
+            unsetenv("SOP_APPEND_TO");
+        }
         if (chdir(project_dir.c_str()) != 0) {
             /* continue anyway */
         }

@@ -75,6 +75,12 @@ int main(void) {
         expect_eq_str("save-as", gpt->save_as, "sop/PRD.md");
         expect_true("file-link inode", gpt->file_link == SopFileLink::Inode);
         expect_true("parse multi-parts", gpt->has_parse_format("multi-parts"));
+        expect_eq_int("append-tos", static_cast<int>(gpt->append_tos.size()), 4);
+        if (!gpt->append_tos.empty()) {
+            expect_eq_str("append dest0", gpt->append_tos[0].dest, "sop/TUC.md");
+            expect_eq_str("append pat0", gpt->append_tos[0].pattern, "TUC*.md");
+            expect_true("append delete0", gpt->append_tos[0].delete_src);
+        }
         expect_true("output path", !gpt->output_paths.empty());
         expect_true("user node", gpt->is_user());
         expect_true("not automatable", !gpt->is_automatable());

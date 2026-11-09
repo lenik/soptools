@@ -6,6 +6,7 @@
 
 #include "gui/render_response_dialog.hpp"
 #include "gui/theme.hpp"
+#include "gui/display_util.hpp"
 
 #include <wx/artprov.h>
 #include <wx/button.h>
@@ -177,6 +178,7 @@ SopRenderResponseDialog::SopRenderResponseDialog(wxWindow *parent, const SopGptS
 
     SetSizer(root);
     RefreshView();
+    centre_on_same_display(this, GetParent());
 }
 
 std::string SopRenderResponseDialog::LoadFileText(const std::string &path) const {

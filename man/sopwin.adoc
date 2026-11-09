@@ -29,9 +29,13 @@ Commands:
 *run* _PROJECTDIR_::
   Run the SOP in console mode.
 
+*sopdlg*::
+  Pseudo-agent dialog for chat/code (*--paste* or *--confirm*). Applies
+  *Save-As* / *Append-To* on Accept; supports file drop. Env:
+  *SOP_SAVE_AS*, *SOP_APPEND_TO*, *SOP_PARENT_DISPLAY*, …
+
 *copydlg*::
-  Standalone clipboard helper used as the default chat/code agent UI
-  (*--paste* or *--confirm*).
+  Alias for *sopdlg*.
 
 *edit* _SOPDIR_::
   Open the SOP authoring editor for a suite directory.
@@ -54,7 +58,7 @@ extension); the graph shows one concatenated node.
 Bodies may use `\response` (nearest prior chat output) and `<select>` /
 `<option>` blocks (resolved with a dialog before the step runs).
 Project file *sop/AGENTS* maps roles to agent cmdlines (default: *sopwin
-copydlg* for chat/code).
+sopdlg* for chat/code).
 The builtin SOP suite is *worldman* under *suite/worldman/* (*default* / *zh_CN* / *ja*).
 
 The GUI shows a workflow graph, branch selection, forward/back navigation,
