@@ -14,6 +14,8 @@ soptools (1.3.1) unstable; urgency=medium
     (sopwin merges into `010` when included; stable step count); chat vs code
     tracks are runtime alternatives (pick one); no visual-regression gates
     (token cost); Google and similar CDNs must use local proxy `:8118`.
+  * WorldMan zh_CN / ja: resync all SOP step files + README to current
+    default/en; add CHECKPOINT.md for both locales.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

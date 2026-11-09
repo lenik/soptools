@@ -1,8 +1,10 @@
 #!/bin/bash
 # 将 Figma 原型导出重构为 WorldMan monorepo 布局。
 #
-# WorldMan Web 应用通常从 Figma 原型导出开始。本必做第一步清理导出脚手架，
-# 把 UI 移到 web/，并创建标准包目录。cwd 为项目根（sopwin 设置 SOP_PROJECT_DIR 与 PATH）。
+# WorldMan webapp 通常从 Figma 制作的原型起步。本必需的
+# 第一步清理一次性导出工具、把 UI 移到 web/ 下，并
+# 创建标准包目录。以 cwd = 项目根运行
+# （sopwin 设置 SOP_PROJECT_DIR 与 PATH）。
 
 . sop-script
 
@@ -10,9 +12,10 @@ set -euo pipefail
 
 set_progress 5%
 
-# 将 WorldMan 套件主题附件复制到项目 sop/themes/（项目 fork：色板 +
-# scripts/generate-theme-css.mjs，可按产品演进；011 由此生成应用 CSS）。
-# 附件位于 suite/worldman/themes/（与语言分支同级）。
+# 从 WorldMan suite 附件播种项目 sop/themes/。
+# 附件位于 suite/worldman/themes/（语言分支的兄弟目录）。
+# 拷贝是项目级 fork（色板 + scripts/generate-theme-css.mjs），
+# 可随产品演进；011 据此生成应用 CSS。
 seed_sop_themes() {
     local src=""
     if [ -n "${SOP_DIR:-}" ]; then
@@ -23,61 +26,139 @@ seed_sop_themes() {
         fi
     fi
     if [ -z "$src" ]; then
-        sop_log 1 "未在 SOP 包旁找到主题附件；跳过 sop/themes 播种。"
+        sop_log 1 "Theme attachment not found beside SOP pack; skip sop/themes seed."
         return 0
     fi
     mkdir -p sop/themes
     cp -a "$src"/. sop/themes/
-    sop_log 1 "已播种项目 sop/themes/ fork（色板 + 生成脚本）。"
+    sop_log 1 "Seeded project sop/themes/ fork (palettes + generate script) from suite attachment."
 }
 
-# 若先前已跑出 WorldMan 布局则跳过。重复执行会把 backend/prisma/sop/… 再移进 web/，破坏目录树。
+# 保留轻量 Figma / agent 脚手架，供清单线索使用。
+# 权威 Figma 原件放在本产品树之外以便并行对照；
+# 下方删除 .git 可防止代理通过 git 回退。
+# 产品树根目录不应继续保留这些路径。
+archive_figma_scaffolding() {
+    local dest="sop/figma-archive"
+    local moved=0
+    mkdir -p "$dest"
+    for path in .figma src/imports AGENT.md CLAUDE.md; do
+        if [ -e "$path" ]; then
+            mkdir -p "$dest/$(dirname "$path")"
+            # 在全新导出树上重跑时替换先前归档副本。
+            rm -rf "$dest/$path"
+            mv "$path" "$dest/$path"
+            moved=1
+            sop_log 1 "Archived $path → $dest/$path"
+        fi
+    done
+    if [ "$moved" -eq 0 ]; then
+        sop_log 2 "No Figma scaffolding (.figma / src/imports / AGENT.md / CLAUDE.md) to archive."
+    else
+        printf '%s\n' \
+            '# Figma export archive' \
+            '' \
+            'Preserved by WorldMan step `000` (lightweight scaffolding only).' \
+            'The canonical Figma original is kept outside this product tree for' \
+            'parallel reference. Step `000` deletes `.git` so agents cannot' \
+            'git-revert to the raw export. Use this archive plus the external' \
+            'original when writing `sop/design-inventory.md` (010) or recovering' \
+            'demo/mock hints for seed (040).' \
+            '' \
+            "Archived at: $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            >"$dest/README.md"
+    fi
+}
+
+ensure_git_init_commit() {
+    local msg="$1"
+    if [ ! -d .git ]; then
+        git init
+        sop_log 1 "Initialized git repository."
+    fi
+    git add -A
+    if git diff --cached --quiet; then
+        sop_log 1 "Nothing to commit; skip [sop000]."
+        return 0
+    fi
+    git commit -m "$msg"
+    sop_log 1 "[sop000] commit recorded."
+}
+
+# 若先前运行已产生 WorldMan 布局则跳过。重跑会把
+# backend/prisma/sop/… 移进 web/ 并毁掉树。
 if [ -d web ] && [ -d backend ] && [ -d prisma ] && [ -d sop ] && [ -d docs ] && {
        [ -f web/package.json ] || [ -d web/src ] ||
            [ -f web/vite.config.ts ] || [ -f web/vite.config.js ] ||
            [ -f web/vite.config.mts ] || [ -f web/index.html ]
    }; then
     seed_sop_themes
+    set_progress 80%
+    ensure_git_init_commit "$(cat <<'EOF'
+[sop000] ensure layout and themes
+
+- WorldMan layout already present; re-seeded sop/themes/ if needed
+- Ensure git history exists for later [sopNNN] commits
+EOF
+)"
     set_progress 100%
-    sop_log 1 "已存在 WorldMan 布局（web/ 及标准包目录）；跳过 Figma 重构。"
+    sop_log 1 "WorldMan layout already present under web/; skipping Figma refactor."
     exit 0
 fi
 
-# 删除不应留在产品树中的 Figma / agent 脚手架。
-rm -rf AGENT.md CLAUDE.md src/imports .figma .git
+mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
+set_progress 10%
+
+archive_figma_scaffolding
 set_progress 15%
+
+# 故意丢弃任何既有 .git。
+# 产品历史必须从本 WorldMan 布局提交开始，使代理无法
+# `git checkout` / reset 回原始 Figma 导出。Figma 原件
+# 保留在别处（本产品树之外）供人工/代理并行对照——
+# 不要依赖项目内 git 历史做这件事。
+# sop/figma-archive/ 下的脚手架只是轻量导出元数据。
+rm -rf .git
+set_progress 20%
 
 mkdir -p web
 set_progress 25%
 
-# 除 web/ 外全部移入 web/（导出应用成为 web 包）。
-shopt -s dotglob extglob
-mv !(web) web
+# 将其余顶层导出内容移入 web/。WorldMan 根目录
+# （sop/ 已持有 figma-archive/）保留在仓库根。
+shopt -s dotglob nullglob
+keep_at_root='|web|sop|docs|prisma|backend|web-e2e|mobile|mobile-e2e|docker|i-local|i-medium|'
+for entry in * .[!.]* ..?*; do
+    [ -e "$entry" ] || continue
+    case "$keep_at_root" in
+        *"|$entry|"*) continue ;;
+    esac
+    mv "$entry" "web/"
+done
 set_progress 45%
 
-# 若导出在 web/ 下带有 .gitignore，提升到仓库根。
+# 若导出在 web/ 下有根 .gitignore，则提升到仓库根。
 [ -f web/.gitignore ] && mv web/.gitignore .
 set_progress 55%
 
-# 在已迁移的 UI 周围建立标准 WorldMan 布局。
-# sop/ 在后续构建/重构步骤中存放工作中的 PRD/TODO/TUC/NTC/ECS。
-# sop/themes/ 为套件主题附件的项目 fork（含 scripts/ 生成脚本，供 011 演进与二开）。
-mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
+# sop/themes/ 是 suite 主题附件的 fork（色板 + 生成
+# 脚本），供步骤 011 主题使用。
 seed_sop_themes
 set_progress 70%
 
-git init
-set_progress 80%
+ensure_git_init_commit "$(cat <<'EOF'
+[sop000] init from Figma export layout
 
-git add .
-set_progress 90%
-
-git commit -m "init"
+- Move exported UI under web/; create standard WorldMan package dirs
+- Archive Figma scaffolding under sop/figma-archive/ for inventory/seed recovery
+- Seed sop/themes/ fork for later theming
+EOF
+)"
 set_progress 100%
 
-# 完成后期望布局：
+# 本步骤后的预期布局：
 #   project/{sop,prisma,backend,web,web-e2e,mobile,mobile-e2e,docs,docker,i-local,i-medium,...}
-# Figma 导出的应用只能位于 web/。
-# 此后不要再把仓库根级文件移回 web/。
+# Figma 导出的应用必须只位于 web/ 下。
+# 此后不要把仓库级文件再移回 web/。
 
-sop_log 1 "已将 Figma 导出重构到 web/，WorldMan 布局就绪。"
+sop_log 1 "Figma export refactored under web/; WorldMan layout ready."
