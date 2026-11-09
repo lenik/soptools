@@ -4,7 +4,7 @@ Discard: vim: set ft=markdown :
 
 # 创建 Prisma schema
 
-为 PostgreSQL 创建完整 Prisma schema。
+为 PostgreSQL 创建完整的 Prisma schema。
 
 产出：
 
@@ -13,28 +13,29 @@ Discard: vim: set ft=markdown :
 
 要求：
 
-- 目标 PostgreSQL
+- 目标为 PostgreSQL
 - ID 列使用 `cuid(2)`
 - 数据库表名使用 `snake_case`
 - 数据库列名使用 `snake_case`
 - 包含有意义的 Prisma 文档注释
-- 将相关 Prisma 注释转换为 PostgreSQL `COMMENT ON` 语句
+- 把相关 Prisma 注释转成 PostgreSQL `COMMENT ON` 语句
 - 使用 PostgreSQL schema `<appname>`
+
 设计要求：
 
 - 为本 WorldMan 模块建模完整产品领域，而不仅是当前可见屏幕
-- 在领域需要处保留历史信息
-- 在适当时区分生命周期状态与删除
-- 为常见查找/搜索模式提供有用索引
+- 领域需要时保留历史信息
+- 在合适处区分生命周期状态与删除
+- 为常见查询/搜索模式提供有用索引
 - 仅在代表真实领域规则时添加唯一约束
 - 支持独立 vs 集成运行：自有主数据留在本 schema；对等主数据仅为标量 cuid2 引用
-- 独立时，基础实体（user/contact/…）可以是**最小本地表**；集成时，偏好不透明 id + API 解析，而非复制对等方完整模型
-- 避免不必要的与其它应用的数据库耦合
+- 独立运行时，基础实体（user/contact/…）可以是**精简本地表**；集成时优先用不透明 id + API 解析，而不是复制对等应用的完整模型
+- 避免与其它应用的不必要数据库耦合
 - 跨应用 ID 通常应为无数据库外键约束的标量 cuid2 字段，除非明确要求
-- 与 `worldman.json` 的 `masterData` / `references`（若存在）一致地记录自有 vs 引用实体
-- 当稳定关系结构已清楚时避免使用 JSON
-- 当结构确实动态或面向扩展时使用 JSON
+- 自有 vs 引用实体的记录，与现有 `worldman.json` 的 `masterData` / `references` 保持一致
+- 已知稳定关系结构时避免使用 JSON
+- 结构确实动态或面向扩展时使用 JSON
 
-本步骤不要生成 `seed.ts`。
+本步不要生成 `seed.ts`。
 
 提供下载链接。

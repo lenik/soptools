@@ -6,29 +6,23 @@ Discard: vim: set ft=markdown :
 
 基于先前定义的 Prisma schema 创建 `prisma/seed.ts`。
 
-撰写 seed 之前，审阅：
+写 seed 之前，审阅：
 
 - `prisma/schema.prisma`
-- `sop/design-inventory.md` 的 mock/demo 来源（若存在）
+- `sop/design-inventory.md` 中的 mock/demo 来源（若存在）
 - `web/` 的 mocks/fixtures
 - `sop/figma-archive/`（若存在）
 - 对照真实 demo 与测试场景的产品模型
 
-**优先提取**既有 Figma/web demo 名称、分类、媒体与行
-形状到 seed 行，而不是发明更瘦的干净数据集。保持
-**media ↔ text 对**在一起（不要把 Figma 图片与不同的
-标题/说明重新配对）。发明的 TUC/ECS 行仅可作为补充，且必须
-标明。
+**优先提取**已有 Figma/web demo 的名称、分类、媒体与行形态写入 seed 行，而不是发明一套更薄的“干净”数据集。保持 **media ↔ text 配对**（不要把 Figma 图片配到另一条标题/说明上）。为 TUC/ECS 发明的行只允许作为增量，且必须标注。
 
-写出 `sop/seed-coverage.md`，含：
+写出 `sop/seed-coverage.md`，包含：
 - 一张表：mock 来源 → 实体 → 示例 → seed 行 →
   `matched` | `seed-enriched` | `figma-suspect` | `schema-blocked` | `missing`
   → media↔text（`ok` / `mismatched` / `n/a`）
-- 一份 **Discrepancy log**，为每个非 `matched` 行说明漂移是
-  Figma/导出问题、有意的 seed 充实，还是 schema
-  阻塞——没有日志条目时**不要**在 seed 中静默“修复”可疑的 Figma 数据。
+- 对每条非 `matched` 行的 **差异记录**：说明漂移是 Figma/导出问题、有意的 seed 充实，还是 schema 阻塞——**不要**在 seed 里静默“修好”可疑 Figma 数据却不写日志。
 
-本步骤中不要修改或静默重设计 `schema.prisma`。
+本步不要修改或静默重设计 `schema.prisma`。
 
 产出：
 
@@ -39,7 +33,7 @@ sop/
     seed-coverage.md
 ```
 
-Seed 数据不应只是填充行。它应锻炼领域。
+Seed 数据不应只是填行，而应能锻炼领域。
 
 在适用处包含：
 
@@ -47,36 +41,30 @@ Seed 数据不应只是填充行。它应锻炼领域。
 - 多个分类/类型
 - 真实关系
 - 不同生命周期状态
-- 活跃/非活跃示例
+- 启用/停用示例
 - 相关处的草稿/已发布/已完成/已取消示例
 - 父子关系
 - 多对多关系
 - 历史/版本示例
-- 空或可选字段示例
+- 空值或可选字段示例
 - 对测试有用的边界示例
-- 可区分搜索/筛选的值
+- 可区分搜索/筛选的取值
 - 日期/时间变化
 - demo 媒体 URL
 - 图片
 - 相关处的音频/视频 URL
 - 相关处的文件/附件
 
-Seed 数据应足够确定，以支持自动化测试。
+Seed 数据应足够确定，以支撑自动化测试。
 
-偏好稳定可读的 demo 名称，而非随机数据。
+优先使用稳定、可读的 demo 名称，而不是随机数据。
 
 <optional title="Also request schema / backend amends?">
-若本 seed 工作暴露出相对既有后端设计提示或既有
-`backend/` 树的缺口，写出所需修订文件（省略不必要者）：
+若本次 seed 工作暴露出与既有后端设计提示或既有 `backend/` 树的缺口，写出所需修订文件（省略不必要的）：
 
-1. **Schema** — 当 `schema.prisma` 无法表达产品需求、关系、生命周期状态、
-   约束、历史情形或真实测试场景时，写 `prisma/request-for-refactor.md`。
-   每个问题包含：受影响模型、暴露它的 seed 场景、为何 schema 不足、
-   严重程度（`blocking` / `recommended`）、最小推荐变更，以及对数据 /
-   seed / API / 测试的影响。
+1. **Schema** — 当 `schema.prisma` 无法表达产品需求、关系、生命周期状态、约束、历史案例或真实测试场景时，写 `prisma/request-for-refactor.md`。每条问题包含：受影响模型、暴露它的 seed 场景、为何 schema 不足、严重度（`blocking` / `recommended`）、建议的最小改动，以及对数据 / seed / API / 测试的影响。
 
-2. **Backend** — 当后端设计提示或既有 `backend/` 需要 API 或行为变更以匹配这些
-   发现时（端点、校验、关系、状态转换等），写 `sop/Backend amends.md`。
+2. **Backend** — 当后端设计提示或既有 `backend/` 需要 API 或行为变更以匹配这些发现时，写 `sop/Backend amends.md`（端点、校验、关系、状态迁移等）。
 
-本步骤中**不要**应用 schema 或后端变更。后续实现工作应合并这些文件然后删除它们。
+本步**不要**应用 schema 或后端变更。后续实现应合并这些文件，然后删除它们。
 </optional>

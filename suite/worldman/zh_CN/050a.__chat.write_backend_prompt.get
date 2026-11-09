@@ -4,9 +4,9 @@ Interaction: select
 Discard: -*- mode: markdown -*-
 Discard: vim: set ft=markdown :
 
-# 撰写后端实现用的 Codex 提示
+# 撰写后端实现用的 Codex 提示词
 
-为本 WorldMan 模块撰写完整的 Codex 提示以创建后端。
+为本 WorldMan 模块撰写完整的 Codex 提示词，用于创建后端。
 
 后端技术栈：
 
@@ -18,10 +18,10 @@ Discard: vim: set ft=markdown :
 
 API 前缀：`/api/v1/`
 
-端口 / 部署期望（写入提示）：
+端口 / 部署期望（写入提示词）：
 
 - 基准 `N` 来自 `wm port -n <name>`（或 `worldman.json` 的 `portBase`）
-- 直接运行后端 HTTP/HTTPS：`2000+N` / `2001+N`
+- 直接运行的 backend HTTP/HTTPS：`2000+N` / `2001+N`
 - Apache/发布映射 HTTP/HTTPS：`6000+N` / `6001+N`
 - 容器 bridge 内部 HTTP/HTTPS：`3000` / `3001`
 - 规则：HTTPS = HTTP + 1，bridge web `80`/`443` 除外
@@ -30,19 +30,19 @@ API 前缀：`/api/v1/`
 
 - 主数据主键使用 `cuid(2)`
 - 对等模块实体是不透明 cuid2 引用 + API 解析，不是跨库外键
-- 在对等方缺席时，模块必须仍可用最小本地基础数据表独立运行
+- 对等应用缺席时，模块须仍能以精简本地基础数据表独立运行
 
-后端 API 必须覆盖领域的有用能力，而不仅是 web 应用当前使用的功能。
+后端 API 须覆盖领域的有用能力，而不仅是当前 web 应用已用到的功能。
 
-分析每个领域对象的性质，并暴露允许数据被以下各方充分复用的功能：
+分析每个领域对象的性质，并暴露能让数据被充分复用的能力，面向：
 
 - 当前 web 应用
-- 未来移动应用
+- 未来的移动应用
 - 其它内部系统
 - 外部集成
 - 自动化
 - 报表
-- 适当时的 AI 代理
+- 合适处的 AI 代理
 
 对每个资源，评估是否需要：
 
@@ -70,33 +70,33 @@ API 前缀：`/api/v1/`
 - media operations
 - external reference resolution
 
-不要机械地为每个模型实现所有这些。
+不要机械地为每个模型实现全部能力。
 
-在对领域有意义时再实现它们。
+仅在对领域有意义时实现。
 
 后端架构应分离：
 
 - route/controller 层
-- validation
-- service/领域逻辑
-- data access
+- 校验
+- 服务/领域逻辑
+- 数据访问
 - 共享错误
-- API serialization
+- API 序列化
 
-避免把领域逻辑直接放在路由处理器中。
+避免把领域逻辑直接放在路由处理器里。
 
 包含稳健校验与一致的 API 错误。
 
-提示应指示 Codex 对照既有 Prisma schema 实现后端。
+提示词应指示 Codex 对照既有 Prisma schema 实现后端。
 
-除非发现实现阻塞性矛盾，否则不要要求 Codex 重设计产品。
+除非发现会阻塞实现的矛盾，否则不要要求 Codex 重设计产品。
 
-## 输出
+## 产出
 
-将完整 Codex 提示保存为：
+把完整的 Codex 提示词保存为：
 
 ```text
 sop/Backend implementation prompt.md
 ```
 
-（见上方 `Save-As`）。步骤 `060` 实现后端时会 Checkout 该文件。
+（见上方 `Save-As`）。步骤 `060` 实现后端时会检出此文件。
