@@ -109,6 +109,7 @@ worldman.json      # name、portBase、masterData、references、…
 复杂构建/重构时，在 `<projectdir>/sop/` 下维护活文档：
 
 - `status` — 当前流程状态；`location=` 为活动步骤 id（自动更新；打开项目时从此恢复）
+- `template-version` — 所用 WorldMan 流程包的 `suite=` + `version=` 钉（`010` 写出；升级时对照 suite `CHANGELOG.md` / `RETROFIT-zh_CN.md`）
 - `TODO.md` — 任务清单；随构建/重构推进同步条目状态
 - `PRD.md` — 产品需求（施工期权威）
 - `TUC.md` — 测试用例参考集
@@ -189,7 +190,7 @@ wm port -n <name>
 - 跨模块引用是标量 cuid2 字段 + API 查询，不是跨库 FK（除非明确要求）。
 - 施工期工作文档放在 `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`、`theme-default.md`）；构建/重构期间持续更新。
 - 根 `package.json`（自步骤 `010`）持有运维脚本：`dev` / `dev:*`、`db:generate`、`db:migrate`（= deploy）、`db:migrate:dev`、`db:seed`、`e2e`。优先 `db:*`，勿再并存根上的 `prisma:*` 别名。
-- 本 SOP 流程版本为 `suite/worldman/VERSION`，格式 **`major.minor.patch`**。改动本包流程文件时，须在同一改动中 bump 该版本（见 `suite/README.md`）。
+- 本 SOP 流程版本为 `suite/worldman/VERSION`（**`major.minor.patch`**），变更史在 `CHANGELOG.md`。改动本包流程时，须在同一改动中 bump VERSION **并**更新 changelog（见 `suite/README.md`、`.cursor/rules/suite-sop.mdc`）。步骤 `010` 把版本钉进项目的 `sop/template-version`。
 - 本地化 demo 资源：Google / Google Fonts / gstatic / Facebook CDN 等**必须**经本地 HTTP 代理 `http://localhost:8118`。字体：优先复用 `$HOME/.cache/fonts` 或 `/usr/share/fonts` 中的同名字体；否则把原文件下载到 `web/assets/fonts/` 与 `$HOME/.cache/fonts/{truetype|opentype|woff}/…`——不要因 CDN 失败就换别的字族。
 - 后端 API 测试与 Playwright E2E 必须拆卸自己创建的行；步骤 `140` 在套件跑完后还要清理共享库里的残留测试污染。
 - `web-e2e/workflows.md` 靠后生成，以便综合 `sop/` 下的 PRD/TUC/NTC/ECS、schema、seed 场景与后端设计。

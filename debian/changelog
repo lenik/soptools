@@ -41,6 +41,9 @@ soptools (1.3.1) unstable; urgency=medium
   * WorldMan: add `RETROFIT-zh_CN.md` checklist for already-shipped projects
     (design fidelity, theme/fonts, seed coverage, root `db:*`, e2e cleanup);
     bump suite VERSION to 1.2.1.
+  * Suites: add per-suite `CHANGELOG.md`; `.cursor/rules/suite-sop.mdc` requires
+    VERSION+changelog on every process change; WorldMan 010 writes
+    `sop/template-version`; worldman suite 1.3.0.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

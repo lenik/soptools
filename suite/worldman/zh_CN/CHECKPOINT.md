@@ -46,7 +46,8 @@ EOF
 
 | 产物 | 写出 / 更新方 | 用途 |
 |------|---------------|------|
-| `sop/design-inventory.md` | `010`（重构前）；UI 结构有意变更时更新 | 基线路由、页签、chrome、字体、mock 来源 |
+| `sop/template-version` | `010` | 钉住 `suite=worldman` + 流程包 `version=`，便于对照 CHANGELOG / 改造清单 |
+| `sop/design-inventory.md` | `010`（重构前）；UI 结构有意变更时更新 | 基线路由、页签、界面外壳、字体、mock 来源 |
 | `sop/figma-archive/` | `000` | 保留的 Figma 导出元数据（不是产品源码） |
 | `sop/theme-default.md` | `011`（纳入 / 并入 `010` 时） | Figma 颜色作为主题 `default` + 未改动的字体栈 |
 | `sop/seed-coverage.md` | `040`；`080` 复核 | 删除 mock 前的 mock/demo → seed 对等 + 差异记录 |

@@ -61,6 +61,7 @@ Commits in that merged run use `[sop010]` (one active step id on the graph).
 
 | Artifact | Written / updated by | Purpose |
 |----------|----------------------|---------|
+| `sop/template-version` | `010` | Pins `suite=worldman` + pack `version=` for later CHANGELOG / retrofit diffs |
 | `sop/design-inventory.md` | `010` (before refactor); updated when UI structure intentionally changes | Baseline routes, tabs, chrome, fonts, mock sources |
 | `sop/figma-archive/` | `000` | Preserved Figma export metadata (not product source) |
 | `sop/theme-default.md` | `011` (when included / merged into `010`) | Figma colors as theme `default` + unchanged font stacks |

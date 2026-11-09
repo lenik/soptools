@@ -1,7 +1,8 @@
 # WorldMan SOP 对照改进清单（已完工项目）
 
 面向：**已经跑过一轮 WorldMan SOP、产品已落地的项目组**。  
-对照当前流程包版本：`suite/worldman/VERSION` = **1.2.1**（`major.minor.patch`）。
+对照当前流程包版本：`suite/worldman/VERSION` = **1.3.0**（`major.minor.patch`）。  
+变更明细：[`CHANGELOG.md`](./CHANGELOG.md)。
 
 本文不是完整 SOP 重跑指南，而是把近期流程收紧点收成**可勾选的自查/整改项**。按优先级处理；每项注明对应步骤与期望产物。
 
@@ -11,12 +12,22 @@
 
 ## 怎么用
 
-1. 打开本仓库（或已安装的 soptools）里的本文件，打印或导入任务看板。
-2. 对每个已交付项目勾选「现状」；未达标的开整改任务，改完勾「已整改」。
-3. 整改提交建议带简短说明（不必强行 `[sopNNN]`，除非你们仍按 SOP 节奏推进）。
-4. 全部关键项通过后，在项目 `sop/TODO.md` 记一行：`WorldMan retrofit vs 1.2.1 done`。
+1. 若项目已有 `sop/template-version`，先读其中的 `version=`，再对照 `CHANGELOG.md` 里**高于该版本**的条目，只补缺项。
+2. 若没有 `sop/template-version`，按本清单全量自查；整改时补写该文件（钉住当前包版本）。
+3. 打开本文件，打印或导入任务看板。
+4. 对每个已交付项目勾选「现状」；未达标的开整改任务，改完勾「已整改」。
+5. 整改提交建议带简短说明（不必强行 `[sopNNN]`，除非你们仍按 SOP 节奏推进）。
+6. 全部关键项通过后，在项目 `sop/TODO.md` 记一行：`WorldMan retrofit vs 1.3.0 done`，并确保 `sop/template-version` 已更新。
 
 图例：🔴 高（用户可见/数据污染）　🟡 中（可维护性）　🟢 低（规范对齐）
+
+---
+
+## 0. 模板版本钉 🟡
+
+| # | 检查项 | 对应步骤 | 期望 |
+|---|--------|----------|------|
+| 0.1 | 是否有 `sop/template-version`（`suite=worldman` + `version=…`）？ | `010` | 与当初/当前使用的包版本一致；升级后按 CHANGELOG 迭代时更新 |
 
 ---
 
@@ -146,12 +157,12 @@ pnpm e2e
 
 ## 变更背景（给负责人）
 
-相对早期 WorldMan 包，**1.2.x** 主要收紧了：
+相对早期 WorldMan 包，**1.2.x–1.3.0** 主要收紧了：
 
 1. Figma 保真：inventory → 主题 `default` → seed 差异可追溯  
 2. 字体可复现：代理 + 同名复用 + `~/.cache/fonts`  
 3. 运维入口：根 `db:*` / `dev:*`，去掉重复 `prisma:generate`  
 4. 测试卫生：创建即拆卸，`140` 跑完再清残留  
-5. 流程版本：`suite/worldman/VERSION` 使用 `major.minor.patch`，改流程必 bump  
+5. 流程版本：`VERSION` + `CHANGELOG.md`（`major.minor.patch`，改流程必同步更新）；项目钉 `sop/template-version`  
 
-完整步骤正文仍以 `default/` / `zh_CN/` 为准；本文仅作**已完工项目的对照表**。
+完整步骤正文仍以 `default/` / `zh_CN/` 为准；本文仅作**已完工项目的对照表**。明细见 [`CHANGELOG.md`](./CHANGELOG.md)。

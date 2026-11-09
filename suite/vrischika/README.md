@@ -10,8 +10,9 @@ suite/vrischika/
     zh_CN/       # Simplified Chinese steps
 ```
 
-Bump `VERSION` in the same commit whenever this suite’s process files change
-(see `suite/README.md`).
+Bump `VERSION` **and** update `CHANGELOG.md` in the same commit whenever this
+suite’s process files change (see `suite/README.md` and
+`.cursor/rules/suite-sop.mdc`).
 
 CLI for templates: **`vsk`** (project meta-repo `vrischika`).
 

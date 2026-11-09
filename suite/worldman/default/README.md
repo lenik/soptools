@@ -109,6 +109,7 @@ worldman.json      # name, portBase, masterData, references, …
 During complex build/refactor work, keep living working documents under `<projectdir>/sop/`:
 
 - `status` — current workflow state; `location=` is the active step id (auto-updated; resumed on open)
+- `template-version` — `suite=` + `version=` pin of the WorldMan pack used (written in `010`; compare to suite `CHANGELOG.md` / `RETROFIT-zh_CN.md` on upgrades)
 - `TODO.md` — task list; sync item status as build/refactor progresses
 - `PRD.md` — product requirements (authoritative during construction)
 - `TUC.md` — test use-case reference set
@@ -191,7 +192,7 @@ Do not leave unrelated default listen ports (`5173`, …) in committed source.
 - Cross-module references are scalar cuid2 fields + API lookups, not cross-database FKs, unless explicitly required.
 - Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`, `design-inventory.md`, `seed-coverage.md`, `theme-default.md`); keep them updated during build/refactor.
 - Root `package.json` (from step `010`) owns operator scripts: `dev` / `dev:*`, `db:generate`, `db:migrate` (= deploy), `db:migrate:dev`, `db:seed`, `e2e`. Prefer `db:*` over duplicate `prisma:*` root aliases.
-- Suite process version is `suite/worldman/VERSION` as **`major.minor.patch`**. Any edit to this SOP pack must bump that file in the same change (see `suite/README.md`).
+- Suite process version is `suite/worldman/VERSION` as **`major.minor.patch`**, with history in `suite/worldman/CHANGELOG.md`. Any edit to this SOP pack must bump VERSION **and** update the changelog in the same change (see `suite/README.md` and `.cursor/rules/suite-sop.mdc`). Step `010` pins the version into the app as `sop/template-version`.
 - Localizing demo assets: Google / Google Fonts / gstatic / Facebook CDNs and similar **must** go through the local HTTP proxy `http://localhost:8118`. Fonts: reuse same-name faces from `$HOME/.cache/fonts` or `/usr/share/fonts` when present; otherwise download the original file into both `web/assets/fonts/` and `$HOME/.cache/fonts/{truetype|opentype|woff}/…` — never substitute another typeface because the CDN failed.
 - Backend API tests and Playwright E2E must tear down rows they create; step `140` also cleans residual test pollution from the shared DB after the suite run.
 - `web-e2e/workflows.md` is generated late so it can synthesize `sop/` PRD/TUC/NTC/ECS, schema, seed scenarios, and backend design.

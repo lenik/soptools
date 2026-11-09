@@ -6,22 +6,28 @@ Each suite root carries:
 
 ```text
 suite/<name>/
-    VERSION          # suite process semver: major.minor.patch (e.g. 1.2.0)
+    VERSION          # process semver: major.minor.patch (e.g. 1.3.0)
+    CHANGELOG.md     # process history for retrofit / self-iteration
     default/ …       # language branches
 ```
 
-### Suite `VERSION` policy
+### Suite `VERSION` + `CHANGELOG.md` policy
 
 - Format is always **`major.minor.patch`** (three numeric components).
 - This versions the **SOP process pack** (steps/prompts/scripts), not the
   soptools Debian package and not a customer app built with the pack.
 - **Every change** to that suite’s process files (`default/`, locale branches,
-  shared suite attachments that agents follow, …) **must bump `VERSION` in the
-  same commit**:
-  - **patch** — wording/clarity, translation sync, typo/doc-only
-  - **minor** — new/changed step behavior, new gates, new required artifacts
-  - **major** — breaking step renumbering or incompatible contract changes
-- sopwin’s status bar shows `[icon] <name> <version>` (e.g. `worldman 1.2.0`).
+  `RETROFIT*.md`, shared attachments agents follow, …) **must**, in the **same
+  commit**:
+  1. **Bump `VERSION`**
+     - **patch** — wording/clarity, translation sync, typo/doc-only
+     - **minor** — new/changed step behavior, new gates, new required artifacts
+     - **major** — breaking step renumbering or incompatible contract changes
+  2. **Update `CHANGELOG.md`** with bullets for that version (enough for
+     shipped projects to self-iterate).
+- Cursor rule: `.cursor/rules/suite-sop.mdc` (always apply).
+- sopwin’s status bar shows `[icon] <name> <version>` (e.g. `worldman 1.3.0`).
+- WorldMan step `010` writes the pin into the app as `sop/template-version`.
 
 Suite icons (Tabler outline SVGs) live in `assets/icons/suite/<name>.svg`;
 the Meson build rasterizes 32×32 PNGs into the build dir / install prefix
@@ -35,6 +41,7 @@ from a Figma prototype export.
 ```text
 suite/worldman/
     VERSION           # process semver major.minor.patch
+    CHANGELOG.md      # process history
     RETROFIT-zh_CN.md # checklist for already-shipped projects (hand-out)
     RETROFIT.md       # pointer / EN stub
     default/          # English prompts and scripts
