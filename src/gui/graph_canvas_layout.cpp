@@ -6,6 +6,7 @@
 
 #include "gui/graph_canvas_layout.hpp"
 #include "gui/graph_style.hpp"
+#include "model/step_interact.hpp"
 
 #include <wx/artprov.h>
 #include <wx/dcbuffer.h>
@@ -99,6 +100,7 @@ NodeMeasure MeasureNode(const SopStep &step, const std::string &step_id, SopEngi
     dc.SetFont(font);
     m.show_check = step.is_action() && engine->is_complete(step_id);
     m.show_error = step.status == SopStepStatus::Error;
+    m.has_input_variables = step_has_input_variables(step);
     const int check_w = m.show_check ? dc.GetTextExtent(kCheckMark).x + 4 : 0;
     const int err_w = m.show_error ? kStatusW : 0;
     const int suffix_w = std::max(check_w, err_w);
@@ -133,6 +135,33 @@ void DrawErrorMark(wxGraphicsContext *gc, double x, double y) {
     wxFont warn_font(8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
     gc->SetFont(warn_font, *wxWHITE);
     gc->DrawText("!", x - 2.5, y + 1.0);
+}
+
+void DrawNodeKindBadge(wxGraphicsContext *gc, const wxRect &node_rect, bool has_input_variables) {
+    /* Sit on the top-right corner; keep clear of the role icon (left) and title. */
+    const double cx = node_rect.x + node_rect.width - 9.0;
+    const double cy = node_rect.y + 8.0;
+    const wxColour ink(110, 110, 120);
+
+    if (has_input_variables) {
+        wxFont badge_font(7, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
+        gc->SetFont(badge_font, ink);
+        double tw = 0;
+        double th = 0;
+        gc->GetTextExtent("V", &tw, &th);
+        gc->DrawText("V", cx - tw * 0.5, cy - th * 0.55);
+        return;
+    }
+
+    /* Hollow △ (plain fixed node). */
+    wxGraphicsPath tri = gc->CreatePath();
+    tri.MoveToPoint(cx, cy - 4.5);
+    tri.AddLineToPoint(cx + 4.5, cy + 3.5);
+    tri.AddLineToPoint(cx - 4.5, cy + 3.5);
+    tri.CloseSubpath();
+    gc->SetBrush(*wxTRANSPARENT_BRUSH);
+    gc->SetPen(wxPen(ink, 1));
+    gc->StrokePath(tri);
 }
 
 wxPoint NodeLeftPort(const wxPoint &pos, const wxSize &size) {

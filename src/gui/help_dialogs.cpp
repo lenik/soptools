@@ -101,7 +101,9 @@ void show_shortcuts_dialog(wxWindow *parent) {
                     {"F8", "Pause after the current in-flight step"},
                     {"PgUp", "Back"},
                     {"Enter", "Set location to selected / focused graph node"},
-                    {"Double-click", "Set location to clicked graph node"}}),
+                    {"Double-click", "Set location to clicked graph node"},
+                    {"Node badge V", "Variant step (has pre-run <select>/<optional> inputs)"},
+                    {"Node badge △", "Plain fixed step (no input variables)"}}),
                0, wxEXPAND | wxALL, 12);
     inner->Add(new wxStaticLine(scroll), 0, wxEXPAND | wxLEFT | wxRIGHT, 12);
     inner->Add(MakeShortcutSection(

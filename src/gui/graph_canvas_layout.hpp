@@ -43,6 +43,7 @@ struct NodeMeasure {
     int line_count = 1;
     bool show_check = false;
     bool show_error = false;
+    bool has_input_variables = false;
 };
 
 constexpr int kEdgePenActive = 2;
@@ -56,6 +57,8 @@ wxString SimplifiedTitle(const SopStep &step);
 wxFont NodeFont(const wxFont &base);
 wxString WrapTitle(wxDC &dc, const wxString &text, int max_text_w, int max_lines, int &line_count);
 void DrawErrorMark(wxGraphicsContext *gc, double x, double y);
+/* Top-right kind badge: V = variant (inputs); hollow △ = plain fixed. */
+void DrawNodeKindBadge(wxGraphicsContext *gc, const wxRect &node_rect, bool has_input_variables);
 wxPoint NodeLeftPort(const wxPoint &pos, const wxSize &size);
 wxPoint NodeRightPort(const wxPoint &pos, const wxSize &size);
 void DedupePoints(std::vector<wxPoint> &pts);

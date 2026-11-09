@@ -20,7 +20,7 @@ API 前缀：`/api/v1/`
 
 端口 / 部署期望（写入提示词）：
 
-- 基准 `N` 来自 `wm port -n <name>`（或 `worldman.json` 的 `portBase`）
+- 模块 `name` = 代号去掉非字母数字再转小写（如 `CM-Ballet` → `cmballet`）；基准 `N` 来自 `wm port -n <name>` / `naan -pwm <name>`（写入 `worldman.json` 的 `portBase`；禁止编造 N）
 - 直接运行的 backend HTTP/HTTPS：`2000+N` / `2001+N`
 - Apache/发布映射 HTTP/HTTPS：`6000+N` / `6001+N`
 - 容器 bridge 内部 HTTP/HTTPS：`3000` / `3001`

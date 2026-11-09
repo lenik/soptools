@@ -1,7 +1,7 @@
 # WorldMan SOP 对照改进清单（已完工项目）
 
 面向：**已经跑过一轮 WorldMan SOP、产品已落地的项目组**。  
-对照当前流程包版本：`suite/worldman/VERSION` = **1.5.0**（`major.minor.patch`）。  
+对照当前流程包版本：`suite/worldman/VERSION` = **1.6.0**（`major.minor.patch`）。  
 变更明细：[`CHANGELOG.md`](./CHANGELOG.md)。
 
 本文不是完整 SOP 重跑指南，而是把近期流程收紧点收成**可勾选的自查/整改项**。按优先级处理；每项注明对应步骤与期望产物。
@@ -17,7 +17,7 @@
 3. 打开本文件，打印或导入任务看板。
 4. 对每个已交付项目勾选「现状」；未达标的开整改任务，改完勾「已整改」。
 5. 整改提交建议带简短说明（不必强行 `[sopNNN]`，除非你们仍按 SOP 节奏推进）。
-6. 全部关键项通过后，在项目 `sop/TODO.md` 记一行：`WorldMan retrofit vs 1.5.0 done`，并确保 `sop/template-version` 已更新。
+6. 全部关键项通过后，在项目 `sop/TODO.md` 记一行：`WorldMan retrofit vs 1.6.0 done`，并确保 `sop/template-version` 已更新。
 
 图例：🔴 高（用户可见/数据污染）　🟡 中（可维护性）　🟢 低（规范对齐）
 
@@ -83,6 +83,7 @@
 | 4.4 | `db:migrate` 与 `db:migrate:dev` 是否分成两个脚本？ | `010` | **deploy** vs **dev**，不是别名；不要再加只重复 deploy 的 `db:deploy` |
 | 4.5 | `prisma/package.json` 短名是否与根转发一致？ | `060` | `generate`、`migrate`(=deploy)、`migrate:dev`、`seed`、`studio`… |
 | 4.6 | 是否已从 git **去掉** `pnpm-lock.yaml`（及 `package-lock.json` / `yarn.lock`）？ | `010` | `.gitignore` 忽略；`git rm --cached`；WorldMan **不要** lock 文件入库 |
+| 4.7 | `worldman.json` 的 `"name"` / `portBase` 是否按代号规则？ | `020`+ | `name` = 代号去特殊符号转小写（`CM-Ballet` → `cmballet`）；`portBase` = `naan -pwm <name>`（或 `wm port -n <name>`），禁止手写随机数 |
 
 **对照：**
 
@@ -92,6 +93,7 @@
 | `db:migrate` | `prisma migrate deploy` | 保留 |
 | `db:migrate:dev` | `prisma migrate dev` | 保留（不同） |
 | `pnpm-lock.yaml` 等 | lock 文件 | 不入库；ignore + 取消跟踪 |
+| `classmate-ballet` / `portBase: 60` | 错误 name / 编造端口 | 改为 `cmballet` + `naan -pwm cmballet`（581） |
 
 ---
 
@@ -131,7 +133,7 @@
 1. **字体 + `default` 主题**（立刻改善「不像 Figma」）  
 2. **共享库测试污染清理**（立刻改善数据可信度）  
 3. **补 `design-inventory` / `seed-coverage` + 差异记录**（挡住后续静默丢页/丢数）  
-4. **根 `package.json` `db:*`/`dev:*` 对齐；去掉 git 中的 lock 文件**  
+4. **根 `package.json` `db:*`/`dev:*` 对齐；去掉 git 中的 lock 文件；校正 `name`/`portBase`（`cmballet` 等）**  
 5. **补 `Backend implementation prompt.md` / theme-default 等文档产物**
 
 ---
@@ -160,11 +162,11 @@ pnpm e2e
 
 ## 变更背景（给负责人）
 
-相对早期 WorldMan 包，**1.2.x–1.5.0** 主要收紧了：
+相对早期 WorldMan 包，**1.2.x–1.6.0** 主要收紧了：
 
 1. Figma 保真：inventory → 主题 `default` → seed 差异可追溯；文档标题 `族 \| 代码 \| 标题`（去掉 `Figma Make App`）  
 2. 字体可复现：代理 + 同名复用 + `~/.cache/fonts`  
-3. 运维入口：根 `db:*` / `dev:*`，去掉重复 `prisma:generate`；**不入库** `pnpm-lock.yaml` 等 lock 文件  
+3. 运维入口：根 `db:*` / `dev:*`，去掉重复 `prisma:generate`；**不入库** lock 文件；模块 `name` = 代号去符号转小写，`portBase` = `naan -pwm <name>`  
 4. 测试卫生：创建即拆卸，`140` 跑完再清残留  
 5. 流程版本：`VERSION` + `CHANGELOG.md`（`major.minor.patch`，改流程必同步更新）；项目钉 `sop/template-version`  
 

@@ -186,6 +186,7 @@ void SopGraphCanvas::LayoutGraph() {
             node.title_text = m.title_text;
             node.show_check = m.show_check;
             node.show_error = m.show_error;
+            node.has_input_variables = m.has_input_variables;
             node.included = engine_->is_included(id);
             node.on_active_path = path_index.count(id) > 0;
             node.started = engine_->is_started(id);
@@ -399,9 +400,12 @@ void SopGraphCanvas::DrawNode(wxGraphicsContext *gc, const SopGraphNode &node) {
     }
 
     if (node.show_error) {
-        DrawErrorMark(gc, r.x + r.width - kStatusW + 7, r.y + kPadY);
+        /* Sit just below the kind badge so both stay readable. */
+        DrawErrorMark(gc, r.x + r.width - kStatusW + 7, r.y + kPadY + 10);
     }
     gc->PopState();
+
+    DrawNodeKindBadge(gc, r, node.has_input_variables);
 }
 
 void SopGraphCanvas::DrawEdge(wxGraphicsContext *gc, const SopGraphEdge &edge) const {

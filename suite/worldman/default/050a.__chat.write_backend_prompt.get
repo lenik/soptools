@@ -20,7 +20,7 @@ API prefix: `/api/v1/`
 
 Port / deploy expectations (include in the prompt):
 
-- base `N` from `wm port -n <name>` (or `worldman.json` `portBase`)
+- module `name` = codename with non-alphanumerics stripped + lowercased (e.g. `CM-Ballet` → `cmballet`); base `N` from `wm port -n <name>` / `naan -pwm <name>` (write `worldman.json` `portBase`; do not invent N)
 - direct-run backend HTTP/HTTPS: `2000+N` / `2001+N`
 - Apache/published map HTTP/HTTPS: `6000+N` / `6001+N`
 - container bridge internal HTTP/HTTPS: `3000` / `3001`

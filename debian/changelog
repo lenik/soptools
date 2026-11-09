@@ -48,6 +48,10 @@ soptools (1.3.1) unstable; urgency=medium
     checklist + suite 1.4.0.
   * WorldMan 010: set document title to `{Family} | {Code} | {Title}`
     (not `Figma Make App`); suite 1.5.0 + retrofit.
+  * WorldMan: module `name` = codename stripped+lowercased (`cmballet`);
+    `portBase` via `naan -pwm`; suite 1.6.0 + retrofit.
+  * sopwin graph: top-right node badge — V when step has <select>/<optional>
+    inputs (variant), hollow triangle for plain fixed nodes.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

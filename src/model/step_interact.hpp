@@ -27,6 +27,10 @@ struct SopOptionalSpec {
 std::vector<SopSelectSpec> parse_selects(const std::string &body);
 std::vector<SopOptionalSpec> parse_optionals(const std::string &body);
 
+/* True when the step body has pre-run <select> / <optional> inputs (variant node). */
+bool step_has_input_variables(const std::string &body);
+bool step_has_input_variables(const SopStep &step);
+
 /* Expand \response using nearest prior chat step response content. */
 std::string expand_response_token(const std::string &text, const std::string &prior_chat_response);
 

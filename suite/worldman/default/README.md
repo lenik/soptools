@@ -155,17 +155,48 @@ step sequence, e.g. `[sop010]`, `[sop200]`).
 
 Deploy options: run processes directly, reverse-proxy with Apache/Nginx, or containerize (bridge or published ports).
 
+## Module `name` (required)
+
+`worldman.json` → `"name"` is the **port / module id**, not the display title.
+
+Derive it from the project **codename** (usually the project-root directory
+basename — the same **Code** used in the document title, e.g. `CM-Ballet`):
+
+1. Take the codename string.
+2. Remove every character that is not ASCII letter or digit (`A–Z` `a–z` `0–9`).
+3. Lowercase the rest.
+
+Examples:
+
+| Codename (directory / Code) | `name` |
+|------------------------|--------|
+| `CM-Ballet` | `cmballet` |
+| `CM-Makeup` | `cmmakeup` |
+| `CM_Aesthetics` | `cmaesthetics` |
+
+Use this `name` everywhere a WorldMan id is required (`worldman.json` `"name"`,
+`wm port -n …`, schema/db short ids when they follow the same convention).
+Do **not** invent hyphenated forms (`classmate-ballet`), spaced titles, or
+family-prefixed slugs unless the **codename itself** already is that string.
+
+`"title"` stays human-readable (e.g. `ClassMate Ballet`); document `<title>`
+uses `{Family} | {Code} | {Title}` (step `010`).
+
 ## Port allocation
 
-Compute the module’s base port `N` with:
+Compute the module’s base port `N` with the derived `name`:
 
 ```bash
-wm port -n <name>
+wm port -n cmballet
+# same hash:
+naan -pwm cmballet
 ```
 
-(`wm port` runs `naac -pwm <name>`; equivalent: `worldman port -n <name>`.)
+(`wm port -n` / `worldman port -n` run `naan -pwm <name>`.)
 
-`N` is in `0..1999` (default `sha1(repo|directory|name) % 2000`). Override via `wm port NUM`, `-p`, or `worldman.json` → `"portBase"`.
+`N` is in `0..1999` (`naan` profile `wm`: SHA-1 mod 2000). Write it to
+`worldman.json` → `"portBase"`. Override only with an explicit operator choice
+(`wm port NUM` / `-p`); **do not invent** a random `portBase`.
 
 Rule: for every HTTP listen port `P`, the matching HTTPS port is `P+1`, except the classic bridge web pair `80`/`443`.
 

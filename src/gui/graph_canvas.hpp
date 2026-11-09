@@ -29,6 +29,8 @@ struct SopGraphNode {
     wxString title_text;
     bool show_check = false;
     bool show_error = false;
+    /* Pre-run <select>/<optional> → variant (V); else plain fixed (hollow △). */
+    bool has_input_variables = false;
 };
 
 struct SopGraphEdge {

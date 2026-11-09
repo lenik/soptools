@@ -5,6 +5,13 @@ Shipped projects pin the template they ran in `sop/template-version` (written
 by step `010`). Use this file + [`RETROFIT-zh_CN.md`](./RETROFIT-zh_CN.md) to
 self-iterate when the pack moves ahead.
 
+## 1.6.0 — 2026-11-09
+
+- Document module `name`: strip non-alphanumerics from the project codename
+  and lowercase (`CM-Ballet` → `cmballet`). `portBase` = `naan -pwm <name>`
+  / `wm port -n <name>` (fix obsolete `naac` wording); do not invent ports.
+  README + `020` / `050` + retrofit.
+
 ## 1.5.0 — 2026-11-09
 
 - Step `010`: replace default web tab title `Figma Make App` with

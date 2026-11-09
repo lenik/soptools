@@ -132,6 +132,14 @@ std::vector<SopOptionalSpec> parse_optionals(const std::string &body) {
     return out;
 }
 
+bool step_has_input_variables(const std::string &body) {
+    return !parse_selects(body).empty() || !parse_optionals(body).empty();
+}
+
+bool step_has_input_variables(const SopStep &step) {
+    return step_has_input_variables(step.body);
+}
+
 std::string expand_response_token(const std::string &text, const std::string &prior_chat_response) {
     std::string out = text;
     const std::string token = "\\response";

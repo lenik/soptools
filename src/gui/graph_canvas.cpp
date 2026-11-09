@@ -6,6 +6,7 @@
 
 #include "gui/graph_canvas.hpp"
 #include "gui/graph_style.hpp"
+#include "model/step_interact.hpp"
 
 #include <wx/dcbuffer.h>
 #include <wx/dcclient.h>
@@ -361,6 +362,7 @@ void SopGraphCanvas::SyncNodeStates() {
         const SopStep &step = engine_->definition().steps.at(node.step_id);
         node.show_check = step.is_action() && engine_->is_complete(node.step_id);
         node.show_error = step.status == SopStepStatus::Error;
+        node.has_input_variables = step_has_input_variables(step);
     }
     Refresh(false);
 }

@@ -153,17 +153,47 @@ Figma 导出是**视觉与导航基线**，不是可随便扔掉的脚手架。
 
 部署方式：直接跑进程、Apache/Nginx 反代，或容器化（bridge / 发布端口）。
 
+## 模块 `name`（必需）
+
+`worldman.json` 的 `"name"` 是**端口 / 模块 id**，不是展示标题。
+
+由项目**代号**（通常是项目根目录名——与文档标题里的**代码**相同，如
+`CM-Ballet`）推导：
+
+1. 取代号字符串。
+2. 去掉一切非 ASCII 字母/数字的字符（只留 `A–Z` `a–z` `0–9`）。
+3. 再全部转成小写。
+
+示例：
+
+| 代号（目录 / 代码） | `name` |
+|---------------------|--------|
+| `CM-Ballet` | `cmballet` |
+| `CM-Makeup` | `cmmakeup` |
+| `CM_Aesthetics` | `cmaesthetics` |
+
+凡需要 WorldMan id 的地方都用这个 `name`（`worldman.json` 的 `"name"`、
+`wm port -n …`，以及若约定一致的 schema/库短名）。
+**不要**自造连字符形式（`classmate-ballet`）、带空格的标题，或族名前缀 slug——除非**代号本身**就是那种字符串。
+
+`"title"` 仍用可读名（如 `ClassMate Ballet`）；浏览器 `<title>` 用
+`{族} | {代码} | {标题}`（步骤 `010`）。
+
 ## 端口分配
 
-用以下命令计算模块基准端口 `N`：
+用推导出的 `name` 计算模块基准端口 `N`：
 
 ```bash
-wm port -n <name>
+wm port -n cmballet
+# 同一哈希：
+naan -pwm cmballet
 ```
 
-（`wm port` 实际执行 `naac -pwm <name>`；等价于 `worldman port -n <name>`。）
+（`wm port -n` / `worldman port -n` 实际执行 `naan -pwm <name>`。）
 
-`N` 范围为 `0..1999`（默认 `sha1(repo|目录名|name) % 2000`）。可用 `wm port NUM`、`-p` 或 `worldman.json` 的 `"portBase"` 覆盖。
+`N` 范围为 `0..1999`（`naan` 的 `wm` 配置：SHA-1 mod 2000）。写入
+`worldman.json` 的 `"portBase"`。仅在运维明确指定时才用 `wm port NUM` / `-p`
+覆盖；**禁止**随便编一个 `portBase`。
 
 规则：对每个 HTTP 监听端口 `P`，对应 HTTPS 端口为 `P+1`；**例外**是 bridge 下 web 的经典端口对 `80`/`443`。
 
