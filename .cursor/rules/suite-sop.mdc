@@ -1,0 +1,40 @@
+---
+description: Suite SOP VERSION + changelog; bump on every process change
+alwaysApply: true
+---
+
+# Suite SOP versioning
+
+Each shipped SOP pack under `suite/<name>/` owns its **process** version
+(independent of the Debian `soptools` package version).
+
+## Files (per suite)
+
+| File | Role |
+|------|------|
+| `suite/<name>/VERSION` | `major.minor.patch` — single line, no `v` prefix |
+| `suite/<name>/CHANGELOG.md` | Human-readable process history for that suite |
+
+## On every suite process change
+
+When you edit that suite’s process (steps under `default/` / locale branches,
+`RETROFIT*.md`, shared attachments agents follow, suite README process notes,
+…), **in the same commit**:
+
+1. **Bump `VERSION`**
+   - **patch** — wording, translation sync, typos, checklist-only docs
+   - **minor** — new/changed step behavior, new gates, new required artifacts
+   - **major** — breaking step renumber / incompatible contracts
+2. **Update `CHANGELOG.md`** — add bullets under the new version stanza
+   describing *why* projects should care (enough for retrofit / self-iteration).
+3. Do **not** leave VERSION bumped without changelog, or changelog without bump.
+
+Debian `debian/changelog` / package `VERSION` rules in `version.mdc` still apply
+separately for the soptools product.
+
+## Project pin (WorldMan)
+
+Step `010` records the active template into the app repo as
+`sop/template-version` (`suite=` + `version=`). Later SOP upgrades: compare that
+file to `suite/<name>/CHANGELOG.md` / `RETROFIT-zh_CN.md` and apply missing
+items.
