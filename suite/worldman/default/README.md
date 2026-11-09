@@ -115,7 +115,8 @@ During complex build/refactor work, keep living working documents under `<projec
 - `NTC.md` — negative / anti test cases
 - `ECS.md` — edge-case scenarios
 - `design-inventory.md` — Figma/UI baseline (routes, tabs, chrome, mock sources); written in `010` **before** structural refactor; later steps must not silently drop entries
-- `seed-coverage.md` — mock/demo → `prisma/seed.ts` parity matrix; written in `040`, gated in `080`
+- `seed-coverage.md` — mock/demo → `prisma/seed.ts` parity matrix + discrepancy log; written in `040`, gated in `080`
+- `theme-default.md` — Figma-extracted theme `default` token map + unchanged fonts; written when `011` is included
 - `figma-archive/` — lightweight export scaffolding preserved by `000` (`.figma`, `src/imports`, agent docs). The **canonical Figma original** lives outside this product tree for parallel reference; `000` deletes `.git` so agents cannot git-revert to the raw export.
 
 When the user supplies a complex prompt, extract or construct candidate tests promptly into `TUC.md`, `NTC.md`, and `ECS.md`. Later Playwright e2e work and tool/support-class extraction should use these `sop/` documents as input.
@@ -126,11 +127,11 @@ The Figma export is the **visual and navigational baseline**, not disposable sca
 
 Hard rules for all steps after `000`:
 
-1. **Inventory first** — step `010` must write `sop/design-inventory.md` *before* splitting files or moving routes. List every route, every tabbed/tabular surface, primary chrome, dialogs/sheets, and mock/demo data sources with approximate row/entity counts.
+1. **Inventory first** — step `010` must write `sop/design-inventory.md` *before* splitting files or moving routes. List every route, every tabbed/tabular surface, primary chrome, dialogs/sheets, mock/demo data sources with approximate row/entity counts, and **typography / font stacks**.
 2. **No silent drops** — removing or merging a listed route, tab, table column set, or dialog requires updating the inventory with an explicit reason. “Cleanup”, “simplify”, or “not in PRD yet” is not enough by itself.
 3. **PRD follows UI structure** — `sop/design-inventory.md` outranks speculative “export noise” filtering for navigational structure. Dead scaffold controls may be demoted only when the inventory itself marks them `dead`/`scaffold`.
-4. **Mocks survive until seed parity** — do not replace demo data with empty API responses. Step `040` prefers mechanical extraction from `web/` mocks; step `080` must recheck `sop/seed-coverage.md` before deleting mocks.
-5. **Theming is color-only** — step `011` maps colors to tokens; it must not restyle layout, typography scale, spacing, or navigation to match a stock palette.
+4. **Mocks survive until seed parity** — do not replace demo data with empty API responses. Step `040` prefers mechanical extraction from `web/` mocks; write a seed **Discrepancy log** when seed and Figma diverge (including `figma-suspect`); step `080` must recheck `sop/seed-coverage.md` (including media↔text pairs) before deleting mocks.
+5. **Theming is color-only; `default` = Figma** — step `011` maps the export’s live colors into a theme id named `default` and boots that theme. Stock packs are switcher-only. Do not change fonts, type ramp, layout, spacing, or navigation to match a stock palette; document the mapping in `sop/theme-default.md`.
 
 ### `web/src` directory roles
 
@@ -184,10 +185,11 @@ Do not leave unrelated default listen ports (`5173`, …) in committed source.
 - Step `011` (theming) is optional content attached with `extend: previous`: when included, **sopwin merges it into `010` as one graph step**. Do not drop `extend` to invent a separate node — the visible **SOP step count is part of the product contract** and must not change casually (no ad-hoc add/remove of seq numbers when refining the pack).
 - Chat (`*.get`) vs Code (`*.md`) tracks for the same seq are **alternatives**: at runtime pick **one**. Use Chat while conversation context is available; switch to Code when the project was advanced by another path, earlier steps cannot be replayed, and Chat context is gone. Do not run both tracks for the same seq in one build.
 - `schema.prisma` and `seed.ts` are generated separately to avoid output-length pressure and to let seed generation pressure-test the domain model.
-- Seed prefers **extracting** Figma/web demo data over inventing new demo rows; seed generation must not silently rewrite the schema.
+- Seed prefers **extracting** Figma/web demo data over inventing new demo rows; keep media↔text pairs; log discrepancies (`matched` / `seed-enriched` / `figma-suspect` / …) instead of silently “fixing” or replacing the demo set; seed generation must not silently rewrite the schema.
+- Step `011` must ship Figma colors as theme `default` (boot default); optional stock packs never become first paint.
 - Seed may optionally request amends when it can run after the backend prompt (`050`): `prisma/request-for-refactor.md` and/or `sop/Backend amends.md` (via `<optional>`). Step `060` merges both and deletes the request files.
 - Cross-module references are scalar cuid2 fields + API lookups, not cross-database FKs, unless explicitly required.
-- Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`, `design-inventory.md`, `seed-coverage.md`); keep them updated during build/refactor.
+- Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`, `design-inventory.md`, `seed-coverage.md`, `theme-default.md`); keep them updated during build/refactor.
 - Localizing demo assets: Google / Google Fonts / gstatic / Facebook CDNs and similar **must** go through the local HTTP proxy `http://localhost:8118`.
 - `web-e2e/workflows.md` is generated late so it can synthesize `sop/` PRD/TUC/NTC/ECS, schema, seed scenarios, and backend design.
 - `docs/api.md` is written after backend implementation/integration as the as-built API contract.

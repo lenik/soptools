@@ -60,6 +60,7 @@ EOF
 
 | 成果物 | 書込／更新担当 | 目的 |
 |----------|----------------------|---------|
-| `sop/design-inventory.md` | `010`（再構成前）；UI 構造を意図的に変えるときに更新 | ベースラインのルート、タブ、chrome、モック元 |
+| `sop/design-inventory.md` | `010`（再構成前）；UI 構造を意図的に変えるときに更新 | ベースラインのルート、タブ、chrome、フォント、モック元 |
 | `sop/figma-archive/` | `000` | 保全された Figma エクスポートメタデータ（製品ソースではない） |
-| `sop/seed-coverage.md` | `040`；`080` が再確認 | モック削除前のモック／デモ → seed パリティ |
+| `sop/theme-default.md` | `011`（含まれる／`010` にマージされるとき） | Figma 色をテーマ `default` として＋未変更のフォントスタック |
+| `sop/seed-coverage.md` | `040`；`080` が再確認 | モック削除前のモック／デモ → seed パリティ＋ discrepancy log |

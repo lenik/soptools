@@ -14,9 +14,19 @@ Discard: vim: set ft=markdown :
 - `sop/figma-archive/`（若存在）
 - 对照真实 demo 与测试场景的产品模型
 
-**优先提取**既有 Figma/web demo 名称、分类、媒体与行形状到 seed 行，
-而不是发明更瘦的“干净”数据集。写出
-`sop/seed-coverage.md`，列出每个 mock 来源 → seed 模型/行 → 缺口。
+**优先提取**既有 Figma/web demo 名称、分类、媒体与行
+形状到 seed 行，而不是发明更瘦的干净数据集。保持
+**media ↔ text 对**在一起（不要把 Figma 图片与不同的
+标题/说明重新配对）。发明的 TUC/ECS 行仅可作为补充，且必须
+标明。
+
+写出 `sop/seed-coverage.md`，含：
+- 一张表：mock 来源 → 实体 → 示例 → seed 行 →
+  `matched` | `seed-enriched` | `figma-suspect` | `schema-blocked` | `missing`
+  → media↔text（`ok` / `mismatched` / `n/a`）
+- 一份 **Discrepancy log**，为每个非 `matched` 行说明漂移是
+  Figma/导出问题、有意的 seed 充实，还是 schema
+  阻塞——没有日志条目时**不要**在 seed 中静默“修复”可疑的 Figma 数据。
 
 本步骤中不要修改或静默重设计 `schema.prisma`。
 

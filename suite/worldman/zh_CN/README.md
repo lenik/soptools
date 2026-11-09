@@ -117,7 +117,8 @@ worldman.json      # name、portBase、masterData、references、…
 - `NTC.md` — 反用例 / 负面测试用例
 - `ECS.md` — 边界场景
 - `design-inventory.md` — Figma/UI 基线（路由、页签、chrome、mock 来源）；在 `010` **结构重构之前**写出；后续步骤不得静默丢弃条目
-- `seed-coverage.md` — mock/demo → `prisma/seed.ts` 对等矩阵；在 `040` 写出，在 `080` 门控
+- `seed-coverage.md` — mock/demo → `prisma/seed.ts` 对等矩阵 + discrepancy log；在 `040` 写出，在 `080` 门控
+- `theme-default.md` — Figma 提取的主题 `default` token 映射 + 未改动字体；当包含 `011` 时写出
 - `figma-archive/` — 由 `000` 保留的轻量导出脚手架（`.figma`、`src/imports`、agent 文档）。**权威 Figma 原件**放在本产品树之外以便并行对照；`000` 删除 `.git`，使代理无法 git-revert 回原始导出。
 
 当用户给出复杂提示时，尽快把候选测试提取或构造进 `TUC.md`、`NTC.md`、`ECS.md`。后续 Playwright e2e 以及工具类/支撑类抽取应以这些 `sop/` 文档为输入。
@@ -128,11 +129,11 @@ Figma 导出是**视觉与导航基线**，不是可随意丢弃的脚手架。
 
 `000` 之后所有步骤的硬性规则：
 
-1. **先建清单** — 步骤 `010` 必须在拆分文件或移动路由**之前**写出 `sop/design-inventory.md`。列出每条路由、每个页签/表格面、主要 chrome、对话框/sheet，以及 mock/demo 数据来源与大致行数/实体数。
+1. **先建清单** — 步骤 `010` 必须在拆分文件或移动路由**之前**写出 `sop/design-inventory.md`。列出每条路由、每个页签/表格面、主要 chrome、对话框/sheet、mock/demo 数据来源与大致行数/实体数，以及 **typography / font stacks**。
 2. **禁止静默丢弃** — 删除或合并已列出的路由、页签、表格列集或对话框，必须更新清单并写明明确理由。“清理”“简化”或“PRD 里还没有”本身不够。
 3. **PRD 服从 UI 结构** — 对导航结构而言，`sop/design-inventory.md` 优先于臆测的“导出噪音”过滤。仅当清单本身将控件标为 `dead`/`scaffold` 时，才可降级死脚手架控件。
-4. **mock 保留至 seed 对等** — 不要用空 API 响应替换 demo 数据。步骤 `040` 优先从 `web/` mock 机械提取；步骤 `080` 在删除 mock 前必须复核 `sop/seed-coverage.md`。
-5. **主题仅改颜色** — 步骤 `011` 把颜色映射到 token；不得为了迁就库存色板而改布局、字号阶梯、间距或导航。
+4. **mock 保留至 seed 对等** — 不要用空 API 响应替换 demo 数据。步骤 `040` 优先从 `web/` mock 机械提取；当 seed 与 Figma 分歧时写出 seed **Discrepancy log**（含 `figma-suspect`）；步骤 `080` 在删除 mock 前必须复核 `sop/seed-coverage.md`（含 media↔text 对）。
+5. **主题仅改颜色；`default` = Figma** — 步骤 `011` 把导出的活颜色映射到名为 `default` 的主题 id 并启动该主题。库存包仅为切换器选项。不要为了迁就库存色板而改字体、字号阶梯、布局、间距或导航；在 `sop/theme-default.md` 中记录映射。
 
 ### `web/src` 目录职责
 
@@ -186,10 +187,11 @@ wm port -n <name>
 - 步骤 `011`（主题）是带 `extend: previous` 的可选内容：被纳入时，**sopwin 将其并入 `010` 成为图上的单一步骤**。不要去掉 `extend` 去发明独立节点——可见的 **SOP 步骤数是产品契约的一部分**，完善包时不得随意增减 seq 编号。
 - 同一序号下的 Chat（`*.get`）与 Code（`*.md`）轨是**备选**：运行时只选**其一**。有对话上下文时用 Chat；若项目已由其他路径推进、早期步骤无法重放且 Chat 上下文已丢失，则改用 Code。同一次构建中不要对同一序号跑两条轨。
 - `schema.prisma` 与 `seed.ts` 分开生成，避免输出过长，并用 seed 对领域模型做压力测试。
-- Seed 优先**提取** Figma/web demo 数据，而非发明新 demo 行；seed 生成不得静默改写 schema。
+- Seed 优先**提取** Figma/web demo 数据，而非发明新 demo 行；保持 media↔text 对；记录 discrepancy（`matched` / `seed-enriched` / `figma-suspect` / …），而不是静默“修复”或替换 demo 集；seed 生成不得静默改写 schema。
+- 步骤 `011` 必须把 Figma 颜色交付为主题 `default`（启动默认）；可选库存包绝不成首屏。
 - Seed 可在后端提示之后运行时可选地请求修订（`050`）：`prisma/request-for-refactor.md` 和/或 `sop/Backend amends.md`（经 `<optional>`）。步骤 `060` 合并二者并删除请求文件。
 - 跨模块引用是标量 cuid2 字段 + API 查询，不是跨库 FK（除非明确要求）。
-- 施工期工作文档放在 `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`）；构建/重构期间持续更新。
+- 施工期工作文档放在 `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`、`theme-default.md`）；构建/重构期间持续更新。
 - 本地化 demo 资源：Google / Google Fonts / gstatic / Facebook CDN 等**必须**经本地 HTTP 代理 `http://localhost:8118`。
 - `web-e2e/workflows.md` 靠后生成，以便综合 `sop/` 下的 PRD/TUC/NTC/ECS、schema、seed 场景与后端设计。
 - `docs/api.md` 在后端实现/集成之后编写，作为建成态 API 合同。

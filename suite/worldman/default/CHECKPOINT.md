@@ -61,6 +61,7 @@ Commits in that merged run use `[sop010]` (one active step id on the graph).
 
 | Artifact | Written / updated by | Purpose |
 |----------|----------------------|---------|
-| `sop/design-inventory.md` | `010` (before refactor); updated when UI structure intentionally changes | Baseline routes, tabs, chrome, mock sources |
+| `sop/design-inventory.md` | `010` (before refactor); updated when UI structure intentionally changes | Baseline routes, tabs, chrome, fonts, mock sources |
 | `sop/figma-archive/` | `000` | Preserved Figma export metadata (not product source) |
-| `sop/seed-coverage.md` | `040`; rechecked by `080` | Mock/demo → seed parity before mock removal |
+| `sop/theme-default.md` | `011` (when included / merged into `010`) | Figma colors as theme `default` + unchanged font stacks |
+| `sop/seed-coverage.md` | `040`; rechecked by `080` | Mock/demo → seed parity + discrepancy log before mock removal |

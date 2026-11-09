@@ -15,8 +15,19 @@ Before writing the seed, review:
 - product model against realistic demo and testing scenarios
 
 **Prefer extracting** existing Figma/web demo names, categories, media, and row
-shapes into seed rows over inventing a thinner clean dataset. Write
-`sop/seed-coverage.md` listing each mock source → seed model/rows → gaps.
+shapes into seed rows over inventing a thinner clean dataset. Keep
+**media ↔ text pairs** together (do not re-pair a Figma image with a different
+title/caption). Invented TUC/ECS rows are allowed only as additions and must
+be marked.
+
+Write `sop/seed-coverage.md` with:
+- a table: mock source → entity → examples → seed rows →
+  `matched` | `seed-enriched` | `figma-suspect` | `schema-blocked` | `missing`
+  → media↔text (`ok` / `mismatched` / `n/a`)
+- a **Discrepancy log** for every non-`matched` row explaining whether the
+  drift is a Figma/export problem, deliberate seed enrichment, or a schema
+  block — do **not** silently “fix” suspicious Figma data in seed without a
+  log entry.
 
 Do not modify or silently redesign `schema.prisma` during this step.
 

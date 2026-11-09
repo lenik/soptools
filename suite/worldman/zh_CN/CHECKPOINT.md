@@ -58,6 +58,7 @@ EOF
 
 | 产物 | 由谁写出 / 更新 | 用途 |
 |------|-----------------|------|
-| `sop/design-inventory.md` | `010`（重构前）；UI 结构有意变更时更新 | 基线路由、页签、chrome、mock 来源 |
+| `sop/design-inventory.md` | `010`（重构前）；UI 结构有意变更时更新 | 基线路由、页签、chrome、字体、mock 来源 |
 | `sop/figma-archive/` | `000` | 保留的 Figma 导出元数据（非产品源码） |
-| `sop/seed-coverage.md` | `040`；由 `080` 复核 | 删除 mock 前的 mock/demo → seed 对等 |
+| `sop/theme-default.md` | `011`（被包含 / 并入 `010` 时） | Figma 颜色作为主题 `default` + 未改动字体栈 |
+| `sop/seed-coverage.md` | `040`；由 `080` 复核 | 删除 mock 前的 mock/demo → seed 对等 + discrepancy log |

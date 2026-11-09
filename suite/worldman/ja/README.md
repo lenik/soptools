@@ -49,9 +49,9 @@ extend: previous
 ---
 ```
 
-- `extend: previous` / `extend: next` — 本手順を前後の**同型**手順（`role` + 拡張子、例: どちらも `code` + `.md`）に吸収します。型が一致しない場合は無視。グラフは結合後のアンカーノードのみ表示し、プロンプト本文は YAML ヘッダを除いて連結します。例: `011` が含まれる場合、`extend: previous` により `010` に結合され、単一の手順になります。
+- `extend: previous` / `extend: next` — 本手順を**同型**（`role`＋拡張子、例：どちらも `code`＋`.md`）の前／次手順へ吸収する。型不一致は無視。グラフはマージされた1ノード（アンカー）を示し、プロンプト本文は YAML ヘッダを除いて連結される。例：`011` が含まれるとき、`extend: previous` はそれを `010` にマージして単一手順とする。
 
-Chat 手順は拡張子 `.get` です。任意の RFC822 風ヘッダ（名前は大文字小文字を区別しない）、空行のあとにプロンプト本文。エディタ modeline など無視すべき行には `Discard:` を使います。
+Chat 手順は拡張子 `.get`。任意の RFC822 風ヘッダ（名前は大文字小文字非区別）、空行、その後プロンプト本文。エディタの modeline や無視行には `Discard:` を使う。
 
 ```text
 Save-As: sop/PRD.md
@@ -62,28 +62,29 @@ Append-To: sop/TUC.md from TUC*.md (delete)
 Discard: -*- mode: markdown -*-
 Discard: vim: set ft=markdown :
 
-# プロンプトタイトル
+# prompt title
 ...
 ```
 
-- `Save-As` — 保存した応答をこのプロジェクト相対パスにも書き込み／リンクする（親ディレクトリは自動作成）。貼り付け応答が空のときはダウンロード済み添付を Save-As に使う（複数時は `file.ext` → `file1.ext`、`file2.ext`…）。
-- `File-Link` — `default`/`auto`（ext2/3/4 では inode、それ以外はコピー）、`none`（コピー）、`inode`（ハードリンク）、`sym`（シンボリックリンク）
-- `Parse` — カンマ区切りの形式。現在の `multi-parts` は複数パート応答を `sop/<seq>/` 下の `partNN` に分割する
-- `Interaction` — `none`（デフォルト：保存のみ）または `select`（保存後にレンダ／パート選択ダイアログ）
-- `Append-To` — `宛先 from パターン [(delete)]`；ドロップ／ステージされた添付がパターン（例 `TUC*.md`）に一致したら Accept で宛先へマージ；`(delete)` は元ファイルを削除
-- 本文マークアップ — `<select title="…">` / `<option>…`（実行前に1つ選択）；`<optional title="…">…</optional>`（実行前に含めるかどうか）；`\response` は直近の先行 chat 応答に展開
+- `Save-As` — 保存した応答をこのプロジェクト相対パスにも書き／リンクする（親ディレクトリは自動作成）。貼り付け応答が空なら、Save-As はダウンロードした添付を使う（複数時は `file.ext` → `file1.ext`、`file2.ext`、…）。
+- `File-Link` — `default`/`auto`（ext2/3/4 では inode、それ以外は copy）、`none`（copy）、`inode`（ハードリンク）、または `sym`（シンボリックリンク）
+- `Parse` — カンマ区切りフォーマット；現在 `multi-parts` はマルチパート応答を `sop/<seq>/` 下の `partNN` ファイルへ分割する
+- `Interaction` — `none`（既定：保存のみ）または `select`（保存後に描画応答／パート選択を表示）
+- `Append-To` — `dest from Pattern [(delete)]`；ドロップ／ステージした添付が `Pattern`（例：`TUC*.md`）に一致すると、Accept 時に `dest` へマージ；`(delete)` はソースファイルを削除
+- 本文マークアップ — `<select title="…">` / `<option>…`（実行前に1つ選択）；`<optional title="…">…</optional>`（実行前に yes/no で含めるか）；`\response` は直近の先行 chat 応答へ展開
 
-- `Discard` — sopwin が無視（エディタ modeline、メモなど）
-chat 手順実行時、sopwin は `sop/AGENTS` の `chat` エージェント（既定：`sopwin sopdlg --paste`）を呼び出します。この疑似エージェントはプロンプトをコピーし応答を取り込み、Accept で `Save-As` / `Append-To` を適用し、応答を `sop/<seq>/` に保存します（`seq` の先頭ゼロは除去）。本文はエージェント実行前に `\response` や `<select>` インタラクションを使えます。
+- `Discard` — sopwin が無視（エディタ modeline、メモ、…）
+Chat 手順実行時、sopwin は `sop/AGENTS` の `chat` エージェントを起動する
+（既定：`sopwin sopdlg --paste`）。エージェントは疑似エージェントのダイアログで、プロンプトをコピーし、返信を取り込み、Accept 時に `Save-As`／`Append-To` を適用し、応答を `sop/<seq>/` に保存する（`seq` の先頭ゼロは除去）。本文はエージェント実行前に `\response` と `<select>` インタラクションを使ってよい。
 
 ## WorldMan アーキテクチャ
 
-WorldMan モジュールは軽量マイクロサービスに近い振る舞いをします。
+WorldMan モジュールは軽量マイクロサービスのように振る舞います：
 
-- 各アプリは**完全に独立**して動かすことも、対等アプリと**統合**することもできます。
-- 独立モード：共有基礎データ（ユーザー、連絡先など）の**簡素なローカル定義**をアプリが持ちます。一般業務アプリは連絡先の氏名＋電話だけの小さな表で足りることが多いです。
-- 統合モード：同じ論理エンティティは**不透明な参照**（cuid2 id）になり、対等アプリの API で解決します——他モジュールのスキーマへのデータベース外部キーではありません。専用の連絡先アプリはより完全なモデルを持てますが、利用側は必要な参照だけを保持します。
-- マスタデータの主キーは **`cuid(2)`** とし、独立／統合のどちらでも id を安定に保ちます。
+- 各アプリは**完全に独立**して動かすことも、ピアアプリと**統合**することもできる。
+- スタンドアロンモード：アプリは共有基本（user、contact、…）の**単純なローカル定義**を持つ。一般的な業務アプリは、通常自前の小さな表に連絡先名＋電話だけで足りる。
+- 統合モード：同じ論理エンティティは、別モジュールのスキーマへの DB 外部キーではなく、ピアアプリの API 経由で解決する**不透明な参照**（cuid2 id）になる。専用の連絡先アプリは連絡先をより完全にモデル化してよい；消費者は必要な参照だけを保持する。
+- マスタデータの主キーは **`cuid(2)`** を使い、スタンドアロンと統合配備のあいだで id を安定に保つ。
 
 標準パッケージレイアウト：
 
@@ -92,11 +93,11 @@ prisma/            # schema、migrations、seed（cuid2 ids）
 backend/           # Fastify + TypeScript、/api/v1
 web/               # Vite + React
 web-e2e/           # Playwright
-mobile/            # 任意 Expo / mobile-web
+mobile/            # 任意の Expo / mobile-web
 mobile-e2e/        # 任意
-sop/               # 構築／再構成中の作業文書：PRD、TODO、TUC/NTC/ECS
-docs/              # as-built 文書（api.md など）
-docker/            # zephyr-docker ベースのカスタムイメージ
+sop/               # 構築／再構成中の作業用 PRD、TODO、TUC/NTC/ECS
+docs/              # as-built 文書（api.md、…）
+docker/            # zephyr-docker からカスタムしたイメージ
 i-local/           # 組み込み単ノード docker ローカルインスタンス＋フレーバー短縮コマンド
 i-medium/          # 組み込み中小規模 docker compose クラスタ＋フレーバー短縮コマンド
 worldman.json      # name、portBase、masterData、references、…
@@ -112,8 +113,9 @@ worldman.json      # name、portBase、masterData、references、…
 - `TUC.md` — テストユースケース参照集
 - `NTC.md` — 反用例・ネガティブケース
 - `ECS.md` — エッジケースシナリオ
-- `design-inventory.md` — Figma/UI ベースライン（ルート、タブ、chrome、モック元）。`010` で**構造再構成の前に**書く。後続手順はエントリを黙って落としてはならない
-- `seed-coverage.md` — モック／デモ → `prisma/seed.ts` の対応マトリクス。`040` で書き、`080` でゲートする
+- `design-inventory.md` — Figma/UI ベースライン（ルート、タブ、chrome、モック元）；`010` で**構造再構成の前に**書く。後続手順はエントリを黙って落としてはならない
+- `seed-coverage.md` — モック／デモ → `prisma/seed.ts` の対応マトリクス＋ discrepancy log；`040` で書き、`080` でゲートする
+- `theme-default.md` — Figma 抽出テーマ `default` のトークン写像＋未変更フォント；`011` が含まれるときに書く
 - `figma-archive/` — `000` が保全する軽量エクスポート足場（`.figma`、`src/imports`、エージェント文書）。**正本の Figma オリジナル**はこの製品ツリー外に置き、並行参照する。`000` は `.git` を削除し、エージェントが生エクスポートへ git-revert できないようにする。
 
 ユーザーが複雑なプロンプトを渡したら、候補テストを速やかに抽出または構成して `TUC.md`、`NTC.md`、`ECS.md` に入れる。後続の Playwright e2e およびツール／サポートクラス抽出は、これらの `sop/` 文書を入力とする。
@@ -124,11 +126,11 @@ Figma エクスポートは**視覚およびナビのベースライン**であ�
 
 `000` 以降の全手順の厳格ルール：
 
-1. **まずインベントリ** — 手順 `010` はファイル分割やルート移動の**前に** `sop/design-inventory.md` を書かなければならない。全ルート、全タブ／表形式サーフェス、主要 chrome、ダイアログ／シート、モック／デモデータ元とおおよその行／エンティティ数を列挙する。
+1. **まずインベントリ** — 手順 `010` はファイル分割やルート移動の**前に** `sop/design-inventory.md` を書かなければならない。全ルート、全タブ／表形式サーフェス、主要 chrome、ダイアログ／シート、モック／デモデータ元とおおよその行／エンティティ数、および **typography／フォントスタック**を列挙する。
 2. **黙って落とさない** — 列挙済みのルート、タブ、表カラム集合、ダイアログを削除またはマージする場合は、明示的な理由とともにインベントリを更新する。「クリーンアップ」「簡略化」「まだ PRD にない」だけでは足りない。
 3. **PRD は UI 構造に従う** — ナビ構造については、推測的な「エクスポートノイズ」フィルタリングより `sop/design-inventory.md` が優先する。死んだ足場コントロールは、インベントリ自身が `dead`/`scaffold` とマークした場合に限り降格してよい。
-4. **モックは seed パリティまで残す** — デモデータを空の API 応答で置き換えない。手順 `040` は `web/` モックからの機械的抽出を優先し、手順 `080` はモック削除前に `sop/seed-coverage.md` を再確認しなければならない。
-5. **テーミングは色のみ** — 手順 `011` は色をトークンに写す。ストックパレットに合わせてレイアウト、タイポグラフィ尺度、余白、ナビを再スタイリングしてはならない。
+4. **モックは seed パリティまで残す** — デモデータを空の API 応答で置き換えない。手順 `040` は `web/` モックからの機械的抽出を優先し、seed と Figma がずれるとき（`figma-suspect` を含む）は seed **Discrepancy log** を書く；手順 `080` はモック削除前に `sop/seed-coverage.md`（media↔text ペアを含む）を再確認しなければならない。
+5. **テーミングは色のみ；`default` = Figma** — 手順 `011` はエクスポートのライブ色をテーマ id `default` に写し、そのテーマで起動する。ストックパックは切替器のみ。ストックパレットに合わせてフォント、タイポグラフィ尺度、レイアウト、余白、ナビを変えてはならない；写像は `sop/theme-default.md` に文書化する。
 
 ### `web/src` ディレクトリの役割
 
@@ -180,10 +182,11 @@ wm port -n <name>
 - 手順 `011`（テーミング）は任意コンテンツで `extend: previous` により付随する：含まれる場合、**sopwin はそれを `010` にマージしてグラフ上は1手順**とする。`extend` を外して別ノードを作らない——表示される **SOP 手順数は製品契約の一部**であり、パック洗練時に seq 番号を安易に増減してはならない。
 - 同一 `seq` の Chat（`*.get`）と Code（`*.md`）トラックは**代替**：実行時に**どちらか一方**を選ぶ。会話コンテキストがある間は Chat を使い、別経路でプロジェクトが進み、先行手順を再生できず Chat コンテキストが消えたら Code に切り替える。同一ビルドで同じ `seq` の両トラックを走らせない。
 - `schema.prisma` と `seed.ts` は分けて生成し、出力長圧力を避け、seed 生成でドメインモデルを圧迫検証できるようにする。
-- Seed は新しいデモ行を発明するより、Figma／web デモデータの**抽出**を優先する。seed 生成は schema を黙って書き換えてはならない。
+- Seed は新しいデモ行を発明するより、Figma／web デモデータの**抽出**を優先する；media↔text ペアを保ち、黙って「修正」したりデモ集合を置き換えたりせず discrepancy（`matched`／`seed-enriched`／`figma-suspect`／…）をログする；seed 生成は schema を黙って書き換えてはならない。
+- 手順 `011` は Figma 色をテーマ `default`（起動デフォルト）として出荷しなければならない；任意のストックパックは初回描画になってはならない。
 - Seed はバックエンドプロンプト（`050`）の後に走れる場合、任意で修正要求を出してよい：`prisma/request-for-refactor.md` および／または `sop/Backend amends.md`（`<optional>` 経由）。手順 `060` は両方をマージし、要求ファイルを削除する。
 - モジュール横断参照はスカラー cuid2 フィールド＋ API 照会であり、明示要求がなければ横断 DB FK にしない。
-- 施工中の作業文書は `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`）に置き、構築／再構成中に更新し続ける。
+- 施工中の作業文書は `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`、`theme-default.md`）に置き、構築／再構成中に更新し続ける。
 - デモアセットのローカライズ：Google／Google Fonts／gstatic／Facebook CDN などは**必ず**ローカル HTTP プロキシ `http://localhost:8118` 経由にする。
 - `web-e2e/workflows.md` は後半で生成し、`sop/` の PRD/TUC/NTC/ECS・schema・seed シナリオ・バックエンド設計を統合する。
 - `docs/api.md` は実装／統合後に書き、as-built API 契約とする。
