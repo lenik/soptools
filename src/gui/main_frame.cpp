@@ -9,7 +9,9 @@
 #include "gui/help_dialogs.hpp"
 #include "gui/paste_response_dialog.hpp"
 #include "gui/render_response_dialog.hpp"
+#include "gui/suite_status_bar.hpp"
 #include "engine/project.hpp"
+#include "util/suite_meta.hpp"
 
 #include <wx/wx.h>
 #include <wx/artprov.h>
@@ -35,10 +37,11 @@ MainFrame::MainFrame(SopEngine *engine)
     SetBackgroundColour(ios_bg());
     CreateMenu();
     CreateAppToolBar();
-    CreateStatusBar(1);
-    SetStatusText(wxString::FromUTF8("Ready"));
+    SetStatusBar(new SuiteStatusBar(this));
+    SetStatusBarMessage(wxString::FromUTF8("Ready"));
     CreateUi();
     SetupAccelerators();
+    RefreshSuiteBadge();
     engine_->set_log_fn([this](int level, const std::string &msg) { append_log(level, msg); });
     engine_->set_notify_fn([this]() {
         if (auto *app = wxTheApp) {

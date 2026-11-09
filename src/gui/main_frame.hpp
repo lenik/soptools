@@ -5,6 +5,7 @@
 #include "engine/stage_watcher.hpp"
 #include "gui/graph_canvas.hpp"
 #include "gui/log_view.hpp"
+#include "gui/suite_status_bar.hpp"
 
 #include <wx/bmpbuttn.h>
 #include <wx/frame.h>
@@ -75,6 +76,8 @@ private:
     void OnFrameSize(wxSizeEvent &evt);
     void append_log(int level, const std::string &msg);
     void SetStatusBarMessage(const wxString &text, bool sticky = false);
+    void RefreshSuiteBadge();
+    SuiteStatusBar *SuiteBar();
     void SetAgentBusy(bool busy);
     bool ResolveStepInteractions(const SopStep &step, std::string *resolved_body);
     bool RunAgentFlow(const SopStep &step);

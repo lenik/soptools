@@ -90,3 +90,13 @@ API 前缀：`/api/v1/`
 提示应指示 Codex 对照既有 Prisma schema 实现后端。
 
 除非发现实现阻塞性矛盾，否则不要要求 Codex 重设计产品。
+
+## 输出
+
+将完整 Codex 提示保存为：
+
+```text
+sop/Backend implementation prompt.md
+```
+
+（见上方 `Save-As`）。步骤 `060` 实现后端时会 Checkout 该文件。

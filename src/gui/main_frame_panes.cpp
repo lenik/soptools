@@ -415,7 +415,7 @@ void MainFrame::OnOpenProject(wxCommandEvent &) {
     UpdateWindowTitle();
     StartStageWatcher();
     RefreshAll();
-    SetStatusText(wxString::FromUTF8("Project opened."));
+    SetStatusBarMessage(wxString::FromUTF8("Project opened."));
 }
 
 void MainFrame::OnSaveProject(wxCommandEvent &) {
@@ -425,7 +425,7 @@ void MainFrame::OnSaveProject(wxCommandEvent &) {
                      wxOK | wxICON_ERROR);
         return;
     }
-    SetStatusText(wxString::FromUTF8("Project status saved to sop/status."));
+    SetStatusBarMessage(wxString::FromUTF8("Project status saved to sop/status."));
 }
 
 void MainFrame::OnRevertProject(wxCommandEvent &) {
@@ -442,7 +442,7 @@ void MainFrame::OnRevertProject(wxCommandEvent &) {
     graph_layout_dirty_ = true;
     sticky_status_.clear();
     RefreshAll();
-    SetStatusText(wxString::FromUTF8("Project reverted."));
+    SetStatusBarMessage(wxString::FromUTF8("Project reverted."));
 }
 
 void MainFrame::OnLoadSop(wxCommandEvent &) {
@@ -459,7 +459,8 @@ void MainFrame::OnLoadSop(wxCommandEvent &) {
     sticky_status_.clear();
     RefreshAll();
     SyncLanguageMenu();
-    SetStatusText(wxString::FromUTF8("SOP loaded."));
+    RefreshSuiteBadge();
+    SetStatusBarMessage(wxString::FromUTF8("SOP loaded."));
 }
 
 void MainFrame::OnHelpShortcuts(wxCommandEvent &) { show_shortcuts_dialog(this); }
@@ -513,6 +514,7 @@ void MainFrame::SwitchLanguagePack(const std::string &lang) {
     graph_layout_dirty_ = true;
     sticky_status_.clear();
     RefreshAll();
+    RefreshSuiteBadge();
     SyncLanguageMenu();
     SetStatusBarMessage(wxString::Format(wxString::FromUTF8("Switched suite branch to %s."),
                                          wxString::FromUTF8(std::filesystem::path(pack).filename().string())),

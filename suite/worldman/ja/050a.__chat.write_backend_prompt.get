@@ -90,3 +90,13 @@ API 接頭辞：`/api/v1/`
 プロンプトは、既存の Prisma スキーマに対してバックエンドを実装するよう Codex に指示すべきである。
 
 実装を阻む矛盾が見つからない限り、Codex に製品の再デザインを要求しない。
+
+## 出力
+
+完全な Codex プロンプトを次へ保存する：
+
+```text
+sop/Backend implementation prompt.md
+```
+
+（上記 `Save-As`）。手順 `060` はバックエンド実装時にこのファイルを Checkout する。

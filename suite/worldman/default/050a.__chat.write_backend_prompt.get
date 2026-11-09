@@ -90,3 +90,13 @@ Include robust validation and consistent API errors.
 The prompt should instruct Codex to implement the backend against the existing Prisma schema.
 
 Do not require Codex to redesign the product unless an implementation-blocking contradiction is found.
+
+## Output
+
+Save the full Codex prompt as:
+
+```text
+sop/Backend implementation prompt.md
+```
+
+(`Save-As` above). Step `060` checkouts this file when implementing the backend.

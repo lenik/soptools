@@ -53,6 +53,26 @@ config_h.set_quoted('SOP_BUILTIN_DIR', sop_builtin_dir)
 config_h.set_quoted('SOP_PKGDATADIR', get_option('prefix') / sop_pkgdatadir)
 config_h.set_quoted('LOCALEDIR', localedir)
 
+rsvg_convert = find_program('rsvg-convert', required: true)
+suite_icon_svgs = {
+    'worldman': 'assets' / 'icons' / 'suite' / 'worldman.svg',
+    'vrischika': 'assets' / 'icons' / 'suite' / 'vrischika.svg',
+}
+suite_icon_pngs = []
+foreach name, svg : suite_icon_svgs
+    suite_icon_pngs += custom_target(
+        'suite-icon-' + name,
+        input: svg,
+        output: name + '.png',
+        command: [rsvg_convert, '-w', '32', '-h', '32', '@INPUT@', '-o', '@OUTPUT@'],
+        build_by_default: true,
+        install: true,
+        install_dir: sop_pkgdatadir / 'icons' / 'suite',
+    )
+endforeach
+# Uninstalled runs find PNGs next to the builddir outputs of the targets above.
+config_h.set_quoted('SOP_BUILD_ICONDIR', meson.current_build_dir())
+
 configure_file(
     output: 'config.h',
     configuration: config_h,
@@ -76,6 +96,7 @@ wxwidgets = declare_dependency(
 app_sources = [
     'src/sopwin.cpp',
     'src/util/paths.cpp',
+    'src/util/suite_meta.cpp',
     'src/model/model.cpp',
     'src/model/model_parse.cpp',
     'src/model/step_interact.cpp',
@@ -92,6 +113,7 @@ app_sources = [
     'src/gui/app.cpp',
     'src/gui/display_util.cpp',
     'src/gui/theme.cpp',
+    'src/gui/suite_status_bar.cpp',
     'src/gui/main_frame.cpp',
     'src/gui/main_frame_actions.cpp',
     'src/gui/main_frame_panes.cpp',
@@ -115,6 +137,15 @@ executable(
     cpp_args: cpp_args_bas,
     install: true,
     install_dir: bindir,
+    link_depends: suite_icon_pngs,
+)
+
+install_data(
+    [
+        'assets/icons/suite/worldman.svg',
+        'assets/icons/suite/vrischika.svg',
+    ],
+    install_dir: sop_pkgdatadir / 'icons' / 'suite',
 )
 
 install_subdir(

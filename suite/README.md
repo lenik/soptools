@@ -2,6 +2,19 @@
 
 Shipped SOP packs live under `suite/<name>/<branch>/`.
 
+Each suite root carries:
+
+```text
+suite/<name>/
+    VERSION          # suite semver shown in sopwin status bar (e.g. 1.1)
+    default/ …       # language branches
+```
+
+Suite icons (Tabler outline SVGs) live in `assets/icons/suite/<name>.svg`;
+the Meson build rasterizes 32×32 PNGs into the build dir / install prefix
+(`…/soptools/icons/suite/`). sopwin’s status bar shows `[icon] <name> <version>`
+on the right (e.g. worldman 1.1).
+
 ## worldman
 
 Guided construction of a **WorldMan** module (web + backend + optional mobile)

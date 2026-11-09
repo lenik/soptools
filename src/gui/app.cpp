@@ -436,6 +436,7 @@ public:
         if (!wxApp::OnInit()) {
             return false;
         }
+        wxInitAllImageHandlers();
         if (g_gui_mode == GuiEntryMode::SopDlg) {
             copy_to_clipboard(g_sopdlg.prompt);
             auto *frame = new SopDlgFrame(g_sopdlg);

@@ -21,6 +21,11 @@ soptools (1.3.1) unstable; urgency=medium
     typography out of scope; `sop/theme-default.md`); seed-coverage gains
     status + media↔text columns and a Discrepancy log (`figma-suspect` vs
     enrichment); 010 inventories fonts; 080/150 gate on these artifacts.
+  * WorldMan 050: document output `sop/Backend implementation prompt.md`
+    (chat Save-As + code-track write for 060 Checkout); locales synced.
+  * Suites: per-suite `VERSION` (worldman 1.1, vrischika 1.0); Tabler icons
+    under `assets/icons/suite/` with Meson `rsvg-convert` PNGs; sopwin status
+    bar shows suite badge `[icon] name version` on the right.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

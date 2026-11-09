@@ -139,8 +139,22 @@ void MainFrame::append_log(int level, const std::string &msg) {
     }
 }
 
+SuiteStatusBar *MainFrame::SuiteBar() {
+    return dynamic_cast<SuiteStatusBar *>(GetStatusBar());
+}
+
+void MainFrame::RefreshSuiteBadge() {
+    if (SuiteStatusBar *sb = SuiteBar()) {
+        sb->SetSuiteMeta(load_suite_meta(engine_->options().sop_dir));
+    }
+}
+
 void MainFrame::SetStatusBarMessage(const wxString &text, bool sticky) {
-    SetStatusText(text);
+    if (SuiteStatusBar *sb = SuiteBar()) {
+        sb->SetMainMessage(text);
+    } else {
+        SetStatusText(text);
+    }
     if (sticky) {
         sticky_status_ = text;
         sticky_status_index_ = engine_->current_index();
@@ -508,13 +522,13 @@ void MainFrame::RefreshStepView() {
 
 void MainFrame::RefreshStatusBar() {
     if (!sticky_status_.empty() && sticky_status_index_ == engine_->current_index()) {
-        SetStatusText(sticky_status_);
+        SetStatusBarMessage(sticky_status_, true);
         return;
     }
     sticky_status_.clear();
     sticky_status_index_ = static_cast<size_t>(-1);
     const SopStep *step = engine_->step_at(engine_->current_index());
-    SetStatusText(status_bar_text(step, engine_));
+    SetStatusBarMessage(status_bar_text(step, engine_));
 }
 
 void MainFrame::RefreshActionTool() {
