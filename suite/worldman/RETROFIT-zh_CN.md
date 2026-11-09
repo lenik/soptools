@@ -1,7 +1,7 @@
 # WorldMan SOP 对照改进清单（已完工项目）
 
 面向：**已经跑过一轮 WorldMan SOP、产品已落地的项目组**。  
-对照当前流程包版本：`suite/worldman/VERSION` = **1.3.0**（`major.minor.patch`）。  
+对照当前流程包版本：`suite/worldman/VERSION` = **1.5.0**（`major.minor.patch`）。  
 变更明细：[`CHANGELOG.md`](./CHANGELOG.md)。
 
 本文不是完整 SOP 重跑指南，而是把近期流程收紧点收成**可勾选的自查/整改项**。按优先级处理；每项注明对应步骤与期望产物。
@@ -17,7 +17,7 @@
 3. 打开本文件，打印或导入任务看板。
 4. 对每个已交付项目勾选「现状」；未达标的开整改任务，改完勾「已整改」。
 5. 整改提交建议带简短说明（不必强行 `[sopNNN]`，除非你们仍按 SOP 节奏推进）。
-6. 全部关键项通过后，在项目 `sop/TODO.md` 记一行：`WorldMan retrofit vs 1.3.0 done`，并确保 `sop/template-version` 已更新。
+6. 全部关键项通过后，在项目 `sop/TODO.md` 记一行：`WorldMan retrofit vs 1.5.0 done`，并确保 `sop/template-version` 已更新。
 
 图例：🔴 高（用户可见/数据污染）　🟡 中（可维护性）　🟢 低（规范对齐）
 
@@ -39,8 +39,9 @@
 | 1.2 | 清单里 `kept`/`moved` 的路由、页签是否都还在、且不是空白壳？ | `010`→`150` | 丢弃必须在清单里写 `dropped:<理由>`；禁止「先简化再说」 |
 | 1.3 | 是否还有 `sop/figma-archive/`（或等价的导出脚手架存档）？ | `000` | 供 inventory / seed 回溯；产品源码仍在 `web/` |
 | 1.4 | 最终审计是否对照过同一份 inventory？ | `150` | 缺页、被掏空的表格/页签要恢复，而不是删面“过审计” |
+| 1.5 | 浏览器标签 / `<title>` 是否已不是 `Figma Make App`？ | `010` | 格式 **`族 \| 代码 \| 标题`**（例：`ClassMate \| CM-Ballet \| ClassMate Ballet`）；`index.html` 与 Vite `figma:title` / site 配置一致；标题优先取自 `worldman.json` `"title"` |
 
-**常见差距：** 早期项目没有 inventory，后续“清理”掉了 Figma 里仍在的页签。
+**常见差距：** 早期项目没有 inventory，后续“清理”掉了 Figma 里仍在的页签；标签页仍显示 `Figma Make App`。
 
 ---
 
@@ -81,6 +82,7 @@
 | 4.3 | 根上是否已去掉与 `db:generate` 重复的 `prisma:generate`？ | `010` | 根统一 `db:*` |
 | 4.4 | `db:migrate` 与 `db:migrate:dev` 是否分成两个脚本？ | `010` | **deploy** vs **dev**，不是别名；不要再加只重复 deploy 的 `db:deploy` |
 | 4.5 | `prisma/package.json` 短名是否与根转发一致？ | `060` | `generate`、`migrate`(=deploy)、`migrate:dev`、`seed`、`studio`… |
+| 4.6 | 是否已从 git **去掉** `pnpm-lock.yaml`（及 `package-lock.json` / `yarn.lock`）？ | `010` | `.gitignore` 忽略；`git rm --cached`；WorldMan **不要** lock 文件入库 |
 
 **对照：**
 
@@ -89,6 +91,7 @@
 | `prisma:generate` ≈ `db:generate` | 相同 | 只保留 `db:generate` |
 | `db:migrate` | `prisma migrate deploy` | 保留 |
 | `db:migrate:dev` | `prisma migrate dev` | 保留（不同） |
+| `pnpm-lock.yaml` 等 | lock 文件 | 不入库；ignore + 取消跟踪 |
 
 ---
 
@@ -128,7 +131,7 @@
 1. **字体 + `default` 主题**（立刻改善「不像 Figma」）  
 2. **共享库测试污染清理**（立刻改善数据可信度）  
 3. **补 `design-inventory` / `seed-coverage` + 差异记录**（挡住后续静默丢页/丢数）  
-4. **根 `package.json` `db:*`/`dev:*` 对齐**  
+4. **根 `package.json` `db:*`/`dev:*` 对齐；去掉 git 中的 lock 文件**  
 5. **补 `Backend implementation prompt.md` / theme-default 等文档产物**
 
 ---
@@ -157,11 +160,11 @@ pnpm e2e
 
 ## 变更背景（给负责人）
 
-相对早期 WorldMan 包，**1.2.x–1.3.0** 主要收紧了：
+相对早期 WorldMan 包，**1.2.x–1.5.0** 主要收紧了：
 
-1. Figma 保真：inventory → 主题 `default` → seed 差异可追溯  
+1. Figma 保真：inventory → 主题 `default` → seed 差异可追溯；文档标题 `族 \| 代码 \| 标题`（去掉 `Figma Make App`）  
 2. 字体可复现：代理 + 同名复用 + `~/.cache/fonts`  
-3. 运维入口：根 `db:*` / `dev:*`，去掉重复 `prisma:generate`  
+3. 运维入口：根 `db:*` / `dev:*`，去掉重复 `prisma:generate`；**不入库** `pnpm-lock.yaml` 等 lock 文件  
 4. 测试卫生：创建即拆卸，`140` 跑完再清残留  
 5. 流程版本：`VERSION` + `CHANGELOG.md`（`major.minor.patch`，改流程必同步更新）；项目钉 `sop/template-version`  
 

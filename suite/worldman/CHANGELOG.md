@@ -5,6 +5,19 @@ Shipped projects pin the template they ran in `sop/template-version` (written
 by step `010`). Use this file + [`RETROFIT-zh_CN.md`](./RETROFIT-zh_CN.md) to
 self-iterate when the pack moves ahead.
 
+## 1.5.0 — 2026-11-09
+
+- Step `010`: replace default web tab title `Figma Make App` with
+  `{Family} | {Code} | {Title}` (e.g. `ClassMate | CM-Ballet | ClassMate Ballet`)
+  via `index.html` / Vite `figma:title` / `worldman.json` `"title"`; `150`
+  audits the same.
+
+## 1.4.0 — 2026-11-09
+
+- Step `010`: drop package-manager lockfiles from git (`pnpm-lock.yaml`,
+  `package-lock.json`, `yarn.lock`) — ignore + `git rm --cached`; WorldMan
+  does not want lockfiles in the repo.
+
 ## 1.3.0 — 2026-11-09
 
 - Require suite `CHANGELOG.md` alongside `VERSION`; document bump policy in

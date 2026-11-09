@@ -44,6 +44,10 @@ soptools (1.3.1) unstable; urgency=medium
   * Suites: add per-suite `CHANGELOG.md`; `.cursor/rules/suite-sop.mdc` requires
     VERSION+changelog on every process change; WorldMan 010 writes
     `sop/template-version`; worldman suite 1.3.0.
+  * WorldMan 010: drop lockfiles from git (`pnpm-lock.yaml` etc.); retrofit
+    checklist + suite 1.4.0.
+  * WorldMan 010: set document title to `{Family} | {Code} | {Title}`
+    (not `Figma Make App`); suite 1.5.0 + retrofit.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 
