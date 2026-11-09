@@ -189,7 +189,8 @@ wm port -n <name>
 - 跨模块引用是标量 cuid2 字段 + API 查询，不是跨库 FK（除非明确要求）。
 - 施工期工作文档放在 `sop/`（`PRD.md`、`TODO.md`、`TUC.md`、`NTC.md`、`ECS.md`、`design-inventory.md`、`seed-coverage.md`、`theme-default.md`）；构建/重构期间持续更新。
 - 根 `package.json`（自步骤 `010`）持有运维脚本：`dev` / `dev:*`、`db:generate`、`db:migrate`（= deploy）、`db:migrate:dev`、`db:seed`、`e2e`。优先 `db:*`，勿再并存根上的 `prisma:*` 别名。
-- 本地化 demo 资源：Google / Google Fonts / gstatic / Facebook CDN 等**必须**经本地 HTTP 代理 `http://localhost:8118`。
+- 本地化 demo 资源：Google / Google Fonts / gstatic / Facebook CDN 等**必须**经本地 HTTP 代理 `http://localhost:8118`。字体：优先复用 `$HOME/.cache/fonts` 或 `/usr/share/fonts` 中的同名字体；否则把原文件下载到 `web/assets/fonts/` 与 `$HOME/.cache/fonts/{truetype|opentype|woff}/…`——不要因 CDN 失败就换别的字族。
+- 后端 API 测试与 Playwright E2E 必须拆卸自己创建的行；步骤 `140` 在套件跑完后还要清理共享库里的残留测试污染。
 - `web-e2e/workflows.md` 靠后生成，以便综合 `sop/` 下的 PRD/TUC/NTC/ECS、schema、seed 场景与后端设计。
 - `docs/api.md` 在后端实现/集成之后编写，作为建成态 API 合同。
 - Playwright 覆盖顺序：路由冒烟 → 工作流 → 交互控件审计 → 跨产物覆盖审计；路由冒烟必须覆盖 `design-inventory.md` 中每个未丢弃的路由。

@@ -31,6 +31,11 @@ soptools (1.3.1) unstable; urgency=medium
     keep both `db:migrate` (deploy) and `db:migrate:dev` (dev) — not aliases.
   * WorldMan zh_CN: retranslate all SOP prose for fluent Simplified Chinese
     (fix literal calques such as theme `default` hard-contract wording).
+  * WorldMan fonts: require proxy for Google Fonts; reuse same-name faces from
+    `$HOME/.cache/fonts` / `/usr/share/fonts`, else download original into
+    `web/assets/fonts/` and cache under `$HOME/.cache/fonts/{truetype|opentype|woff}/`.
+  * WorldMan e2e/API tests: tear down created rows; step 140 cleans residual
+    shared-DB test pollution after the suite run.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

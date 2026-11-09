@@ -191,7 +191,8 @@ Do not leave unrelated default listen ports (`5173`, …) in committed source.
 - Cross-module references are scalar cuid2 fields + API lookups, not cross-database FKs, unless explicitly required.
 - Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`, `design-inventory.md`, `seed-coverage.md`, `theme-default.md`); keep them updated during build/refactor.
 - Root `package.json` (from step `010`) owns operator scripts: `dev` / `dev:*`, `db:generate`, `db:migrate` (= deploy), `db:migrate:dev`, `db:seed`, `e2e`. Prefer `db:*` over duplicate `prisma:*` root aliases.
-- Localizing demo assets: Google / Google Fonts / gstatic / Facebook CDNs and similar **must** go through the local HTTP proxy `http://localhost:8118`.
+- Localizing demo assets: Google / Google Fonts / gstatic / Facebook CDNs and similar **must** go through the local HTTP proxy `http://localhost:8118`. Fonts: reuse same-name faces from `$HOME/.cache/fonts` or `/usr/share/fonts` when present; otherwise download the original file into both `web/assets/fonts/` and `$HOME/.cache/fonts/{truetype|opentype|woff}/…` — never substitute another typeface because the CDN failed.
+- Backend API tests and Playwright E2E must tear down rows they create; step `140` also cleans residual test pollution from the shared DB after the suite run.
 - `web-e2e/workflows.md` is generated late so it can synthesize `sop/` PRD/TUC/NTC/ECS, schema, seed scenarios, and backend design.
 - `docs/api.md` is written after backend implementation/integration as the as-built API contract.
 - Playwright coverage proceeds from route smoke → workflow → interactive-control audit → cross-artifact coverage audit; route smoke must cover every non-dropped route in `design-inventory.md`.
