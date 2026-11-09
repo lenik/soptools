@@ -34,11 +34,16 @@ from a Figma prototype export.
 
 ```text
 suite/worldman/
-    VERSION      # currently 1.2.0
-    default/     # English prompts and scripts
-    zh_CN/       # Simplified Chinese
-    themes/      # catalog/ + minor|vibe|country/*.mjs → $PROJECT/sop/themes/ in 000
+    VERSION           # process semver major.minor.patch
+    RETROFIT-zh_CN.md # checklist for already-shipped projects (hand-out)
+    RETROFIT.md       # pointer / EN stub
+    default/          # English prompts and scripts
+    zh_CN/            # Simplified Chinese
+    themes/           # catalog/ + minor|vibe|country/*.mjs → $PROJECT/sop/themes/ in 000
 ```
+
+Already-built apps: use [`worldman/RETROFIT-zh_CN.md`](./worldman/RETROFIT-zh_CN.md)
+as the distribution checklist (do not require a full SOP replay).
 
 Rough coverage (same step ids across branches):
 

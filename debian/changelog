@@ -38,6 +38,9 @@ soptools (1.3.1) unstable; urgency=medium
     shared-DB test pollution after the suite run.
   * Suites: `VERSION` is `major.minor.patch`; bump on every SOP-process change
     (worldman 1.2.0, vrischika 1.0.0); document policy in `suite/README.md`.
+  * WorldMan: add `RETROFIT-zh_CN.md` checklist for already-shipped projects
+    (design fidelity, theme/fonts, seed coverage, root `db:*`, e2e cleanup);
+    bump suite VERSION to 1.2.1.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 
