@@ -47,7 +47,7 @@ extend: previous
 ---
 ```
 
-- `extend: previous` / `extend: next` — absorb this step into the previous/next step of the **same type** (`role` + extension, e.g. both `code` + `.md`). Type mismatch is ignored. The graph shows one merged node (the anchor); prompt bodies are concatenated with the YAML header removed. Example: `011` (`extend: previous`) merges into `010`.
+- `extend: previous` / `extend: next` — absorb this step into the previous/next step of the **same type** (`role` + extension, e.g. both `code` + `.md`). Type mismatch is ignored. The graph shows one merged node (the anchor); prompt bodies are concatenated with the YAML header removed. Example: when `011` is included, `extend: previous` merges it into `010` as a single step.
 
 Chat steps use extension `.get`. They begin with optional RFC822-style headers (names case-insensitive), then a blank line, then the prompt body. Use `Discard:` for editor modelines and other ignored lines.
 
@@ -56,6 +56,7 @@ Save-As: sop/PRD.md
 File-Link: inode
 Parse: multi-parts
 Interaction: none
+Append-To: sop/TUC.md from TUC*.md (delete)
 Discard: -*- mode: markdown -*-
 Discard: vim: set ft=markdown :
 
@@ -67,14 +68,15 @@ Discard: vim: set ft=markdown :
 - `File-Link` — `default`/`auto` (inode on ext2/3/4, otherwise copy), `none` (copy), `inode` (hard link), or `sym` (symlink)
 - `Parse` — comma-separated formats; currently `multi-parts` splits a multi-part response into `partNN` files under `sop/<seq>/`
 - `Interaction` — `none` (default: save only) or `select` (show rendered response / part picker after save)
+- `Append-To` — `dest from Pattern [(delete)]`; when a dropped/staged attachment matches `Pattern` (e.g. `TUC*.md`), merge it into `dest` on Accept; `(delete)` removes the source file
 - Body markup — `<select title="…">` / `<option>…` (choose one before run); `<optional title="…">…</optional>` (yes/no include before run); `\response` expands to the nearest prior chat response
 
 - `Discard` — ignored by sopwin (editor modelines, notes, …)
 When a chat step runs, sopwin invokes the `chat` agent from `sop/AGENTS`
-(default: `sopwin copydlg --paste`). The agent copies the prompt and captures
-the reply; responses are stored under `sop/<seq>/` (leading zeros stripped from
-`seq`). Bodies may use `\response` and `<select>` interactions before the agent
-runs.
+(default: `sopwin sopdlg --paste`). The agent is a pseudo-agent dialog: it copies
+the prompt, captures the reply, applies `Save-As` / `Append-To` on Accept, and
+stores responses under `sop/<seq>/` (leading zeros stripped from `seq`). Bodies
+may use `\response` and `<select>` interactions before the agent runs.
 
 ## WorldMan architecture
 
@@ -112,8 +114,42 @@ During complex build/refactor work, keep living working documents under `<projec
 - `TUC.md` — test use-case reference set
 - `NTC.md` — negative / anti test cases
 - `ECS.md` — edge-case scenarios
+- `design-inventory.md` — Figma/UI baseline (routes, tabs, chrome, mock sources); written in `010` **before** structural refactor; later steps must not silently drop entries
+- `seed-coverage.md` — mock/demo → `prisma/seed.ts` parity matrix; written in `040`, gated in `080`
+- `figma-archive/` — lightweight export scaffolding preserved by `000` (`.figma`, `src/imports`, agent docs). The **canonical Figma original** lives outside this product tree for parallel reference; `000` deletes `.git` so agents cannot git-revert to the raw export.
 
 When the user supplies a complex prompt, extract or construct candidate tests promptly into `TUC.md`, `NTC.md`, and `ECS.md`. Later Playwright e2e work and tool/support-class extraction should use these `sop/` documents as input.
+
+### Design fidelity
+
+The Figma export is the **visual and navigational baseline**, not disposable scaffolding.
+
+Hard rules for all steps after `000`:
+
+1. **Inventory first** — step `010` must write `sop/design-inventory.md` *before* splitting files or moving routes. List every route, every tabbed/tabular surface, primary chrome, dialogs/sheets, and mock/demo data sources with approximate row/entity counts.
+2. **No silent drops** — removing or merging a listed route, tab, table column set, or dialog requires updating the inventory with an explicit reason. “Cleanup”, “simplify”, or “not in PRD yet” is not enough by itself.
+3. **PRD follows UI structure** — `sop/design-inventory.md` outranks speculative “export noise” filtering for navigational structure. Dead scaffold controls may be demoted only when the inventory itself marks them `dead`/`scaffold`.
+4. **Mocks survive until seed parity** — do not replace demo data with empty API responses. Step `040` prefers mechanical extraction from `web/` mocks; step `080` must recheck `sop/seed-coverage.md` before deleting mocks.
+5. **Theming is color-only** — step `011` maps colors to tokens; it must not restyle layout, typography scale, spacing, or navigation to match a stock palette.
+
+### `web/src` directory roles
+
+Target layout under `web/src/` (Vite + React — **not** Next.js file routing):
+
+| Directory | Role |
+|-----------|------|
+| `pages/` | **Route boundary** — one module per navigable screen for the router and route-smoke tests |
+| `features/` | Page-specific UI, state, and domain chunks for a route or product feature |
+| `components/` | Reusable UI shared across routes/features |
+| `hooks/`, `services/`, `lib/` | Shared non-visual support |
+
+Thin `pages/*` re-exports are allowed **only** when the real page body lives under `features/` (or an equivalent feature module). Do **not** leave `pages/` as empty re-exports of full page implementations dumped under `components/`.
+
+### SOP-driven commits
+
+See [`CHECKPOINT.md`](./CHECKPOINT.md). Commit **as work evolves** inside a step
+(not one dump at the end). SOP-driven subjects start with `[sopNNN]` (the active
+step sequence, e.g. `[sop010]`, `[sop200]`).
 
 Deploy options: run processes directly, reverse-proxy with Apache/Nginx, or containerize (bridge or published ports).
 
@@ -141,13 +177,18 @@ Do not leave unrelated default listen ports (`5173`, …) in committed source.
 
 ## Design choices in this SOP
 
-- Start from the Figma prototype: step `000` must refactor the export under `web/` before specification or backend work.
-- The Chat specification track and the Code implementation track stay logically independent (`a` vs `z` branches).
+- Start from the Figma prototype: step `000` must refactor the export under `web/` before specification or backend work. Soft export scaffolding may land under `sop/figma-archive/`; the **canonical Figma original is kept outside** this tree for parallel reference.
+- Step `000` **deletes `.git` on purpose** so agents cannot check out / reset back to the raw Figma export. Product history starts at the WorldMan layout commit.
+- Design fidelity beats opportunistic cleanup: inventory (`010`) → respect in PRD/schema/seed/integrate → final audit (`150`) against the same inventory. Prefer inventory + route/tab smoke over expensive visual-regression / screenshot gates (token cost).
+- SOP-driven git commits (`CHECKPOINT.md`) happen continuously during each step, prefixed `[sopNNN]`, so evolution stays bisectable.
+- Step `011` (theming) is optional content attached with `extend: previous`: when included, **sopwin merges it into `010` as one graph step**. Do not drop `extend` to invent a separate node — the visible **SOP step count is part of the product contract** and must not change casually (no ad-hoc add/remove of seq numbers when refining the pack).
+- Chat (`*.get`) vs Code (`*.md`) tracks for the same seq are **alternatives**: at runtime pick **one**. Use Chat while conversation context is available; switch to Code when the project was advanced by another path, earlier steps cannot be replayed, and Chat context is gone. Do not run both tracks for the same seq in one build.
 - `schema.prisma` and `seed.ts` are generated separately to avoid output-length pressure and to let seed generation pressure-test the domain model.
-- Seed generation must not silently rewrite the schema.
+- Seed prefers **extracting** Figma/web demo data over inventing new demo rows; seed generation must not silently rewrite the schema.
 - Seed may optionally request amends when it can run after the backend prompt (`050`): `prisma/request-for-refactor.md` and/or `sop/Backend amends.md` (via `<optional>`). Step `060` merges both and deletes the request files.
 - Cross-module references are scalar cuid2 fields + API lookups, not cross-database FKs, unless explicitly required.
-- Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`); keep them updated during build/refactor.
+- Working construction docs live under `sop/` (`PRD.md`, `TODO.md`, `TUC.md`, `NTC.md`, `ECS.md`, `design-inventory.md`, `seed-coverage.md`); keep them updated during build/refactor.
+- Localizing demo assets: Google / Google Fonts / gstatic / Facebook CDNs and similar **must** go through the local HTTP proxy `http://localhost:8118`.
 - `web-e2e/workflows.md` is generated late so it can synthesize `sop/` PRD/TUC/NTC/ECS, schema, seed scenarios, and backend design.
 - `docs/api.md` is written after backend implementation/integration as the as-built API contract.
-- Playwright coverage proceeds from route smoke → workflow → interactive-control audit → cross-artifact coverage audit.
+- Playwright coverage proceeds from route smoke → workflow → interactive-control audit → cross-artifact coverage audit; route smoke must cover every non-dropped route in `design-inventory.md`.

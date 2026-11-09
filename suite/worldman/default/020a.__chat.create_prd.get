@@ -3,6 +3,10 @@ File-Link: inode
 Parse: multi-parts
 Discard: -*- mode: markdown -*-
 Discard: vim: set ft=markdown :
+Append-To: sop/TUC.md from TUC*.md (delete)
+Append-To: sop/NTC.md from NTC*.md (delete)
+Append-To: sop/ECS.md from ECS*.md (delete)
+Append-To: sop/TODO.md from TODO*.md (delete)
 
 # Create PRD
 
@@ -82,6 +86,9 @@ Also initialize or update under `sop/` when discussion yields testable material:
 - `TUC.md` — test use-case reference set extracted or constructed from the discussion
 - `NTC.md` — negative / anti test cases
 - `ECS.md` — edge-case scenarios
+
+When `sop/design-inventory.md` exists, treat its `kept`/`moved` routes and tabs as
+required product surfaces in the PRD — do not demote them to optional chrome.
 
 These files feed later e2e workflows and tool/support-class work.
 

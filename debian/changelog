@@ -4,6 +4,16 @@ soptools (1.3.1) unstable; urgency=medium
     Accept; same-monitor placement.
   * Append-To: sop/<file> from Pattern (delete); worldman chat steps use it
     for TUC/NTC/ECS attachments.
+  * WorldMan (default/en): design fidelity — `sop/design-inventory.md` before
+    010 refactor; archive Figma scaffolding under `sop/figma-archive/`;
+    `000` deletes `.git` so agents cannot revert to the Figma export (canonical
+    original kept outside the product tree); evolving `[sopNNN]` commits during
+    each step (`CHECKPOINT.md`); seed prefers mock extraction +
+    `sop/seed-coverage.md`; 080 seed-coverage gate; clarify `pages/` vs
+    `features/` vs `components/`; `011` theming stays `extend: previous`
+    (sopwin merges into `010` when included; stable step count); chat vs code
+    tracks are runtime alternatives (pick one); no visual-regression gates
+    (token cost); Google and similar CDNs must use local proxy `:8118`.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Wed, 16 Sep 2026 19:56:53 +0800
 

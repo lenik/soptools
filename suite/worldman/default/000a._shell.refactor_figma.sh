@@ -34,6 +34,57 @@ seed_sop_themes() {
     sop_log 1 "Seeded project sop/themes/ fork (palettes + generate script) from suite attachment."
 }
 
+# Preserve lightweight Figma / agent scaffolding for inventory hints.
+# The canonical Figma original lives outside this product tree for parallel
+# reference; deleting .git below prevents agents from reverting via git.
+# Product tree should not keep these paths at the root.
+archive_figma_scaffolding() {
+    local dest="sop/figma-archive"
+    local moved=0
+    mkdir -p "$dest"
+    for path in .figma src/imports AGENT.md CLAUDE.md; do
+        if [ -e "$path" ]; then
+            mkdir -p "$dest/$(dirname "$path")"
+            # Replace prior archive copy if re-run on a fresh export tree.
+            rm -rf "$dest/$path"
+            mv "$path" "$dest/$path"
+            moved=1
+            sop_log 1 "Archived $path → $dest/$path"
+        fi
+    done
+    if [ "$moved" -eq 0 ]; then
+        sop_log 2 "No Figma scaffolding (.figma / src/imports / AGENT.md / CLAUDE.md) to archive."
+    else
+        printf '%s\n' \
+            '# Figma export archive' \
+            '' \
+            'Preserved by WorldMan step `000` (lightweight scaffolding only).' \
+            'The canonical Figma original is kept outside this product tree for' \
+            'parallel reference. Step `000` deletes `.git` so agents cannot' \
+            'git-revert to the raw export. Use this archive plus the external' \
+            'original when writing `sop/design-inventory.md` (010) or recovering' \
+            'demo/mock hints for seed (040).' \
+            '' \
+            "Archived at: $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            >"$dest/README.md"
+    fi
+}
+
+ensure_git_init_commit() {
+    local msg="$1"
+    if [ ! -d .git ]; then
+        git init
+        sop_log 1 "Initialized git repository."
+    fi
+    git add -A
+    if git diff --cached --quiet; then
+        sop_log 1 "Nothing to commit; skip [sop000]."
+        return 0
+    fi
+    git commit -m "$msg"
+    sop_log 1 "[sop000] commit recorded."
+}
+
 # Skip if a prior run already produced the WorldMan layout. Re-running would
 # move backend/prisma/sop/… into web/ and destroy the tree.
 if [ -d web ] && [ -d backend ] && [ -d prisma ] && [ -d sop ] && [ -d docs ] && {
@@ -42,21 +93,48 @@ if [ -d web ] && [ -d backend ] && [ -d prisma ] && [ -d sop ] && [ -d docs ] &&
            [ -f web/vite.config.mts ] || [ -f web/index.html ]
    }; then
     seed_sop_themes
+    set_progress 80%
+    ensure_git_init_commit "$(cat <<'EOF'
+[sop000] ensure layout and themes
+
+- WorldMan layout already present; re-seeded sop/themes/ if needed
+- Ensure git history exists for later [sopNNN] commits
+EOF
+)"
     set_progress 100%
     sop_log 1 "WorldMan layout already present under web/; skipping Figma refactor."
     exit 0
 fi
 
-# Remove Figma / agent scaffolding that should not stay in the product tree.
-rm -rf AGENT.md CLAUDE.md src/imports .figma .git
+mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
+set_progress 10%
+
+archive_figma_scaffolding
 set_progress 15%
+
+# Drop any prior .git intentionally.
+# Product history must start at this WorldMan layout commit so agents cannot
+# `git checkout` / reset back to the raw Figma export. The Figma original is
+# kept elsewhere (outside this product tree) for parallel human/agent
+# reference — do not rely on git history inside the project for that.
+# Scaffolding under sop/figma-archive/ is only lightweight export metadata.
+rm -rf .git
+set_progress 20%
 
 mkdir -p web
 set_progress 25%
 
-# Move everything except web/ into web/ (the exported app becomes the web package).
-shopt -s dotglob extglob
-mv !(web) web
+# Move remaining top-level export content into web/. Keep WorldMan root dirs
+# (sop/ already holds figma-archive/) at the repository root.
+shopt -s dotglob nullglob
+keep_at_root='|web|sop|docs|prisma|backend|web-e2e|mobile|mobile-e2e|docker|i-local|i-medium|'
+for entry in * .[!.]* ..?*; do
+    [ -e "$entry" ] || continue
+    case "$keep_at_root" in
+        *"|$entry|"*) continue ;;
+    esac
+    mv "$entry" "web/"
+done
 set_progress 45%
 
 # Keep a root .gitignore if the export had one under web/.
@@ -65,17 +143,17 @@ set_progress 55%
 
 # sop/themes/ is a fork of the suite theme attachment (palettes + generate
 # script) for step 011 theming.
-mkdir -p sop docs prisma backend web-e2e mobile mobile-e2e docker i-local i-medium
 seed_sop_themes
 set_progress 70%
 
-git init
-set_progress 80%
+ensure_git_init_commit "$(cat <<'EOF'
+[sop000] init from Figma export layout
 
-git add .
-set_progress 90%
-
-git commit -m "init"
+- Move exported UI under web/; create standard WorldMan package dirs
+- Archive Figma scaffolding under sop/figma-archive/ for inventory/seed recovery
+- Seed sop/themes/ fork for later theming
+EOF
+)"
 set_progress 100%
 
 # Expected layout after this step:

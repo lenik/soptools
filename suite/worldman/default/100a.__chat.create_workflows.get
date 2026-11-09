@@ -1,6 +1,9 @@
 Save-As: web-e2e/workflows.md
 Discard: -*- mode: markdown -*-
 Discard: vim: set ft=markdown :
+Append-To: sop/TUC.md from TUC*.md (delete)
+Append-To: sop/NTC.md from NTC*.md (delete)
+Append-To: sop/ECS.md from ECS*.md (delete)
 
 # Create complete testing workflows
 

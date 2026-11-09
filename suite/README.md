@@ -19,16 +19,16 @@ Rough coverage (same step ids across branches):
 
 | Seq | Role | Purpose |
 |-----|------|---------|
-| 000 | shell | Refactor Figma export into WorldMan layout; seed `sop/themes/` |
-| 010 | codex | Refactor web; localize demo assets |
-| 011 | codex | Theme web from `web-palettes.mjs` + switcher |
-| 020 | gpt/codex | PRD |
-| 030–040 | gpt/codex | Prisma schema + seed |
+| 000 | shell | Refactor Figma export into WorldMan layout; archive scaffolding; delete `.git` (no revert to export); seed `sop/themes/`; `[sop000]` commit |
+| 010 | codex | Freeze `sop/design-inventory.md`; refactor web; localize demo assets (Google* via `:8118`); evolving `[sop010]` commits |
+| 011 | codex | Optional theming (`extend: previous` → merges into `010` when included) |
+| 020 | gpt/codex | PRD (inventory-backed UI structure) |
+| 030–040 | gpt/codex | Prisma schema + seed (mock extraction + `seed-coverage.md`) |
 | 050–070 | gpt/codex | Backend design / implement / API tests |
-| 080–090 | codex | Web↔backend integrate; API docs |
+| 080–090 | codex | Web↔backend integrate (seed-coverage gate); API docs |
 | 100 | gpt/codex | Author `web-e2e/workflows.md` |
 | 110–120 | codex | Route smoke + workflow Playwright (120 also merges TUC/NTC/ECS/TODO) |
-| 150 | codex | Final coverage audit |
+| 150 | codex | Final coverage audit (inventory + seed + e2e) |
 
 Branch selection: `sopwin` picks `default` / `zh_CN` / `ja` from `LANG` (or
 `LC_ALL` / `LC_MESSAGES`). Override with `-S/--sop-dir`, or choose suite with
