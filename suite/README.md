@@ -6,14 +6,26 @@ Each suite root carries:
 
 ```text
 suite/<name>/
-    VERSION          # suite semver shown in sopwin status bar (e.g. 1.1)
+    VERSION          # suite process semver: major.minor.patch (e.g. 1.2.0)
     default/ …       # language branches
 ```
 
+### Suite `VERSION` policy
+
+- Format is always **`major.minor.patch`** (three numeric components).
+- This versions the **SOP process pack** (steps/prompts/scripts), not the
+  soptools Debian package and not a customer app built with the pack.
+- **Every change** to that suite’s process files (`default/`, locale branches,
+  shared suite attachments that agents follow, …) **must bump `VERSION` in the
+  same commit**:
+  - **patch** — wording/clarity, translation sync, typo/doc-only
+  - **minor** — new/changed step behavior, new gates, new required artifacts
+  - **major** — breaking step renumbering or incompatible contract changes
+- sopwin’s status bar shows `[icon] <name> <version>` (e.g. `worldman 1.2.0`).
+
 Suite icons (Tabler outline SVGs) live in `assets/icons/suite/<name>.svg`;
 the Meson build rasterizes 32×32 PNGs into the build dir / install prefix
-(`…/soptools/icons/suite/`). sopwin’s status bar shows `[icon] <name> <version>`
-on the right (e.g. worldman 1.1).
+(`…/soptools/icons/suite/`).
 
 ## worldman
 
@@ -22,9 +34,9 @@ from a Figma prototype export.
 
 ```text
 suite/worldman/
+    VERSION      # currently 1.2.0
     default/     # English prompts and scripts
     zh_CN/       # Simplified Chinese
-    ja/          # Japanese
     themes/      # catalog/ + minor|vibe|country/*.mjs → $PROJECT/sop/themes/ in 000
 ```
 
